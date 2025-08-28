@@ -1,0 +1,17 @@
+{
+  "packages": [
+    {
+      "id": "test_pkg_1",
+      "name": "باقة اختبار",
+      "retailPrice": 100,
+      "wholesalePrice": 90,
+      "distributorPrice": 80,
+      "createdAt": "2024-01-01"
+    }
+  ],
+  "inventory": [],
+  "stores": [],
+  "expenses": [],
+  "sales": [],
+  "payments": []
+}

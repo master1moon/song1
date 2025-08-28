@@ -1,0 +1,26 @@
+[
+  {
+    "id": "pkg_001",
+    "name": "باقة 5 جيجا",
+    "retailPrice": 500,
+    "wholesalePrice": 450,
+    "distributorPrice": 425,
+    "createdAt": "2024-01-01"
+  },
+  {
+    "id": "pkg_002",
+    "name": "باقة 10 جيجا",
+    "retailPrice": 1000,
+    "wholesalePrice": 900,
+    "distributorPrice": 850,
+    "createdAt": "2024-01-01"
+  },
+  {
+    "id": "pkg_003",
+    "name": "باقة 30 جيجا",
+    "retailPrice": 3000,
+    "wholesalePrice": 2700,
+    "distributorPrice": 2550,
+    "createdAt": "2024-01-01"
+  }
+]

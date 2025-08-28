@@ -1,0 +1,66 @@
+{
+  "packages": [
+    {
+      "id": "pkg_1234567890",
+      "name": "باقة 10 جيجا",
+      "retailPrice": 1000,
+      "wholesalePrice": 900,
+      "distributorPrice": 850,
+      "createdAt": "2024-01-01"
+    },
+    {
+      "id": "pkg_1234567891",
+      "name": "باقة 20 جيجا",
+      "retailPrice": 2000,
+      "wholesalePrice": 1800,
+      "distributorPrice": 1700,
+      "createdAt": "2024-01-01"
+    }
+  ],
+  "inventory": [
+    {
+      "id": "inv_1234567890",
+      "packageId": "pkg_1234567890",
+      "quantity": 100,
+      "createdAt": "2024-01-01"
+    }
+  ],
+  "stores": [
+    {
+      "id": "store_1234567890",
+      "name": "محل الأمل",
+      "priceType": "retail",
+      "createdAt": "2024-01-01"
+    }
+  ],
+  "expenses": [
+    {
+      "id": "exp_1234567890",
+      "type": "إيجار",
+      "amount": 50000,
+      "notes": "إيجار شهر يناير",
+      "date": "2024-01-01",
+      "addLater": false
+    }
+  ],
+  "sales": [
+    {
+      "id": "sale_1234567890",
+      "storeId": "store_1234567890",
+      "packageId": "pkg_1234567890",
+      "quantity": 5,
+      "pricePerUnit": 1000,
+      "total": 5000,
+      "date": "2024-01-02"
+    }
+  ],
+  "payments": [
+    {
+      "id": "payment_1234567890",
+      "storeId": "store_1234567890",
+      "amount": 3000,
+      "notes": "دفعة جزئية",
+      "date": "2024-01-03"
+    }
+  ]
+}

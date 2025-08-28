@@ -1,0 +1,23 @@
+{
+  "name": "نظام بيع الكروت والمصروفات",
+  "short_name": "نظام الكروت",
+  "description": "تطبيق شامل لإدارة مبيعات كروت الشبكات والمصروفات.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#2c3e50",
+  "theme_color": "#2c3e50",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}

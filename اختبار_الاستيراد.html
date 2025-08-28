@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>اختبار الاستيراد</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .error {
+            color: #dc3545;
+            margin: 10px 0;
+        }
+        .success {
+            color: #28a745;
+            margin: 10px 0;
+        }
+        .info {
+            color: #17a2b8;
+            margin: 10px 0;
+        }
+        #output {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>اختبار استيراد البيانات</h1>
+        
+        <div class="test-section">
+            <h2>خطوات الاختبار:</h2>
+            <ol>
+                <li>افتح وحدة التحكم (Console) بالضغط على F12</li>
+                <li>اضغط على أحد أزرار الاختبار أدناه</li>
+                <li>راقب الرسائل في وحدة التحكم</li>
+                <li>انسخ أي رسائل خطأ تظهر</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h2>اختبارات البيانات:</h2>
+            <button onclick="testValidJSON()">اختبار JSON صحيح</button>
+            <button onclick="testInvalidJSON()">اختبار JSON خاطئ</button>
+            <button onclick="testEmptyFile()">اختبار ملف فارغ</button>
+            <button onclick="testArrayFormat()">اختبار تنسيق مصفوفة</button>
+            <button onclick="testObjectFormat()">اختبار تنسيق كائن</button>
+        </div>
+
+        <div class="test-section">
+            <h2>اختبار يدوي:</h2>
+            <input type="file" id="testFile" accept=".json">
+            <button onclick="testManualImport()">اختبار الملف</button>
+        </div>
+
+        <div id="result"></div>
+        <div id="output"></div>
+    </div>
+
+    <script>
+        // محاكاة بيانات التطبيق
+        window.data = {
+            packages: [],
+            inventory: [],
+            stores: [],
+            expenses: [],
+            sales: [],
+            payments: []
+        };
+
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = type;
+            resultDiv.textContent = message;
+        }
+
+        function log(message, data) {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString('ar-SA');
+            output.textContent += `[${timestamp}] ${message}\n`;
+            if (data) {
+                output.textContent += JSON.stringify(data, null, 2) + '\n';
+            }
+            output.textContent += '---\n';
+            console.log(message, data);
+        }
+
+        function testValidJSON() {
+            log('اختبار JSON صحيح');
+            const validData = {
+                packages: [
+                    {
+                        id: "pkg_test_1",
+                        name: "باقة اختبار",
+                        retailPrice: 100
+                    }
+                ]
+            };
+            
+            try {
+                log('البيانات المختبرة:', validData);
+                // محاكاة الاستيراد
+                if (validData && typeof validData === 'object') {
+                    log('✓ البيانات كائن صحيح');
+                    if (Array.isArray(validData.packages)) {
+                        log('✓ الباقات مصفوفة صحيحة');
+                        showResult('اختبار ناجح: JSON صحيح', 'success');
+                    }
+                }
+            } catch (error) {
+                log('✗ خطأ:', error.message);
+                showResult('فشل الاختبار: ' + error.message, 'error');
+            }
+        }
+
+        function testInvalidJSON() {
+            log('اختبار JSON خاطئ');
+            const invalidJSON = '{invalid json}';
+            
+            try {
+                JSON.parse(invalidJSON);
+            } catch (error) {
+                log('✓ تم اكتشاف JSON خاطئ بنجاح:', error.message);
+                showResult('اختبار ناجح: تم اكتشاف الخطأ', 'success');
+            }
+        }
+
+        function testEmptyFile() {
+            log('اختبار ملف فارغ');
+            const emptyData = '';
+            
+            try {
+                const parsed = JSON.parse(emptyData);
+            } catch (error) {
+                log('✓ تم اكتشاف ملف فارغ:', error.message);
+                showResult('اختبار ناجح: تم اكتشاف الملف الفارغ', 'success');
+            }
+        }
+
+        function testArrayFormat() {
+            log('اختبار تنسيق مصفوفة');
+            const arrayData = [
+                {
+                    id: "pkg_1",
+                    name: "باقة 1"
+                }
+            ];
+            
+            try {
+                if (Array.isArray(arrayData)) {
+                    log('✓ البيانات مصفوفة صحيحة');
+                    showResult('اختبار ناجح: تنسيق المصفوفة صحيح', 'success');
+                }
+            } catch (error) {
+                log('✗ خطأ:', error.message);
+                showResult('فشل الاختبار: ' + error.message, 'error');
+            }
+        }
+
+        function testObjectFormat() {
+            log('اختبار تنسيق كائن');
+            const objectData = {
+                packages: [
+                    {
+                        id: "pkg_1",
+                        name: "باقة 1"
+                    }
+                ]
+            };
+            
+            try {
+                if (objectData.packages && Array.isArray(objectData.packages)) {
+                    log('✓ البيانات كائن يحتوي على مصفوفة packages');
+                    showResult('اختبار ناجح: تنسيق الكائن صحيح', 'success');
+                }
+            } catch (error) {
+                log('✗ خطأ:', error.message);
+                showResult('فشل الاختبار: ' + error.message, 'error');
+            }
+        }
+
+        function testManualImport() {
+            const fileInput = document.getElementById('testFile');
+            if (!fileInput.files.length) {
+                showResult('يرجى اختيار ملف أولاً', 'error');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            log('اختبار ملف:', file.name);
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    log('محتوى الملف (أول 200 حرف):', e.target.result.substring(0, 200));
+                    const data = JSON.parse(e.target.result);
+                    log('تم تحليل JSON بنجاح:', data);
+                    showResult('تم قراءة الملف بنجاح', 'success');
+                } catch (error) {
+                    log('✗ خطأ في تحليل JSON:', error.message);
+                    showResult('خطأ: ' + error.message, 'error');
+                }
+            };
+            
+            reader.onerror = function() {
+                log('✗ خطأ في قراءة الملف');
+                showResult('خطأ في قراءة الملف', 'error');
+            };
+            
+            reader.readAsText(file);
+        }
+
+        // تشغيل اختبار أولي
+        window.onload = function() {
+            log('صفحة الاختبار جاهزة');
+            log('بيانات التطبيق الحالية:', window.data);
+        };
+    </script>
+</body>
+</html>

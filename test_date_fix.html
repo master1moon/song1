@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>اختبار مشكلة التاريخ</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+</head>
+<body>
+    <h1>اختبار مشكلة التاريخ</h1>
+    
+    <script>
+        // نسخة من دالة toEnglishDigits
+        function toEnglishDigits(input) {
+            if (input === null || input === undefined) return '';
+            return String(input)
+                .replace(/[\u0660-\u0669]/g, d => String(d.charCodeAt(0) - 0x0660))
+                .replace(/[\u06F0-\u06F9]/g, d => String(d.charCodeAt(0) - 0x06F0));
+        }
+
+        // النسخة الحالية من formatDateEn
+        function formatDateEn_old(dateStr) {
+            if (!dateStr) return '';
+            const raw = toEnglishDigits(dateStr).slice(0, 10);
+            try {
+                if (typeof moment !== 'undefined') {
+                    const m = moment(raw, [moment.ISO_8601, 'YYYY-MM-DD', 'YYYY-M-D', 'DD/MM/YYYY', 'D/M/YYYY'], true);
+                    if (m.isValid()) return m.format('YYYY-MM-DD');
+                }
+            } catch (_) {}
+            // fallback: simple cleanup
+            const m = /^\d{4}-\d{1,2}-\d{1,2}$/.test(raw) ? raw : raw.replace(/\D/g, '').replace(/(\d{4})(\d{2})(\d{2}).*/, '$1-$2-$3');
+            return m;
+        }
+
+        // النسخة المحسنة من formatDateEn
+        function formatDateEn_new(dateStr) {
+            if (!dateStr) return '';
+            
+            // تحويل الأرقام العربية إلى إنجليزية
+            const englishDate = toEnglishDigits(dateStr);
+            
+            try {
+                if (typeof moment !== 'undefined') {
+                    // جرب صيغ مختلفة للتاريخ
+                    const formats = [
+                        'YYYY-MM-DD',
+                        'YYYY-M-D',
+                        'DD/MM/YYYY',
+                        'D/M/YYYY',
+                        'DD-MM-YYYY',
+                        'D-M-YYYY',
+                        moment.ISO_8601
+                    ];
+                    
+                    const m = moment(englishDate, formats, true);
+                    if (m.isValid()) {
+                        return m.format('YYYY-MM-DD');
+                    }
+                }
+            } catch (_) {}
+            
+            // إذا فشل moment.js، حاول التحليل اليدوي
+            // التحقق من الصيغ المختلفة
+            const patterns = {
+                'YYYY-MM-DD': /^(\d{4})-(\d{1,2})-(\d{1,2})$/,
+                'DD/MM/YYYY': /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/,
+                'DD-MM-YYYY': /^(\d{1,2})-(\d{1,2})-(\d{4})$/
+            };
+            
+            for (const [format, pattern] of Object.entries(patterns)) {
+                const match = englishDate.match(pattern);
+                if (match) {
+                    if (format === 'YYYY-MM-DD') {
+                        return `${match[1]}-${match[2].padStart(2, '0')}-${match[3].padStart(2, '0')}`;
+                    } else {
+                        // DD/MM/YYYY أو DD-MM-YYYY
+                        return `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`;
+                    }
+                }
+            }
+            
+            // إذا لم تتطابق أي صيغة، حاول تنظيف بسيط
+            const cleanDate = englishDate.replace(/\D/g, '');
+            if (cleanDate.length === 8) {
+                // افترض DDMMYYYY
+                return `${cleanDate.substr(4, 4)}-${cleanDate.substr(2, 2)}-${cleanDate.substr(0, 2)}`;
+            }
+            
+            return englishDate;
+        }
+
+        // الاختبارات
+        const testDates = [
+            '20/07/2025',
+            '2025-07-20',
+            '20-07-2025',
+            '2/7/2025',
+            '2025-7-2'
+        ];
+
+        console.log('اختبار النسخة القديمة:');
+        testDates.forEach(date => {
+            console.log(`${date} => ${formatDateEn_old(date)}`);
+        });
+
+        console.log('\nاختبار النسخة الجديدة:');
+        testDates.forEach(date => {
+            console.log(`${date} => ${formatDateEn_new(date)}`);
+        });
+    </script>
+</body>
+</html>

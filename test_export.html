@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>اختبار التصدير</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            direction: rtl;
+        }
+        .test-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .test-btn:hover {
+            background: #0056b3;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>اختبار دوال التصدير</h1>
+    
+    <h2>فحص الدوال المتاحة:</h2>
+    <button class="test-btn" onclick="checkFunctions()">فحص الدوال</button>
+    <div id="functionStatus"></div>
+    
+    <h2>اختبار التصدير:</h2>
+    <button class="test-btn" onclick="testExportStore()">اختبار تصدير المحل</button>
+    <button class="test-btn" onclick="testExportExpenses()">اختبار تصدير المصروفات</button>
+    
+    <h2>النتائج:</h2>
+    <div id="results"></div>
+    
+    <script>
+        // بيانات وهمية للاختبار
+        window.data = {
+            stores: [
+                { id: 'store1', name: 'محل الاختبار', priceType: 'retail' }
+            ],
+            sales: [
+                { id: 'sale1', storeId: 'store1', packageId: 'pkg1', quantity: 5, total: 5000, date: '2024-01-01' }
+            ],
+            payments: [
+                { id: 'pay1', storeId: 'store1', amount: 3000, date: '2024-01-02' }
+            ],
+            packages: [
+                { id: 'pkg1', name: 'باقة 10 جيجا', retailPrice: 1000 }
+            ],
+            expenses: [
+                { id: 'exp1', type: 'إيجار', amount: 5000, date: '2024-01-01' }
+            ],
+            inventory: []
+        };
+        
+        function checkFunctions() {
+            const functions = [
+                'exportStoreData',
+                'exportExpensesData',
+                'exportReportsData',
+                'formatNumber',
+                'formatDateEn',
+                'toEnglishDigits',
+                'showNotification',
+                'getPriceTypeName',
+                'buildStoreReportHTML'
+            ];
+            
+            let html = '<h3>حالة الدوال:</h3><ul>';
+            functions.forEach(func => {
+                const exists = typeof window[func] === 'function';
+                const status = exists ? '✅ متاحة' : '❌ غير متاحة';
+                html += `<li>${func}: ${status}</li>`;
+            });
+            html += '</ul>';
+            
+            document.getElementById('functionStatus').innerHTML = html;
+        }
+        
+        async function testExportStore() {
+            try {
+                addResult('اختبار تصدير المحل...');
+                
+                if (typeof window.exportStoreData !== 'function') {
+                    addResult('❌ دالة exportStoreData غير متاحة', 'error');
+                    return;
+                }
+                
+                // محاولة التصدير بصيغة JSON (لا يحتاج لتنزيل ملف)
+                await window.exportStoreData('store1', 'json');
+                addResult('✅ تم استدعاء دالة التصدير بنجاح', 'success');
+                
+            } catch (error) {
+                addResult('❌ خطأ: ' + error.message, 'error');
+                console.error(error);
+            }
+        }
+        
+        function testExportExpenses() {
+            try {
+                addResult('اختبار تصدير المصروفات...');
+                
+                if (typeof window.exportExpensesData !== 'function') {
+                    addResult('❌ دالة exportExpensesData غير متاحة', 'error');
+                    return;
+                }
+                
+                // محاولة التصدير
+                window.exportExpensesData('json');
+                addResult('✅ تم استدعاء دالة التصدير بنجاح', 'success');
+                
+            } catch (error) {
+                addResult('❌ خطأ: ' + error.message, 'error');
+                console.error(error);
+            }
+        }
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = 'status ' + type;
+            div.textContent = message;
+            document.getElementById('results').appendChild(div);
+        }
+        
+        // تحميل المكتبات المطلوبة
+        window.moment = { 
+            format: () => '20240101',
+            ISO_8601: 'YYYY-MM-DD'
+        };
+        
+        // دالة وهمية للإشعارات
+        window.showNotification = window.showNotification || function(msg, type) {
+            addResult('إشعار: ' + msg, type);
+        };
+        
+        // فحص أولي عند التحميل
+        window.onload = function() {
+            setTimeout(checkFunctions, 1000);
+        };
+    </script>
+</body>
+</html>

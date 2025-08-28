@@ -1,0 +1,20 @@
+[
+  {
+    "id": "store_001",
+    "name": "بقالة السعادة",
+    "priceType": "retail",
+    "createdAt": "2024-01-01"
+  },
+  {
+    "id": "store_002",
+    "name": "مركز الاتصالات المتقدم",
+    "priceType": "wholesale",
+    "createdAt": "2024-01-01"
+  },
+  {
+    "id": "store_003",
+    "name": "موزع الجملة الرئيسي",
+    "priceType": "distributor",
+    "createdAt": "2024-01-01"
+  }
+]
