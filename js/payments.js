@@ -54,10 +54,10 @@ function savePayment() {
     showNotification('تم إضافة التسديد بنجاح', 'success');
   }
   saveData();
-  showStoreDetails(storeId);
-  updateDashboard();
-  updateProfitReport();
-  generateDebtReport();
+  refreshCurrentView(); // تحديث جميع العروض المرئية
+  showStoreDetails(storeId); // تحديث تفاصيل المحل
+  updateProfitReport(); // خاص بتقرير الأرباح
+  generateDebtReport(); // خاص بتقرير الديون
   if (typeof generatePartnerReports === 'function') generatePartnerReports();
   const modal = bootstrap.Modal.getInstance(document.getElementById('paymentModal')); 
   modal.hide();
@@ -93,7 +93,7 @@ function deletePayment(id) {
   if (!confirm('هل أنت متأكد من حذف هذا التسديد؟')) return;
   data.payments = data.payments.filter(p => p.id !== id);
   saveData();
-  (async()=>{ try{ if (typeof addToTrash==='function') await addToTrash('payments', payment); }catch{}; showStoreDetails(payment.storeId); updateDashboard(); updateProfitReport(); generateDebtReport(); })();
+  (async()=>{ try{ if (typeof addToTrash==='function') await addToTrash('payments', payment); }catch{}; refreshCurrentView(); showStoreDetails(payment.storeId); updateProfitReport(); generateDebtReport(); })();
   showNotification('تم حذف التسديد بنجاح', 'success');
 }
 

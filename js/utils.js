@@ -291,6 +291,57 @@ function getTodayDate() {
   return `${year}-${month}-${day}`;
 }
 
+/**
+ * تحديث عرض البيانات في جميع الأقسام المرئية
+ * يحدث القوائم والجداول والتقارير بناءً على القسم النشط
+ * يستخدم بعد أي عملية تعديل للبيانات لضمان ظهور التغييرات مباشرة
+ * آمن للاستخدام - يتحقق من وجود الدوال قبل استدعائها
+ */
+function refreshCurrentView() {
+  // تحديث قائمة المحلات دائماً (قد تكون في الشريط الجانبي)
+  if (typeof renderStoresList === 'function') {
+    renderStoresList();
+  }
+  
+  // تحديث تفاصيل المحل إذا كانت مفتوحة
+  const storeDetailsSection = document.getElementById('storeDetailsSection');
+  if (storeDetailsSection && storeDetailsSection.style.display !== 'none') {
+    const storeId = document.querySelector('#storeHeader [data-id]')?.dataset.id;
+    if (storeId && typeof showStoreDetails === 'function') {
+      showStoreDetails(storeId);
+    }
+  }
+  
+  // تحديث لوحة المعلومات (دائماً مفيد)
+  if (typeof updateDashboard === 'function') {
+    updateDashboard();
+  }
+  
+  // تحديث القسم النشط حالياً
+  const activeSection = document.querySelector('.section.show');
+  if (activeSection) {
+    switch(activeSection.id) {
+      case 'inventory':
+        if (typeof renderInventoryTable === 'function') renderInventoryTable();
+        break;
+      case 'expenses':
+        if (typeof renderExpensesTable === 'function') renderExpensesTable();
+        break;
+      case 'packages':
+        if (typeof renderPackagesTable === 'function') renderPackagesTable();
+        break;
+      case 'reports':
+        if (typeof updateProfitReport === 'function') updateProfitReport();
+        if (typeof generateDebtReport === 'function') generateDebtReport();
+        if (typeof generatePartnerReports === 'function') generatePartnerReports();
+        break;
+      case 'trash':
+        if (typeof renderTrashTable === 'function') renderTrashTable();
+        break;
+    }
+  }
+}
+
 // تصدير الدوال للنطاق العام
 if (typeof window !== 'undefined') {
   window.toEnglishDigits = toEnglishDigits;
@@ -300,4 +351,5 @@ if (typeof window !== 'undefined') {
   window.showNotification = showNotification;
   window.switchSection = switchSection;
   window.getTodayDate = getTodayDate;
+  window.refreshCurrentView = refreshCurrentView;
 }

@@ -427,7 +427,7 @@ function deleteStore(id) {
   const store = data.stores.find(s => s.id === id);
   data.stores = data.stores.filter(s => s.id !== id);
   saveData();
-  (async()=>{ try{ if (store && typeof addToTrash==='function') await addToTrash('stores', store); }catch{}; renderStoresList(); updateDashboard(); updateProfitReport(); })();
+  (async()=>{ try{ if (store && typeof addToTrash==='function') await addToTrash('stores', store); }catch{}; refreshCurrentView(); updateProfitReport(); })();
   showNotification('تم حذف المحل بنجاح', 'success');
 }
 
@@ -481,10 +481,9 @@ function saveStore() {
     showNotification('تم إضافة المحل بنجاح', 'success');
   }
   saveData();
-  renderStoresList();
-  updateDashboard();
-  updateReportStores();
-  generateDebtReport();
+  refreshCurrentView(); // تحديث جميع العروض المرئية
+  updateReportStores(); // خاص بالتقارير
+  generateDebtReport(); // خاص بتقرير الديون
   const modal = bootstrap.Modal.getInstance(document.getElementById('storeModal')); 
   modal.hide();
   if (typeof cleanupModalBackdrops === 'function') setTimeout(cleanupModalBackdrops, 300);

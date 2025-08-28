@@ -214,7 +214,7 @@ function deleteInventory(id) {
   const inv = data.inventory.find(i => i.id === id);
   data.inventory = data.inventory.filter(i => i.id !== id);
   saveData();
-  (async()=>{ try{ if (inv && typeof addToTrash==='function') await addToTrash('inventory', inv); }catch{}; renderInventoryTable(); updateDashboard(); })();
+  (async()=>{ try{ if (inv && typeof addToTrash==='function') await addToTrash('inventory', inv); }catch{}; refreshCurrentView(); })();
   showNotification('تم حذف الكمية بنجاح', 'success');
 }
 
@@ -240,7 +240,6 @@ function saveInventory() {
     showNotification('تم إضافة الكمية بنجاح', 'success');
   }
   saveData();
-  renderInventoryTable();
-  updateDashboard();
+  refreshCurrentView(); // تحديث جميع العروض المرئية
   const modal = bootstrap.Modal.getInstance(document.getElementById('inventoryModal')); modal.hide();
 }

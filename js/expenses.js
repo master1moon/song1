@@ -62,7 +62,7 @@ function deleteExpense(id) {
   const removed = data.expenses.find(e => e.id === id);
   data.expenses = data.expenses.filter(e => e.id !== id);
   saveData();
-  (async()=>{ try{ if (removed && typeof addToTrash==='function') await addToTrash('expenses', removed); }catch{}; renderExpensesTable(); updateDashboard(); updateProfitReport(); })();
+  (async()=>{ try{ if (removed && typeof addToTrash==='function') await addToTrash('expenses', removed); }catch{}; refreshCurrentView(); updateProfitReport(); })();
   showNotification('تم حذف المصروف بنجاح', 'success');
 }
 
@@ -94,9 +94,8 @@ function saveExpense() {
     if (type && !saved.includes(type)) { saved.push(type); localStorage.setItem('expenseTypes', JSON.stringify(saved)); }
   } catch (_) {}
   saveData();
-  renderExpensesTable();
-  updateDashboard();
-  updateProfitReport();
+  refreshCurrentView(); // تحديث جميع العروض المرئية
+  updateProfitReport(); // خاص بتقرير الأرباح
   if (typeof generatePartnerReports === 'function') generatePartnerReports();
   const modal = bootstrap.Modal.getInstance(document.getElementById('expenseModal')); 
   modal.hide();
@@ -202,7 +201,7 @@ function renderExpensesControls(total, pages){
         if (newType && !saved.includes(newType)) { saved.push(newType); localStorage.setItem('expenseTypes', JSON.stringify(saved)); }
       } catch(_){}
     }
-    saveData(); renderExpensesTable(); updateDashboard(); updateProfitReport(); showNotification('تم تطبيق الإجراء الجماعي', 'success');
+    saveData(); refreshCurrentView(); updateProfitReport(); showNotification('تم تطبيق الإجراء الجماعي', 'success');
   }
   bulkBtn.addEventListener('click', applyBulk);
   left.appendChild(bulkSel); left.appendChild(bulkTypeInp); left.appendChild(bulkBtn);

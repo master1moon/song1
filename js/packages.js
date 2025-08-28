@@ -177,7 +177,7 @@ function deletePackage(id) {
   const pkg = data.packages.find(p => p.id === id);
   data.packages = data.packages.filter(p => p.id !== id);
   saveData();
-  (async()=>{ try{ if (pkg && typeof addToTrash==='function') await addToTrash('packages', pkg); }catch{}; renderPackagesTable(); updateDashboard(); })();
+  (async()=>{ try{ if (pkg && typeof addToTrash==='function') await addToTrash('packages', pkg); }catch{}; refreshCurrentView(); })();
   showNotification('تم حذف الباقة بنجاح', 'success');
 }
 
@@ -208,7 +208,6 @@ function savePackage() {
     showNotification('تم إضافة الباقة بنجاح', 'success');
   }
   saveData();
-  renderPackagesTable();
-  updateDashboard();
+  refreshCurrentView(); // تحديث جميع العروض المرئية
   const modal = bootstrap.Modal.getInstance(document.getElementById('packageModal')); modal.hide();
 }

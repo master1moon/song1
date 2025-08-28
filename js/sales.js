@@ -96,11 +96,10 @@ function saveSale() {
   }
   if (!isCustom && packageId) { checkLowStockForPackage(packageId); }
   saveData();
-  renderInventoryTable();
-  showStoreDetails(storeId);
-  updateDashboard();
-  updateProfitReport();
-  generateDebtReport();
+  refreshCurrentView(); // تحديث جميع العروض المرئية
+  showStoreDetails(storeId); // تحديث تفاصيل المحل
+  updateProfitReport(); // خاص بتقرير الأرباح
+  generateDebtReport(); // خاص بتقرير الديون
   const modal = bootstrap.Modal.getInstance(document.getElementById('saleModal')); 
   modal.hide();
   if (typeof cleanupModalBackdrops === 'function') setTimeout(cleanupModalBackdrops, 300);
@@ -156,6 +155,6 @@ function deleteSale(id) {
   if (!confirm('هل أنت متأكد من حذف هذا البيع؟')) return;
   data.sales = data.sales.filter(s => s.id !== id);
   saveData();
-  (async()=>{ try{ if (typeof addToTrash==='function') await addToTrash('sales', sale); }catch{}; renderStoresList(); updateDashboard(); updateProfitReport(); })();
+  (async()=>{ try{ if (typeof addToTrash==='function') await addToTrash('sales', sale); }catch{}; refreshCurrentView(); updateProfitReport(); })();
   showNotification('تم حذف البيع بنجاح', 'success');
 }
