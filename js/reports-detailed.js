@@ -1,3 +1,17 @@
+/**
+ * ملف reports-detailed.js - أرشيف كود التقارير المفصلة
+ * يحفظ التنفيذ السابق لمنطق التقارير المفصلة
+ * تم نقل هذا الكود من reports.js لتقليل حجم الملف
+ * يشمل: حالة التقارير، التحكم بحجم الصفحة، البحث والترتيب
+ * 
+ * المشاكل المحتملة:
+ * - هذا ملف أرشيف وليس مستخدماً حالياً
+ * - الكود معلق بالكامل ولا يتم تنفيذه
+ * - قد يحتوي على أخطاء لم يتم اكتشافها
+ * - يحتاج لتحديث إذا تم إعادة تفعيله
+ * - بعض الدوال مكررة في ملفات أخرى
+ */
+
 // Archived detailed reports logic (payments, expenses, sales, debts)
 // This file preserves the previous implementation so it can be restored later.
 // Include: reportState, wirePageSizeControl, applyReportSearchSortPaginate,

@@ -1,3 +1,17 @@
+/**
+ * ملف backup.js - نظام النسخ الاحتياطي المحلي
+ * يستخدم File System Access API لحفظ نسخ احتياطية محلية
+ * يحفظ مرجع الملف في IndexedDB للوصول السريع
+ * يتكامل مع دالة saveData للحفظ التلقائي
+ * 
+ * المشاكل المحتملة:
+ * - يعمل فقط في المتصفحات الحديثة (Chrome/Edge)
+ * - معالجة الأخطاء بسيطة جداً (catch فارغ)
+ * - لا يوجد آلية لاستعادة النسخ الاحتياطية
+ * - لا يحفظ نسخ متعددة (يستبدل الملف كل مرة)
+ * - لا يوجد تشفير للبيانات المحفوظة
+ */
+
 // Local file backup using File System Access API, with handle persisted in IndexedDB
 (function(){
   const DB_NAME = 'networkCardsDB';
