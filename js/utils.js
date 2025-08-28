@@ -278,6 +278,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
 function setTextSafe(el, text){ if (el) el.textContent = text; }
 
+/**
+ * الحصول على تاريخ اليوم بصيغة YYYY-MM-DD
+ * يستخدم كقيمة افتراضية عندما لا يكون هناك تاريخ محدد
+ * @returns {string} التاريخ الحالي بصيغة YYYY-MM-DD
+ */
+function getTodayDate() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 // تصدير الدوال للنطاق العام
 if (typeof window !== 'undefined') {
   window.toEnglishDigits = toEnglishDigits;
@@ -286,4 +299,5 @@ if (typeof window !== 'undefined') {
   window.formatDateEn = formatDateEn;
   window.showNotification = showNotification;
   window.switchSection = switchSection;
+  window.getTodayDate = getTodayDate;
 }

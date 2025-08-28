@@ -58,7 +58,7 @@ function deductFromInventory(packageId, quantity) {
 function addToInventory(packageId, quantity) {
   const existing = data.inventory.find(i => i.packageId === packageId);
   if (existing) { existing.quantity = (existing.quantity || 0) + quantity; }
-  else { data.inventory.push({ id: 'inv_' + Date.now(), packageId, quantity, createdAt: today }); }
+  else { data.inventory.push({ id: 'inv_' + Date.now(), packageId, quantity, createdAt: getTodayDate() }); }
 }
 
 /**
@@ -182,7 +182,7 @@ function addInventory() {
   document.getElementById('inventoryModalTitle').textContent = 'إضافة كمية جديدة';
   document.getElementById('inventoryId').value = '';
   document.getElementById('inventoryQuantity').value = '';
-  document.getElementById('inventoryDate').value = today;
+  document.getElementById('inventoryDate').value = getTodayDate();
   const modal = new bootstrap.Modal(document.getElementById('inventoryModal')); modal.show();
 }
 
@@ -199,7 +199,7 @@ function editInventory(id) {
   document.getElementById('inventoryModalTitle').textContent = 'تعديل الكمية';
   document.getElementById('inventoryId').value = item.id;
   document.getElementById('inventoryQuantity').value = formatNumber(item.quantity);
-  document.getElementById('inventoryDate').value = item.createdAt || today;
+  document.getElementById('inventoryDate').value = item.createdAt || getTodayDate();
   const modal = new bootstrap.Modal(document.getElementById('inventoryModal')); modal.show();
 }
 
@@ -228,7 +228,7 @@ function saveInventory() {
   const id = document.getElementById('inventoryId').value;
   const packageId = document.getElementById('inventoryPackage').value;
   const quantity = parseFormattedNumber(document.getElementById('inventoryQuantity').value);
-  const date = document.getElementById('inventoryDate').value ? formatDateEn(document.getElementById('inventoryDate').value) : today;
+  const date = document.getElementById('inventoryDate').value ? formatDateEn(document.getElementById('inventoryDate').value) : getTodayDate();
   if (!packageId || isNaN(quantity) || quantity <= 0) { showNotification('يرجى ملء جميع الحقول المطلوبة', 'error'); return; }
   if (id) {
     const item = data.inventory.find(i => i.id === id);

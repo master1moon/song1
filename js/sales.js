@@ -42,7 +42,7 @@ function addSale(storeId) {
   document.getElementById('saleReason').value = '';
   document.getElementById('saleQuantity').value = '';
   document.getElementById('saleAmount').value = '';
-  document.getElementById('saleDate').value = today;
+  document.getElementById('saleDate').value = getTodayDate();
   document.getElementById('customReasonGroup').style.display = 'none';
   document.getElementById('amountGroup').style.display = 'none';
   const modal = new bootstrap.Modal(document.getElementById('saleModal')); modal.show();
@@ -63,7 +63,7 @@ function saveSale() {
   const reason = document.getElementById('saleReason').value;
   const quantity = parseFormattedNumber(document.getElementById('saleQuantity').value) || 0;
   const amount = parseFormattedNumber(document.getElementById('saleAmount').value) || 0;
-  const date = document.getElementById('saleDate').value ? formatDateEn(document.getElementById('saleDate').value) : today;
+  const date = document.getElementById('saleDate').value ? formatDateEn(document.getElementById('saleDate').value) : getTodayDate();
   if (!storeId || (!packageId && !reason)) { showNotification('يرجى ملء جميع الحقول المطلوبة', 'error'); return; }
   const isCustom = packageId === 'custom';
   const store = data.stores.find(s => s.id === storeId);

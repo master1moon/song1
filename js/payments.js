@@ -27,7 +27,7 @@ function addPayment(storeId) {
   document.getElementById('paymentStoreId').value = storeId;
   document.getElementById('paymentAmount').value = '';
   document.getElementById('paymentNotes').value = '';
-  document.getElementById('paymentDate').value = today;
+  document.getElementById('paymentDate').value = getTodayDate();
   const modal = new bootstrap.Modal(document.getElementById('paymentModal')); modal.show();
 }
 
@@ -42,7 +42,7 @@ function savePayment() {
   const storeId = document.getElementById('paymentStoreId').value;
   const amount = parseFormattedNumber(document.getElementById('paymentAmount').value);
   const notes = document.getElementById('paymentNotes').value;
-  const date = document.getElementById('paymentDate').value ? formatDateEn(document.getElementById('paymentDate').value) : today;
+  const date = document.getElementById('paymentDate').value ? formatDateEn(document.getElementById('paymentDate').value) : getTodayDate();
   if (!storeId || isNaN(amount) || amount <= 0) { showNotification('يرجى ملء جميع الحقول المطلوبة', 'error'); return; }
   if (id) {
     const payment = data.payments.find(p => p.id === id);

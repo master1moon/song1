@@ -143,7 +143,7 @@ function addPackage() {
   document.getElementById('retailPrice').value = '';
   document.getElementById('wholesalePrice').value = '';
   document.getElementById('distributorPrice').value = '';
-  document.getElementById('packageDate').value = today;
+  document.getElementById('packageDate').value = getTodayDate();
   const modal = new bootstrap.Modal(document.getElementById('packageModal')); modal.show();
 }
 
@@ -161,7 +161,7 @@ function editPackage(id) {
   document.getElementById('retailPrice').value = pkg.retailPrice ? formatNumber(pkg.retailPrice) : '';
   document.getElementById('wholesalePrice').value = pkg.wholesalePrice ? formatNumber(pkg.wholesalePrice) : '';
   document.getElementById('distributorPrice').value = pkg.distributorPrice ? formatNumber(pkg.distributorPrice) : '';
-  document.getElementById('packageDate').value = pkg.createdAt || today;
+  document.getElementById('packageDate').value = pkg.createdAt || getTodayDate();
   const modal = new bootstrap.Modal(document.getElementById('packageModal')); modal.show();
 }
 
@@ -194,7 +194,7 @@ function savePackage() {
   const retailPrice = parseFormattedNumber(document.getElementById('retailPrice').value) || null;
   const wholesalePrice = parseFormattedNumber(document.getElementById('wholesalePrice').value) || null;
   const distributorPrice = parseFormattedNumber(document.getElementById('distributorPrice').value) || null;
-  const date = document.getElementById('packageDate').value ? formatDateEn(document.getElementById('packageDate').value) : today;
+  const date = document.getElementById('packageDate').value ? formatDateEn(document.getElementById('packageDate').value) : getTodayDate();
   if (!name) { showNotification('يرجى إدخال اسم الباقة', 'error'); return; }
   if (id) {
     const pkg = data.packages.find(p => p.id === id);

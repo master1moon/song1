@@ -395,7 +395,7 @@ function addStore() {
   document.getElementById('storeName').value = '';
   document.getElementById('storePriceType').value = 'retail';
   document.getElementById('storePhone').value = '';
-  document.getElementById('storeDate').value = today;
+  document.getElementById('storeDate').value = getTodayDate();
   const modal = new bootstrap.Modal(document.getElementById('storeModal')); modal.show();
 }
 
@@ -411,7 +411,7 @@ function editStore(id) {
   document.getElementById('storeName').value = store.name;
   document.getElementById('storePriceType').value = store.priceType;
   document.getElementById('storePhone').value = store.phone || '';
-  document.getElementById('storeDate').value = store.createdAt || today;
+  document.getElementById('storeDate').value = store.createdAt || getTodayDate();
   const modal = new bootstrap.Modal(document.getElementById('storeModal')); modal.show();
 }
 
@@ -443,7 +443,7 @@ function saveStore() {
   const name = document.getElementById('storeName').value;
   const priceType = document.getElementById('storePriceType').value;
   const phone = document.getElementById('storePhone').value.trim();
-  const date = document.getElementById('storeDate').value ? formatDateEn(document.getElementById('storeDate').value) : today;
+  const date = document.getElementById('storeDate').value ? formatDateEn(document.getElementById('storeDate').value) : getTodayDate();
   
   if (!name) { 
     showNotification('يرجى إدخال اسم المحل', 'error'); 
