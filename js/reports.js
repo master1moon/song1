@@ -529,14 +529,79 @@ function buildAccountStatementHTML(store, periodText, allTransactions, previousB
         }
         @media print {
             .no-print { display: none; }
-            body { background: white; padding: 0; }
+            body { 
+                background: white; 
+                padding: 0;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
             .report-container { 
                 box-shadow: none; 
                 padding: 20px;
                 max-width: 100%;
             }
-            table { font-size: 12px; }
-            th { position: static; }
+            table { 
+                font-size: 12px;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            th { 
+                position: static;
+                background: #34495e !important;
+                color: white !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            /* الاحتفاظ بألوان الخلايا */
+            .debit { 
+                color: #e74c3c !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            .credit { 
+                color: #27ae60 !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            .balance-positive {
+                background: #e8f5e9 !important;
+                color: #2e7d32 !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            .balance-negative {
+                background: #ffebee !important;
+                color: #c62828 !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            .balance-zero {
+                background: #f5f5f5 !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            .summary-row {
+                background: #f0f0f0 !important;
+                border-top: 3px double #333 !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            .info-section {
+                background: #ecf0f1 !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            .summary-box {
+                background: #f8f9fa !important;
+                border: 2px solid #3498db !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            tr:hover {
+                background: transparent !important;
+            }
+            /* تأكيد طباعة الحدود */
+            table, th, td {
+                border: 1px solid #ddd !important;
+            }
+            h1 {
+                color: #2c3e50 !important;
+                border-bottom: 3px solid #3498db !important;
+                -webkit-print-color-adjust: exact !important;
+            }
         }
         @page {
             size: A4;
