@@ -830,6 +830,19 @@ function buildAccountStatementHTML(store, periodText, allTransactions, previousB
                 <div>• الرصيد النهائي: <strong>${formatNumber(Math.abs(finalBalance))} ريال ${finalBalanceText}</strong></div>
             </div>
         </div>
+        
+        <!-- حقوق الطبع والنشر -->
+        <div style="text-align: center; margin-top: 40px; padding: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px;">
+            <p style="margin: 5px 0;">
+                <strong>نظام إدارة المبيعات والمخزون</strong><br>
+                جميع الحقوق محفوظة © ${new Date().getFullYear()}<br>
+                تم التطوير بواسطة: [اسمك هنا]<br>
+                للتواصل: [رقم هاتفك أو بريدك الإلكتروني]
+            </p>
+            <p style="margin: 5px 0; font-size: 11px; color: #999;">
+                يُحظر نسخ أو توزيع هذا النظام بدون إذن مسبق
+            </p>
+        </div>
     </div>
 </body>
 </html>`;
@@ -852,6 +865,16 @@ function buildStoreReportHTML(store, periodText, mappedSalesForExport, mappedPay
   if (mappedSalesForExport.length > 0) html += '<table><thead><tr><th>التاريخ</th><th>التفاصيل</th><th>الباقة</th><th>الكمية/المبلغ</th><th>الإجمالي</th></tr></thead><tbody>' + buildSalesRows() + '</tbody></table>'; else html += '<div>لا توجد مبيعات ضمن الفترة</div>';
   html += '<h4>التسديدات</h4>';
   if (mappedPaymentsForExport.length > 0) html += '<table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>ملاحظات</th></tr></thead><tbody>' + buildPaymentRows() + '</tbody></table>'; else html += '<div>لا توجد تسديدات ضمن الفترة</div>';
+  // حقوق الطبع والنشر
+  html += '<div style="text-align:center; margin-top:40px; padding:20px; border-top:1px solid #ddd; color:#666; font-size:12px;">' +
+    '<p style="margin:5px 0;">' +
+    '<strong>نظام إدارة المبيعات والمخزون</strong><br>' +
+    'جميع الحقوق محفوظة © ' + new Date().getFullYear() + '<br>' +
+    'تم التطوير بواسطة: [اسمك هنا]<br>' +
+    'للتواصل: [رقم هاتفك أو بريدك الإلكتروني]' +
+    '</p>' +
+    '<p style="margin:5px 0; font-size:11px; color:#999;">يُحظر نسخ أو توزيع هذا النظام بدون إذن مسبق</p>' +
+    '</div>';
   html += '</body></html>';
   return html;
 }
@@ -914,6 +937,17 @@ function buildExpensesReportHTML(expensesRows, periodText) {
     html += renderTable(rows);
   }
 
+  // حقوق الطبع والنشر
+  html += '<div style="text-align:center; margin-top:40px; padding:20px; border-top:1px solid #ddd; color:#666; font-size:12px;">' +
+    '<p style="margin:5px 0;">' +
+    '<strong>نظام إدارة المبيعات والمخزون</strong><br>' +
+    'جميع الحقوق محفوظة © ' + (new Date()).getFullYear() + '<br>' +
+    'تم التطوير بواسطة: [اسمك هنا]<br>' +
+    'للتواصل: [رقم هاتفك أو بريدك الإلكتروني]' +
+    '</p>' +
+    '<p style="margin:5px 0; font-size:11px; color:#999;">يُحظر نسخ أو توزيع هذا النظام بدون إذن مسبق</p>' +
+    '</div>';
+  
   html += '</body></html>';
   return html;
 }
@@ -964,6 +998,14 @@ async function exportStoreData(storeId, format) {
     const periodText = `${formatDate(fromDate) || 'من البداية'} إلى ${formatDate(toDate) || 'حتى الآن'}`;
   if (format === 'json') {
     const arabic = { المحل: { اسم: store.name, نوع_السعر: getPriceTypeName(store.priceType) }, الفترة: periodText, الملخص: { إجمالي_المبيعات: totalSales, إجمالي_التسديدات: totalPayments, المتبقي: remaining }, المبيعات: mappedSalesForExport, التسديدات: mappedPaymentsForExport };
+    // إضافة حقوق الطبع في JSON
+    arabic.حقوق_النشر = {
+      النظام: 'نظام إدارة المبيعات والمخزون',
+      الحقوق: `جميع الحقوق محفوظة © ${new Date().getFullYear()}`,
+      المطور: '[اسمك هنا]',
+      التواصل: '[رقم هاتفك أو بريدك الإلكتروني]',
+      تحذير: 'يُحظر نسخ أو توزيع هذا النظام بدون إذن مسبق'
+    };
     const dataStr = JSON.stringify(arabic, null, 2);
     const blob = new Blob([dataStr], { type: 'application/json' }); const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `${filename}.json`;
@@ -975,6 +1017,15 @@ async function exportStoreData(storeId, format) {
     const summaryWs = XLSX.utils.json_to_sheet([{ إجمالي_المبيعات: totalSales, إجمالي_التسديدات: totalPayments, المتبقي: remaining }]); XLSX.utils.book_append_sheet(wb, summaryWs, 'الملخص');
     if (mappedSalesForExport.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mappedSalesForExport), 'المبيعات');
     if (mappedPaymentsForExport.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mappedPaymentsForExport), 'التسديدات');
+    // إضافة ورقة حقوق النشر
+    const copyrightData = [{
+      '': 'نظام إدارة المبيعات والمخزون',
+      ' ': `جميع الحقوق محفوظة © ${new Date().getFullYear()}`,
+      '  ': 'تم التطوير بواسطة: [اسمك هنا]',
+      '   ': 'للتواصل: [رقم هاتفك أو بريدك الإلكتروني]',
+      '    ': 'يُحظر نسخ أو توزيع هذا النظام بدون إذن مسبق'
+    }];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(copyrightData), 'حقوق النشر');
     XLSX.writeFile(wb, `${filename}.xlsx`); showNotification('تم تصدير بيانات المحل إلى ملف Excel', 'success');
   } else if (format === 'txt') {
     let txtContent = `تفاصيل المحل: ${store.name}\n\n` + `الفترة: ${periodText}\n` + `إجمالي المبيعات: ${totalSales}\n` + `إجمالي التسديدات: ${totalPayments}\n` + `المتبقي: ${remaining}\n\n` + '===== المبيعات =====\n\n';
@@ -987,6 +1038,14 @@ async function exportStoreData(storeId, format) {
       txtContent += ['التاريخ', 'المبلغ', 'ملاحظات'].join('\t') + '\n';
       mappedPaymentsForExport.forEach(p => { txtContent += [p.التاريخ, p.المبلغ, p.ملاحظات].join('\t') + '\n'; });
     } else { txtContent += 'لا توجد تسديدات\n'; }
+    // إضافة حقوق النشر
+    txtContent += '\n\n' + '='.repeat(50) + '\n';
+    txtContent += 'نظام إدارة المبيعات والمخزون\n';
+    txtContent += `جميع الحقوق محفوظة © ${new Date().getFullYear()}\n`;
+    txtContent += 'تم التطوير بواسطة: [اسمك هنا]\n';
+    txtContent += 'للتواصل: [رقم هاتفك أو بريدك الإلكتروني]\n';
+    txtContent += 'يُحظر نسخ أو توزيع هذا النظام بدون إذن مسبق\n';
+    txtContent += '='.repeat(50) + '\n';
     const blob = new Blob([txtContent], { type: 'text/plain' }); const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `${filename}.txt`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
