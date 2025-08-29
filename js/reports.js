@@ -889,6 +889,12 @@ function initReportsControls(){
 }
 
 // دوال تصدير التقارير الإضافية
+/**
+ * تصدير الملخصات المرئية بصيغ مختلفة
+ * يدعم: Excel, TXT, PDF (صفحة طباعة), Print
+ * ملاحظة: PDF لا ينشئ ملف PDF حقيقي، بل يفتح صفحة HTML قابلة للطباعة
+ * @param {string} format - صيغة التصدير المطلوبة
+ */
 function exportSummaries(format) {
   const { fromDate, toDate } = getPeriodRange('summaries');
   const salesData = data.sales.filter(s => inPeriod(s.date, fromDate, toDate));
@@ -919,10 +925,18 @@ function exportSummaries(format) {
     downloadTextFile(content, `ملخصات_${moment().format('YYYY-MM-DD')}.txt`);
     showNotification('تم تصدير الملخصات إلى ملف نصي', 'success');
   } else if (format === 'pdf' || format === 'print') {
+    // ملاحظة: كلا الخيارين (pdf و print) يفتحان نفس صفحة الطباعة
+    // يمكن للمستخدم طباعتها أو حفظها كـ PDF من المتصفح
     openSummariesPrintPage(fromDate, toDate, totalSales, totalPayments, totalExpenses);
   }
 }
 
+/**
+ * تصدير تقرير الديون بصيغ مختلفة
+ * يدعم: Excel, TXT, PDF (صفحة طباعة), Print
+ * ملاحظة: PDF لا ينشئ ملف PDF حقيقي، بل يفتح صفحة HTML قابلة للطباعة
+ * @param {string} format - صيغة التصدير المطلوبة
+ */
 function exportDebts(format) {
   const { fromDate, toDate } = getPeriodRange('debts');
   const debtData = generateDebtReportDataForExport();
@@ -1035,7 +1049,16 @@ function openProfitPrintPage(fromDate, toDate, profitData) {
   openPrintWindow(html);
 }
 
-// دالة مساعدة لبناء صفحة الطباعة
+/**
+ * بناء صفحة HTML قابلة للطباعة للتقارير
+ * تستخدم لإنشاء صفحات قابلة للطباعة أو الحفظ كـ PDF
+ * ملاحظة: هذه الدالة تنشئ HTML فقط، ولا تنشئ ملف PDF حقيقي
+ * @param {string} title - عنوان التقرير
+ * @param {string} period - فترة التقرير
+ * @param {Array|Object} data - بيانات التقرير
+ * @param {string} type - نوع التقرير (debts, profit, إلخ)
+ * @returns {string} كود HTML للصفحة
+ */
 function buildPrintPageHTML(title, period, data, type) {
   let html = `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
