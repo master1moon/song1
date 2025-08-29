@@ -416,19 +416,74 @@ function editStore(id) {
 }
 
 /**
- * حذف محل من القائمة
+ * حذف محل من القائمة مع جميع البيانات المرتبطة
  * يطلب تأكيد من المستخدم قبل الحذف
- * ينقل المحل المحذوف إلى سلة المحذوفات إذا كانت متاحة
+ * يعرض عدد العمليات المرتبطة قبل الحذف
+ * ينقل المحل وجميع بياناته المرتبطة إلى سلة المحذوفات
  * يحدث جميع الجداول والتقارير المتعلقة
  * @param {string} id - معرف المحل المراد حذفه
  */
 function deleteStore(id) {
-  if (!confirm('هل أنت متأكد من حذف هذا المحل؟')) return;
   const store = data.stores.find(s => s.id === id);
+  if (!store) return;
+  
+  // حساب البيانات المرتبطة
+  const relatedSales = data.sales.filter(s => s.storeId === id);
+  const relatedPayments = data.payments.filter(p => p.storeId === id);
+  
+  // عرض تأكيد مفصل
+  let confirmMessage = `هل أنت متأكد من حذف محل "${store.name}"؟`;
+  
+  if (relatedSales.length > 0 || relatedPayments.length > 0) {
+    confirmMessage += `\n\nسيتم أيضاً حذف:`;
+    if (relatedSales.length > 0) {
+      confirmMessage += `\n- ${relatedSales.length} عملية بيع`;
+    }
+    if (relatedPayments.length > 0) {
+      confirmMessage += `\n- ${relatedPayments.length} عملية دفع`;
+    }
+    confirmMessage += `\n\nيمكن استرجاع جميع البيانات من سلة المحذوفات`;
+  }
+  
+  if (!confirm(confirmMessage)) return;
+  
+  // حذف المحل
   data.stores = data.stores.filter(s => s.id !== id);
+  
+  // حذف البيانات المرتبطة
+  data.sales = data.sales.filter(s => s.storeId !== id);
+  data.payments = data.payments.filter(p => p.storeId !== id);
+  
+  // حفظ التغييرات
   saveData();
-  (async()=>{ try{ if (store && typeof addToTrash==='function') await addToTrash('stores', store); }catch{}; refreshCurrentView(); updateProfitReport(); })();
-  showNotification('تم حذف المحل بنجاح', 'success');
+  
+  // نقل كل شيء إلى سلة المحذوفات
+  (async() => {
+    try {
+      if (typeof addToTrash === 'function') {
+        // نقل المحل
+        await addToTrash('stores', store);
+        
+        // نقل المبيعات المرتبطة
+        for (const sale of relatedSales) {
+          await addToTrash('sales', sale);
+        }
+        
+        // نقل المدفوعات المرتبطة
+        for (const payment of relatedPayments) {
+          await addToTrash('payments', payment);
+        }
+      }
+    } catch(e) {
+      console.error('خطأ في نقل البيانات إلى سلة المحذوفات:', e);
+    }
+    
+    // تحديث العروض
+    refreshCurrentView();
+    updateProfitReport();
+  })();
+  
+  showNotification('تم حذف المحل وجميع البيانات المرتبطة بنجاح', 'success');
 }
 
 /**
