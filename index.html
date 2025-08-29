@@ -4059,25 +4059,68 @@
             const store = data.stores.find(s => s.id === storeId);
             if (!store || !store.phone) return;
             
-            const sales = data.sales.filter(s => s.storeId === storeId);
-            const payments = data.payments.filter(p => p.storeId === storeId);
-            const totalSales = sales.reduce((sum, sale) => sum + sale.total, 0);
-            const totalPayments = payments.reduce((sum, payment) => sum + payment.amount, 0);
-            const balance = totalSales - totalPayments;
+            const sales = data.sales.filter(s => s.storeId === storeId)
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
+            const payments = data.payments.filter(p => p.storeId === storeId)
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
             
-            // إنشاء رابط للتقرير
-            const reportUrl = window.location.origin + window.location.pathname + `#store-report-${storeId}`;
+            // دمج وترتيب جميع العمليات حسب التاريخ
+            const allTransactions = [];
+            sales.forEach(sale => allTransactions.push({...sale, type: 'sale'}));
+            payments.forEach(payment => allTransactions.push({...payment, type: 'payment'}));
+            allTransactions.sort((a, b) => new Date(a.date) - new Date(b.date));
             
-            const message = encodeURIComponent(
-                `*تقرير محل ${store.name}*\n` +
-                `━━━━━━━━━━━━━\n` +
-                `📊 *إجمالي المبيعات:* ${formatNumber(totalSales)} ريال\n` +
-                `💰 *إجمالي المدفوعات:* ${formatNumber(totalPayments)} ريال\n` +
-                `💳 *الرصيد الحالي:* ${formatNumber(Math.abs(balance))} ريال ${balance >= 0 ? '✅ دائن' : '❌ مدين'}\n\n` +
-                `📅 *تاريخ التقرير:* ${new Date().toLocaleDateString('ar-YE')}\n\n` +
-                `🔗 *رابط التقرير الكامل:*\n${reportUrl}\n\n` +
-                `_تم إنشاء هذا التقرير بواسطة نظام إدارة المبيعات_`
-            );
+            // بناء التقرير
+            let report = `*تقرير محل ${store.name}*\n`;
+            report += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+            
+            let runningBalance = 0;
+            let totalSalesSum = 0;
+            
+            // عنوان الجدول
+            report += `*المبيعات* | *التسديدات* | *إجمالي المبيعات* | *الرصيد*\n`;
+            report += `────────────────────────────\n`;
+            
+            allTransactions.forEach(transaction => {
+                if (transaction.type === 'sale') {
+                    totalSalesSum += transaction.total;
+                    runningBalance += transaction.total;
+                    
+                    // الحصول على اسم الباقة
+                    let packageName = 'مبلغ مخصص';
+                    if (transaction.packageId) {
+                        const pkg = data.packages.find(p => p.id === transaction.packageId);
+                        if (pkg) packageName = pkg.name;
+                    }
+                    
+                    report += `*البيع:*\n`;
+                    report += `📅 ${formatDateEn(transaction.date)}\n`;
+                    report += `📦 ${packageName}\n`;
+                    report += `🔢 الكمية: ${transaction.quantity || 1}\n`;
+                    report += `💰 ${formatNumber(transaction.total)} ريال\n`;
+                    report += `| - | ${formatNumber(totalSalesSum)} | ${formatNumber(runningBalance)}\n`;
+                    report += `────────────────────────────\n`;
+                    
+                } else if (transaction.type === 'payment') {
+                    runningBalance -= transaction.amount;
+                    
+                    report += `- | *التسديد:*\n`;
+                    report += `- | 📅 ${formatDateEn(transaction.date)}\n`;
+                    report += `- | 💵 ${formatNumber(transaction.amount)} ريال\n`;
+                    report += `- | ${formatNumber(totalSalesSum)} | ${formatNumber(runningBalance)}\n`;
+                    report += `────────────────────────────\n`;
+                }
+            });
+            
+            // ملخص نهائي
+            const totalPayments = payments.reduce((sum, p) => sum + p.amount, 0);
+            report += `\n*الملخص النهائي:*\n`;
+            report += `📊 إجمالي المبيعات: ${formatNumber(totalSalesSum)} ريال\n`;
+            report += `💰 إجمالي التسديدات: ${formatNumber(totalPayments)} ريال\n`;
+            report += `💳 الرصيد النهائي: ${formatNumber(Math.abs(runningBalance))} ريال ${runningBalance >= 0 ? '(دائن)' : '(مدين)'}\n\n`;
+            report += `📅 تاريخ التقرير: ${new Date().toLocaleDateString('ar-YE')}`;
+            
+            const message = encodeURIComponent(report);
             
             // فتح واتساب مع الرسالة
             const whatsappUrl = `https://wa.me/${store.phone.replace(/^0/, '967')}?text=${message}`;
