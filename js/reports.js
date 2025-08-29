@@ -829,7 +829,7 @@ async function exportStoreData(storeId, format) {
     // كشف الحساب المتحرك الجديد
     try {
       // تحضير جميع العمليات بترتيب زمني
-      const allTransactions = [];
+      let allTransactions = [];
       
       // إضافة المبيعات
       storeSales.forEach(sale => {
