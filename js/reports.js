@@ -832,17 +832,66 @@ function buildAccountStatementHTML(store, periodText, allTransactions, previousB
         </div>
         
         <!-- حقوق الطبع والنشر -->
-        <div style="text-align: center; margin-top: 40px; padding: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px;">
-            <p style="margin: 5px 0;">
-                <strong>نظام إدارة المبيعات والمخزون</strong><br>
-                جميع الحقوق محفوظة © ${new Date().getFullYear()}<br>
-                تم التطوير بواسطة: م / نجيب المقداد<br>
-                للتواصل: 775396439 - 737896431
-            </p>
-            <p style="margin: 5px 0; font-size: 11px; color: #999;">
-                يُحظر نسخ أو توزيع هذا النظام بدون إذن مسبق
-            </p>
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-top: 50px; padding: 30px; border-radius: 15px; color: white; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; backdrop-filter: blur(10px);">
+                <h4 style="margin: 0 0 15px 0; font-size: 18px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                    💼 نظام إدارة المبيعات والمخزون والمصروفات
+                </h4>
+                <p style="margin: 10px 0; font-size: 14px;">
+                    جميع الحقوق محفوظة © ${new Date().getFullYear()}
+                </p>
+                <div style="margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 8px;">
+                    <p style="margin: 5px 0; font-size: 16px; font-weight: bold;">
+                        👨‍💻 تم التطوير بواسطة: م / نجيب المقداد
+                    </p>
+                    <p style="margin: 10px 0; font-size: 14px;">
+                        📱 للتواصل: 
+                        <span style="background: rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 5px; margin: 0 5px; cursor: pointer; transition: all 0.3s ease;" 
+                              onclick="copyPhoneNumber('775396439')" 
+                              onmouseover="this.style.background='rgba(255,255,255,0.5)'" 
+                              onmouseout="this.style.background='rgba(255,255,255,0.3)'">
+                            775396439
+                        </span>
+                        أو
+                        <span style="background: rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 5px; margin: 0 5px; cursor: pointer; transition: all 0.3s ease;" 
+                              onclick="copyPhoneNumber('737896431')" 
+                              onmouseover="this.style.background='rgba(255,255,255,0.5)'" 
+                              onmouseout="this.style.background='rgba(255,255,255,0.3)'">
+                            737896431
+                        </span>
+                    </p>
+                </div>
+                <p style="margin: 15px 0 0 0; font-size: 12px; opacity: 0.9; font-style: italic;">
+                    ⚖️ يُحظر نسخ أو توزيع هذا النظام بدون إذن مسبق
+                </p>
+            </div>
         </div>
+        
+        <script>
+        function copyPhoneNumber(number) {
+            // نسخ الرقم إلى الحافظة
+            navigator.clipboard.writeText(number).then(function() {
+                // إظهار إشعار مؤقت
+                const notification = document.createElement('div');
+                notification.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #4CAF50; color: white; padding: 15px 30px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 10000; font-size: 16px; animation: fadeInOut 2s ease-in-out;';
+                notification.innerHTML = '✅ تم نسخ الرقم: ' + number;
+                document.body.appendChild(notification);
+                
+                // إضافة الأنيميشن
+                const style = document.createElement('style');
+                style.textContent = '@keyframes fadeInOut { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 80% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } }';
+                document.head.appendChild(style);
+                
+                // إزالة الإشعار بعد 2 ثانية
+                setTimeout(function() {
+                    notification.remove();
+                    style.remove();
+                }, 2000);
+            }).catch(function(err) {
+                alert('تعذر نسخ الرقم. يمكنك نسخه يدوياً: ' + number);
+            });
+        }
+        </script>
     </div>
 </body>
 </html>`;
@@ -859,22 +908,27 @@ function buildStoreReportHTML(store, periodText, mappedSalesForExport, mappedPay
   html += '<!doctype html><html lang="ar" dir="rtl">';
   html += '<head><meta charset="utf-8"><title>كشف حساب: ' + store.name + '</title>';
   html += '<style>' + "@font-face { font-family:'AmiriExport'; src: url('" + fontUrl + "') format('woff2'); font-weight:400; font-style:normal; }" +
-    "body { font-family:'AmiriExport','Arial',sans-serif; padding:16px; }" + '.summary{ display:flex; gap:12px; justify-content:flex-end; margin:10px 0; }' + '.box{ border:1px solid #ddd; padding:8px 12px; }' + 'table{ width:100%; border-collapse:collapse; text-align:right; margin-top:8px; }' + 'th,td{ border:1px solid #ccc; padding:6px; }' + 'h3,h4{ margin:12px 0 6px; text-align:right; }' + '.actions{ display:flex; justify-content:flex-start; margin-bottom:12px; gap:8px; }' + '.actions button{ padding:8px 12px; border:1px solid #2c3e50; background:#2c3e50; color:#fff; border-radius:6px; font-size:14px; }' + '@media print { .actions{ display:none } }' + '@page{ size:A4; margin:12mm; }' + '</style></head>';
+    "body { font-family:'AmiriExport','Arial',sans-serif; padding:16px; }" + '.summary{ display:flex; gap:12px; justify-content:flex-end; margin:10px 0; }' + '.box{ border:1px solid #ddd; padding:8px 12px; }' + 'table{ width:100%; border-collapse:collapse; text-align:right; margin-top:8px; }' + 'th,td{ border:1px solid #ccc; padding:6px; }' + 'h3,h4{ margin:12px 0 6px; text-align:right; }' + '.actions{ display:flex; justify-content:flex-start; margin-bottom:12px; gap:8px; }' + '.actions button{ padding:8px 12px; border:1px solid #2c3e50; background:#2c3e50; color:#fff; border-radius:6px; font-size:14px; }' + '@media print { .actions{ display:none } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; } }' + '@page{ size:A4; margin:12mm; }' + '</style></head>';
   html += '<body>' + '<div class="actions"><button onclick="window.print()">حفظ التقرير كـ PDF</button></div>' + '<h3>كشف حساب: ' + store.name + '</h3>' + '<div>الفترة: ' + periodText + ' | تاريخ التصدير: ' + (new Date()).toISOString().slice(0, 10) + '</div>' + '<div class="summary">' + '<div class="box">إجمالي المبيعات: <span class="currency">' + (totalSales || 0).toLocaleString('en-US') + '</span></div>' + '<div class="box">إجمالي التسديدات: <span class="currency">' + (totalPayments || 0).toLocaleString('en-US') + '</span></div>' + '<div class="box">المتبقي: <span class="currency">' + (remaining || 0).toLocaleString('en-US') + '</span></div>' + '</div>';
   html += '<h4>المبيعات</h4>';
   if (mappedSalesForExport.length > 0) html += '<table><thead><tr><th>التاريخ</th><th>التفاصيل</th><th>الباقة</th><th>الكمية/المبلغ</th><th>الإجمالي</th></tr></thead><tbody>' + buildSalesRows() + '</tbody></table>'; else html += '<div>لا توجد مبيعات ضمن الفترة</div>';
   html += '<h4>التسديدات</h4>';
   if (mappedPaymentsForExport.length > 0) html += '<table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>ملاحظات</th></tr></thead><tbody>' + buildPaymentRows() + '</tbody></table>'; else html += '<div>لا توجد تسديدات ضمن الفترة</div>';
   // حقوق الطبع والنشر
-  html += '<div style="text-align:center; margin-top:40px; padding:20px; border-top:1px solid #ddd; color:#666; font-size:12px;">' +
-    '<p style="margin:5px 0;">' +
-    '<strong>نظام إدارة المبيعات والمخزون</strong><br>' +
-    'جميع الحقوق محفوظة © ' + new Date().getFullYear() + '<br>' +
-    'تم التطوير بواسطة: م / نجيب المقداد<br>' +
-    'للتواصل: 775396439 - 737896431' +
-    '</p>' +
-    '<p style="margin:5px 0; font-size:11px; color:#999;">يُحظر نسخ أو توزيع هذا النظام بدون إذن مسبق</p>' +
-    '</div>';
+  html += '<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-top: 50px; padding: 30px; border-radius: 15px; color: white; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">' +
+    '<div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; backdrop-filter: blur(10px);">' +
+    '<h4 style="margin: 0 0 15px 0; font-size: 18px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">💼 نظام إدارة المبيعات والمخزون والمصروفات</h4>' +
+    '<p style="margin: 10px 0; font-size: 14px;">جميع الحقوق محفوظة © ' + new Date().getFullYear() + '</p>' +
+    '<div style="margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 8px;">' +
+    '<p style="margin: 5px 0; font-size: 16px; font-weight: bold;">👨‍💻 تم التطوير بواسطة: م / نجيب المقداد</p>' +
+    '<p style="margin: 10px 0; font-size: 14px;">📱 للتواصل: ' +
+    '<span style="background: rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 5px; margin: 0 5px; cursor: pointer;" onclick="copyPhoneNumber(\'775396439\')">775396439</span>' +
+    ' أو ' +
+    '<span style="background: rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 5px; margin: 0 5px; cursor: pointer;" onclick="copyPhoneNumber(\'737896431\')">737896431</span>' +
+    '</p></div>' +
+    '<p style="margin: 15px 0 0 0; font-size: 12px; opacity: 0.9; font-style: italic;">⚖️ يُحظر نسخ أو توزيع هذا النظام بدون إذن مسبق</p>' +
+    '</div></div>' +
+    '<script>function copyPhoneNumber(number){navigator.clipboard.writeText(number).then(function(){const n=document.createElement("div");n.style.cssText="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#4CAF50;color:white;padding:15px 30px;border-radius:8px;box-shadow:0 5px 15px rgba(0,0,0,0.3);z-index:10000;font-size:16px;animation:fadeInOut 2s ease-in-out;";n.innerHTML="✅ تم نسخ الرقم: "+number;document.body.appendChild(n);const s=document.createElement("style");s.textContent="@keyframes fadeInOut{0%{opacity:0;transform:translate(-50%,-50%) scale(0.8);}20%{opacity:1;transform:translate(-50%,-50%) scale(1);}80%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-50%) scale(0.8);}}";document.head.appendChild(s);setTimeout(function(){n.remove();s.remove();},2000);}).catch(function(err){alert("تعذر نسخ الرقم. يمكنك نسخه يدوياً: "+number);});}</script>';
   html += '</body></html>';
   return html;
 }
@@ -938,15 +992,20 @@ function buildExpensesReportHTML(expensesRows, periodText) {
   }
 
   // حقوق الطبع والنشر
-  html += '<div style="text-align:center; margin-top:40px; padding:20px; border-top:1px solid #ddd; color:#666; font-size:12px;">' +
-    '<p style="margin:5px 0;">' +
-    '<strong>نظام إدارة المبيعات والمخزون</strong><br>' +
-    'جميع الحقوق محفوظة © ' + (new Date()).getFullYear() + '<br>' +
-    'تم التطوير بواسطة: م / نجيب المقداد<br>' +
-    'للتواصل: 775396439 - 737896431' +
-    '</p>' +
-    '<p style="margin:5px 0; font-size:11px; color:#999;">يُحظر نسخ أو توزيع هذا النظام بدون إذن مسبق</p>' +
-    '</div>';
+  html += '<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-top: 50px; padding: 30px; border-radius: 15px; color: white; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">' +
+    '<div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; backdrop-filter: blur(10px);">' +
+    '<h4 style="margin: 0 0 15px 0; font-size: 18px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">💼 نظام إدارة المبيعات والمخزون والمصروفات</h4>' +
+    '<p style="margin: 10px 0; font-size: 14px;">جميع الحقوق محفوظة © ' + (new Date()).getFullYear() + '</p>' +
+    '<div style="margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 8px;">' +
+    '<p style="margin: 5px 0; font-size: 16px; font-weight: bold;">👨‍💻 تم التطوير بواسطة: م / نجيب المقداد</p>' +
+    '<p style="margin: 10px 0; font-size: 14px;">📱 للتواصل: ' +
+    '<span style="background: rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 5px; margin: 0 5px; cursor: pointer;" onclick="copyPhoneNumber(\'775396439\')">775396439</span>' +
+    ' أو ' +
+    '<span style="background: rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 5px; margin: 0 5px; cursor: pointer;" onclick="copyPhoneNumber(\'737896431\')">737896431</span>' +
+    '</p></div>' +
+    '<p style="margin: 15px 0 0 0; font-size: 12px; opacity: 0.9; font-style: italic;">⚖️ يُحظر نسخ أو توزيع هذا النظام بدون إذن مسبق</p>' +
+    '</div></div>' +
+    '<script>function copyPhoneNumber(number){navigator.clipboard.writeText(number).then(function(){const n=document.createElement("div");n.style.cssText="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#4CAF50;color:white;padding:15px 30px;border-radius:8px;box-shadow:0 5px 15px rgba(0,0,0,0.3);z-index:10000;font-size:16px;animation:fadeInOut 2s ease-in-out;";n.innerHTML="✅ تم نسخ الرقم: "+number;document.body.appendChild(n);const s=document.createElement("style");s.textContent="@keyframes fadeInOut{0%{opacity:0;transform:translate(-50%,-50%) scale(0.8);}20%{opacity:1;transform:translate(-50%,-50%) scale(1);}80%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-50%) scale(0.8);}}";document.head.appendChild(s);setTimeout(function(){n.remove();s.remove();},2000);}).catch(function(err){alert("تعذر نسخ الرقم. يمكنك نسخه يدوياً: "+number);});}</script>';
   
   html += '</body></html>';
   return html;
@@ -1000,7 +1059,7 @@ async function exportStoreData(storeId, format) {
     const arabic = { المحل: { اسم: store.name, نوع_السعر: getPriceTypeName(store.priceType) }, الفترة: periodText, الملخص: { إجمالي_المبيعات: totalSales, إجمالي_التسديدات: totalPayments, المتبقي: remaining }, المبيعات: mappedSalesForExport, التسديدات: mappedPaymentsForExport };
     // إضافة حقوق الطبع في JSON
     arabic.حقوق_النشر = {
-      النظام: 'نظام إدارة المبيعات والمخزون',
+      النظام: 'نظام إدارة المبيعات والمخزون والمصروفات',
       الحقوق: `جميع الحقوق محفوظة © ${new Date().getFullYear()}`,
       المطور: 'م / نجيب المقداد',
       التواصل: '775396439 - 737896431',
@@ -1019,7 +1078,7 @@ async function exportStoreData(storeId, format) {
     if (mappedPaymentsForExport.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mappedPaymentsForExport), 'التسديدات');
     // إضافة ورقة حقوق النشر
     const copyrightData = [{
-      '': 'نظام إدارة المبيعات والمخزون',
+      '': 'نظام إدارة المبيعات والمخزون والمصروفات',
       ' ': `جميع الحقوق محفوظة © ${new Date().getFullYear()}`,
       '  ': 'تم التطوير بواسطة: م / نجيب المقداد',
       '   ': 'للتواصل: 775396439 - 737896431',
@@ -1040,7 +1099,7 @@ async function exportStoreData(storeId, format) {
     } else { txtContent += 'لا توجد تسديدات\n'; }
     // إضافة حقوق النشر
     txtContent += '\n\n' + '='.repeat(50) + '\n';
-    txtContent += 'نظام إدارة المبيعات والمخزون\n';
+    txtContent += 'نظام إدارة المبيعات والمخزون والمصروفات\n';
     txtContent += `جميع الحقوق محفوظة © ${new Date().getFullYear()}\n`;
     txtContent += 'تم التطوير بواسطة: م / نجيب المقداد\n';
     txtContent += 'للتواصل: 775396439 - 737896431\n';
