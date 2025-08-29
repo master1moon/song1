@@ -647,9 +647,34 @@ function buildAccountStatementHTML(store, periodText, allTransactions, previousB
                 -webkit-print-color-adjust: exact !important;
             }
         }
+        /* إعدادات أفضل للطباعة متعددة الصفحات */
+        .page-break-before {
+            page-break-before: always;
+        }
+        .page-break-avoid {
+            page-break-inside: avoid;
+        }
+        /* رأس وتذييل الصفحة */
         @page {
             size: A4;
             margin: 15mm;
+            @top-center {
+                content: "كشف حساب متحرك";
+            }
+            @bottom-center {
+                content: "صفحة " counter(page) " من " counter(pages);
+            }
+        }
+        /* تأكد من عدم قطع الصفوف */
+        tr {
+            page-break-inside: avoid;
+        }
+        .date-group-header {
+            page-break-after: avoid;
+        }
+        /* الإجمالي النهائي في آخر صفحة فقط */
+        .final-summary {
+            page-break-inside: avoid;
         }
     </style>
 </head>
@@ -777,16 +802,22 @@ function buildAccountStatementHTML(store, periodText, allTransactions, previousB
   
   html += `
             </tbody>
-            <tfoot>
-                <tr class="summary-row">
-                    <td colspan="2"><strong>الإجمالي</strong></td>
-                    <td class="debit"><strong>${formatNumber(totalDebits)}</strong></td>
-                    <td class="credit"><strong>${formatNumber(totalCredits)}</strong></td>
-                    <td class="${finalBalanceClass}"><strong>${formatNumber(Math.abs(finalBalance))} ${finalBalanceText}</strong></td>
-                    <td></td>
-                </tr>
-            </tfoot>
         </table>
+        
+        <!-- الإجمالي النهائي - يظهر فقط في آخر الصفحة الأخيرة -->
+        <div class="final-summary" style="margin-top: 30px; page-break-inside: avoid;">
+            <table style="width: 100%;">
+                <tbody>
+                    <tr class="summary-row">
+                        <td colspan="2" style="width: 47%;"><strong>الإجمالي النهائي</strong></td>
+                        <td class="debit" style="width: 13%;"><strong>${formatNumber(totalDebits)}</strong></td>
+                        <td class="credit" style="width: 13%;"><strong>${formatNumber(totalCredits)}</strong></td>
+                        <td class="${finalBalanceClass}" style="width: 15%;"><strong>${formatNumber(Math.abs(finalBalance))} ${finalBalanceText}</strong></td>
+                        <td style="width: 12%;"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
         <div class="summary-box">
             <h3>📊 ملخص الحساب</h3>
