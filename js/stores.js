@@ -292,8 +292,8 @@ function showStoreDetails(storeId) {
           <button class="btn btn-outline-info" onclick="shareReport('${storeId}')" title="مشاركة التقرير">
             <i class="fas fa-share-alt"></i>
           </button>
-          <button class="btn btn-outline-success" onclick="shareViaWhatsApp('${storeId}')" title="مشاركة واتساب">
-            <i class="fab fa-whatsapp"></i>
+          <button class="btn btn-outline-success" onclick="shareViaWhatsApp('${storeId}')" title="مشاركة التقرير">
+            <i class="fas fa-share-alt"></i>
           </button>
         </div>
       </div>

@@ -4120,11 +4120,72 @@
             report += `💳 الرصيد النهائي: ${formatNumber(Math.abs(runningBalance))} ريال ${runningBalance >= 0 ? '(دائن)' : '(مدين)'}\n\n`;
             report += `📅 تاريخ التقرير: ${new Date().toLocaleDateString('ar-YE')}`;
             
-            const message = encodeURIComponent(report);
+            // استخدام Web Share API إذا كان متاحاً
+            if (navigator.share) {
+                try {
+                    navigator.share({
+                        title: `تقرير محل ${store.name}`,
+                        text: report
+                    }).then(() => {
+                        console.log('تمت المشاركة بنجاح');
+                    }).catch((error) => {
+                        console.log('تم إلغاء المشاركة:', error);
+                    });
+                } catch (error) {
+                    console.error('خطأ في المشاركة:', error);
+                    // في حالة الفشل، استخدام الطريقة القديمة
+                    fallbackWhatsApp();
+                }
+            } else {
+                // إذا لم يكن Web Share API متاحاً، اعرض خيارات
+                showShareOptions();
+            }
             
-            // فتح واتساب مع الرسالة
-            const whatsappUrl = `https://wa.me/${store.phone.replace(/^0/, '967')}?text=${message}`;
-            window.open(whatsappUrl, '_blank');
+            // دالة احتياطية لفتح واتساب مباشرة
+            function fallbackWhatsApp() {
+                const message = encodeURIComponent(report);
+                const whatsappUrl = `https://wa.me/${store.phone.replace(/^0/, '967')}?text=${message}`;
+                window.open(whatsappUrl, '_blank');
+            }
+            
+            // عرض خيارات المشاركة
+            function showShareOptions() {
+                const message = encodeURIComponent(report);
+                const phoneNumber = store.phone.replace(/^0/, '967');
+                
+                // إنشاء نافذة منبثقة بالخيارات
+                const modal = document.createElement('div');
+                modal.className = 'modal fade show';
+                modal.style.display = 'block';
+                modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+                modal.innerHTML = `
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">مشاركة التقرير</h5>
+                                <button type="button" class="btn-close" onclick="this.closest('.modal').remove()"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-success" onclick="window.open('https://wa.me/${phoneNumber}?text=${message}', '_blank'); this.closest('.modal').remove();">
+                                        <i class="fab fa-whatsapp"></i> WhatsApp
+                                    </button>
+                                    <button class="btn btn-success" onclick="window.open('https://api.whatsapp.com/send?phone=${phoneNumber}&text=${message}', '_blank'); this.closest('.modal').remove();">
+                                        <i class="fab fa-whatsapp"></i> WhatsApp Business
+                                    </button>
+                                    <button class="btn btn-info" onclick="window.open('https://t.me/share/url?text=${message}', '_blank'); this.closest('.modal').remove();">
+                                        <i class="fab fa-telegram"></i> Telegram
+                                    </button>
+                                    <button class="btn btn-primary" onclick="copyToClipboard(decodeURIComponent('${message}')); this.closest('.modal').remove(); showNotification('تم نسخ التقرير', 'success');">
+                                        <i class="fas fa-copy"></i> نسخ التقرير
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
         }
         
         // تصدير دوال التواصل
