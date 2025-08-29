@@ -852,12 +852,62 @@ async function exportStoreData(storeId, format) {
         });
       });
       
-      // ترتيب حسب التاريخ
+      // ترتيب حسب التاريخ أولاً
       allTransactions.sort((a, b) => {
         const dateA = new Date(a.date);
         const dateB = new Date(b.date);
         return dateA - dateB;
       });
+      
+      // إعادة ترتيب العمليات في نفس اليوم حسب الرصيد
+      const reorderTransactionsByBalance = (transactions, startBalance) => {
+        const transactionsByDate = {};
+        
+        // تجميع العمليات حسب التاريخ
+        transactions.forEach(t => {
+          const dateKey = t.date;
+          if (!transactionsByDate[dateKey]) {
+            transactionsByDate[dateKey] = { sales: [], payments: [] };
+          }
+          if (t.type === 'sale') {
+            transactionsByDate[dateKey].sales.push(t);
+          } else if (t.type === 'payment') {
+            transactionsByDate[dateKey].payments.push(t);
+          }
+        });
+        
+        // إعادة بناء قائمة العمليات بالترتيب الصحيح
+        const reorderedTransactions = [];
+        let currentBalance = startBalance;
+        
+        Object.keys(transactionsByDate).sort().forEach(date => {
+          const dayTransactions = transactionsByDate[date];
+          
+          // إذا كان هناك رصيد دائن سابق، ضع التسديدات أولاً
+          if (currentBalance > 0 && dayTransactions.payments.length > 0) {
+            dayTransactions.payments.forEach(payment => {
+              reorderedTransactions.push(payment);
+              currentBalance -= payment.amount;
+            });
+            dayTransactions.sales.forEach(sale => {
+              reorderedTransactions.push(sale);
+              currentBalance += sale.amount;
+            });
+          } else {
+            // وإلا، ضع المبيعات أولاً ثم التسديدات
+            dayTransactions.sales.forEach(sale => {
+              reorderedTransactions.push(sale);
+              currentBalance += sale.amount;
+            });
+            dayTransactions.payments.forEach(payment => {
+              reorderedTransactions.push(payment);
+              currentBalance -= payment.amount;
+            });
+          }
+        });
+        
+        return reorderedTransactions;
+      };
       
       // حساب الرصيد السابق إذا كانت هناك فترة محددة
       let previousBalance = 0;
@@ -868,6 +918,9 @@ async function exportStoreData(storeId, format) {
         const prevTotalPayments = prevPayments.reduce((sum, p) => sum + p.amount, 0);
         previousBalance = prevTotalSales - prevTotalPayments;
       }
+      
+      // تطبيق إعادة الترتيب بناءً على الرصيد السابق
+      allTransactions = reorderTransactionsByBalance(allTransactions, previousBalance);
       
       // بناء التقرير
       const html = buildAccountStatementHTML(store, periodText, allTransactions, previousBalance);
