@@ -244,10 +244,17 @@ if (typeof window !== 'undefined') {
  */
 function showStoreDetails(storeId) {
   const store = data.stores.find(s => s.id === storeId); 
-  if (!store) return;
+  if (!store) {
+    showNotification('المحل غير موجود', 'error');
+    return;
+  }
   
   // تحديث العنوان
   const headerEl = document.getElementById('storeHeader');
+  if (!headerEl) {
+    console.error('عنصر storeHeader غير موجود');
+    return;
+  }
   headerEl.innerHTML = `
     <div class="d-flex justify-content-between align-items-center">
       <span>تفاصيل المحل: ${store.name}</span>
@@ -476,6 +483,8 @@ function deleteStore(id) {
       }
     } catch(e) {
       console.error('خطأ في نقل البيانات إلى سلة المحذوفات:', e);
+      // إظهار تحذير للمستخدم دون إيقاف العملية
+      showNotification('تحذير: قد لا تكون النسخة الاحتياطية كاملة في سلة المحذوفات', 'warning');
     }
     
     // تحديث العروض
@@ -503,6 +512,18 @@ function saveStore() {
   if (!name) { 
     showNotification('يرجى إدخال اسم المحل', 'error'); 
     return; 
+  }
+  
+  // التحقق من عدم تكرار اسم المحل
+  const duplicateStore = data.stores.find(s => 
+    s.name.trim().toLowerCase() === name.trim().toLowerCase() && 
+    s.id !== id // استثناء المحل الحالي عند التعديل
+  );
+  
+  if (duplicateStore) {
+    showNotification('يوجد محل آخر بنفس الاسم، يرجى اختيار اسم مختلف', 'error');
+    document.getElementById('storeName').focus();
+    return;
   }
   
   // التحقق من صحة رقم الهاتف اليمني إذا تم إدخاله
