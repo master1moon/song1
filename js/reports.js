@@ -372,6 +372,293 @@ function exportData() {
   }
 }
 
+/**
+ * بناء تقرير كشف الحساب المتحرك - نموذج جديد احترافي
+ * يعرض جميع العمليات بترتيب زمني مع رصيد متحرك بعد كل عملية
+ * @param {Object} store - بيانات المحل
+ * @param {string} periodText - نص الفترة الزمنية
+ * @param {Array} allTransactions - جميع العمليات (مبيعات وتسديدات) مرتبة زمنياً
+ * @param {number} previousBalance - الرصيد السابق (قبل الفترة المحددة)
+ * @returns {string} كود HTML للتقرير
+ */
+function buildAccountStatementHTML(store, periodText, allTransactions, previousBalance = 0) {
+  const baseUrl = (function () { try { return new URL('.', location.href).href; } catch (e) { return location.href.substring(0, location.href.lastIndexOf('/') + 1); } })();
+  const fontUrl = baseUrl + 'fonts/Amiri-Regular.woff2';
+  
+  // حساب الرصيد المتحرك
+  let runningBalance = previousBalance;
+  const transactionsWithBalance = allTransactions.map(t => {
+    if (t.type === 'sale') {
+      runningBalance += t.amount;
+    } else if (t.type === 'payment') {
+      runningBalance -= t.amount;
+    }
+    return { ...t, balance: runningBalance };
+  });
+  
+  // حساب الإجماليات
+  const totalDebits = allTransactions.filter(t => t.type === 'sale').reduce((sum, t) => sum + t.amount, 0);
+  const totalCredits = allTransactions.filter(t => t.type === 'payment').reduce((sum, t) => sum + t.amount, 0);
+  
+  // بناء HTML
+  let html = `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <title>كشف حساب متحرك - ${store.name}</title>
+    <style>
+        @font-face { 
+            font-family: 'AmiriExport'; 
+            src: url('${fontUrl}') format('woff2'); 
+            font-weight: 400; 
+            font-style: normal; 
+        }
+        body { 
+            font-family: 'AmiriExport', 'Arial', sans-serif; 
+            padding: 20px;
+            background: #f5f5f5;
+            margin: 0;
+        }
+        .report-container {
+            background: white;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 1200px;
+            margin: 0 auto;
+            border-radius: 8px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+        .info-section {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            padding: 15px;
+            background: #ecf0f1;
+            border-radius: 5px;
+        }
+        .info-section div {
+            line-height: 1.8;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        th {
+            background: #34495e;
+            color: white;
+            padding: 12px 8px;
+            text-align: right;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #ddd;
+            text-align: right;
+        }
+        tr:hover {
+            background: #f8f9fa;
+        }
+        .debit { 
+            color: #e74c3c; 
+            font-weight: bold;
+        }
+        .credit { 
+            color: #27ae60; 
+            font-weight: bold;
+        }
+        .balance-positive {
+            background: #e8f5e9;
+            font-weight: bold;
+            color: #2e7d32;
+        }
+        .balance-negative {
+            background: #ffebee;
+            font-weight: bold;
+            color: #c62828;
+        }
+        .balance-zero {
+            background: #f5f5f5;
+            font-weight: bold;
+        }
+        .summary-row {
+            background: #f0f0f0;
+            font-weight: bold;
+            border-top: 3px double #333;
+        }
+        .summary-box {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border: 2px solid #3498db;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .print-button {
+            background: #2c3e50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        .print-button:hover {
+            background: #34495e;
+        }
+        @media print {
+            .no-print { display: none; }
+            body { background: white; padding: 0; }
+            .report-container { 
+                box-shadow: none; 
+                padding: 20px;
+                max-width: 100%;
+            }
+            table { font-size: 12px; }
+            th { position: static; }
+        }
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <button onclick="window.print()" class="print-button no-print">
+            <i class="fas fa-print"></i> طباعة / حفظ كـ PDF
+        </button>
+        
+        <h1>كشف حساب متحرك</h1>
+        
+        <div class="info-section">
+            <div>
+                <strong>اسم المحل:</strong> ${store.name}<br>
+                <strong>نوع السعر:</strong> ${getPriceTypeName(store.priceType)}<br>
+                ${store.phone ? `<strong>رقم الهاتف:</strong> ${store.phone}` : ''}
+            </div>
+            <div>
+                <strong>الفترة:</strong> ${periodText}<br>
+                <strong>تاريخ الطباعة:</strong> ${new Date().toLocaleDateString('ar-YE')}<br>
+                <strong>عدد العمليات:</strong> ${allTransactions.length}
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:10%">التاريخ</th>
+                    <th style="width:8%">المرجع</th>
+                    <th style="width:30%">البيان</th>
+                    <th style="width:12%">مدين</th>
+                    <th style="width:12%">دائن</th>
+                    <th style="width:14%">الرصيد</th>
+                    <th style="width:14%">ملاحظات</th>
+                </tr>
+            </thead>
+            <tbody>`;
+  
+  // إضافة رصيد سابق إن وجد
+  if (previousBalance !== 0) {
+    const balanceClass = previousBalance > 0 ? 'balance-positive' : 'balance-negative';
+    const balanceText = previousBalance > 0 ? 'دائن' : 'مدين';
+    html += `
+                <tr>
+                    <td>-</td>
+                    <td>-</td>
+                    <td><strong>رصيد سابق مُرحّل</strong></td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td class="${balanceClass}">${formatNumber(Math.abs(previousBalance))} ${balanceText}</td>
+                    <td>من الفترة السابقة</td>
+                </tr>`;
+  }
+  
+  // إضافة العمليات
+  transactionsWithBalance.forEach((t, index) => {
+    const balanceClass = t.balance > 0 ? 'balance-positive' : t.balance < 0 ? 'balance-negative' : 'balance-zero';
+    const balanceText = t.balance > 0 ? 'دائن' : t.balance < 0 ? 'مدين' : '';
+    
+    if (t.type === 'sale') {
+      const packageName = t.packageName || 'مبلغ مخصص';
+      const quantity = t.quantity || 1;
+      html += `
+                <tr>
+                    <td>${formatDateEn(t.date)}</td>
+                    <td>ف-${t.id}</td>
+                    <td>بيع: ${packageName}${quantity > 1 ? ` (كمية: ${quantity})` : ''}</td>
+                    <td class="debit">${formatNumber(t.amount)}</td>
+                    <td>-</td>
+                    <td class="${balanceClass}">${formatNumber(Math.abs(t.balance))} ${balanceText}</td>
+                    <td>${t.notes || ''}</td>
+                </tr>`;
+    } else if (t.type === 'payment') {
+      html += `
+                <tr>
+                    <td>${formatDateEn(t.date)}</td>
+                    <td>ت-${t.id}</td>
+                    <td>تسديد${t.notes ? ': ' + t.notes : ''}</td>
+                    <td>-</td>
+                    <td class="credit">${formatNumber(t.amount)}</td>
+                    <td class="${balanceClass}">${formatNumber(Math.abs(t.balance))} ${balanceText}</td>
+                    <td>${t.paymentMethod || 'نقدي'}</td>
+                </tr>`;
+    }
+  });
+  
+  // صف الإجمالي
+  const finalBalance = transactionsWithBalance.length > 0 ? 
+    transactionsWithBalance[transactionsWithBalance.length - 1].balance : previousBalance;
+  const finalBalanceClass = finalBalance > 0 ? 'balance-positive' : finalBalance < 0 ? 'balance-negative' : 'balance-zero';
+  const finalBalanceText = finalBalance > 0 ? 'دائن' : finalBalance < 0 ? 'مدين' : '';
+  
+  html += `
+            </tbody>
+            <tfoot>
+                <tr class="summary-row">
+                    <td colspan="3"><strong>الإجمالي</strong></td>
+                    <td class="debit"><strong>${formatNumber(totalDebits)}</strong></td>
+                    <td class="credit"><strong>${formatNumber(totalCredits)}</strong></td>
+                    <td class="${finalBalanceClass}"><strong>${formatNumber(Math.abs(finalBalance))} ${finalBalanceText}</strong></td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="summary-box">
+            <h3>📊 ملخص الحساب</h3>
+            <div class="summary-grid">
+                <div>• إجمالي المبيعات: <strong>${formatNumber(totalDebits)} ريال</strong></div>
+                <div>• إجمالي التسديدات: <strong>${formatNumber(totalCredits)} ريال</strong></div>
+                <div>• عدد عمليات البيع: <strong>${allTransactions.filter(t => t.type === 'sale').length}</strong></div>
+                <div>• عدد عمليات التسديد: <strong>${allTransactions.filter(t => t.type === 'payment').length}</strong></div>
+                <div>• صافي الحركة: <strong>${formatNumber(totalDebits - totalCredits)} ريال</strong></div>
+                <div>• الرصيد النهائي: <strong>${formatNumber(Math.abs(finalBalance))} ريال ${finalBalanceText}</strong></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>`;
+  
+  return html;
+}
+
 function buildStoreReportHTML(store, periodText, mappedSalesForExport, mappedPaymentsForExport, totalSales, totalPayments, remaining) {
   const baseUrl = (function () { try { return new URL('.', location.href).href; } catch (e) { return location.href.substring(0, location.href.lastIndexOf('/') + 1); } })();
   const fontUrl = baseUrl + 'fonts/Amiri-Regular.woff2';
@@ -533,6 +820,70 @@ async function exportStoreData(storeId, format) {
       win.document.open(); win.document.write(html); win.document.close();
       showNotification(format === 'pdf' ? 'تم فتح صفحة الطباعة. اضغط حفظ كـ PDF.' : 'تم فتح صفحة التقرير.', 'success');
     } catch (e) { showNotification(format === 'pdf' ? 'حدث خطأ أثناء إنشاء PDF' : 'تعذر فتح صفحة التقرير', 'error'); }
+  } else if (format === 'statement') {
+    // كشف الحساب المتحرك الجديد
+    try {
+      // تحضير جميع العمليات بترتيب زمني
+      const allTransactions = [];
+      
+      // إضافة المبيعات
+      storeSales.forEach(sale => {
+        const pkg = data.packages.find(p => p.id === sale.packageId);
+        allTransactions.push({
+          id: sale.id,
+          date: sale.date,
+          type: 'sale',
+          amount: sale.total,
+          packageName: pkg ? pkg.name : (sale.packageId === 'custom' ? 'مبلغ مخصص' : 'غير معروف'),
+          quantity: sale.quantity || 1,
+          notes: sale.reason || ''
+        });
+      });
+      
+      // إضافة التسديدات
+      storePayments.forEach(payment => {
+        allTransactions.push({
+          id: payment.id,
+          date: payment.date,
+          type: 'payment',
+          amount: payment.amount,
+          notes: payment.notes || '',
+          paymentMethod: payment.method || 'نقدي'
+        });
+      });
+      
+      // ترتيب حسب التاريخ
+      allTransactions.sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        return dateA - dateB;
+      });
+      
+      // حساب الرصيد السابق إذا كانت هناك فترة محددة
+      let previousBalance = 0;
+      if (fromDate) {
+        const prevSales = salesAll.filter(s => new Date(s.date) < new Date(fromDate));
+        const prevPayments = paymentsAll.filter(p => new Date(p.date) < new Date(fromDate));
+        const prevTotalSales = prevSales.reduce((sum, s) => sum + s.total, 0);
+        const prevTotalPayments = prevPayments.reduce((sum, p) => sum + p.amount, 0);
+        previousBalance = prevTotalSales - prevTotalPayments;
+      }
+      
+      // بناء التقرير
+      const html = buildAccountStatementHTML(store, periodText, allTransactions, previousBalance);
+      const win = window.open('', '_blank');
+      if (!win || !win.document) {
+        showNotification('يمنع المتصفح النوافذ المنبثقة. الرجاء السماح بها.', 'error');
+        return;
+      }
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+      showNotification('تم فتح كشف الحساب المتحرك', 'success');
+    } catch (e) {
+      console.error('خطأ في إنشاء كشف الحساب:', e);
+      showNotification('تعذر فتح كشف الحساب المتحرك', 'error');
+    }
   }
 }
 

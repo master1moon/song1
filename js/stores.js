@@ -347,6 +347,7 @@ function showStoreDetails(storeId) {
       <button type="button" class="btn btn-outline-danger export-btn" data-type="store" data-store="${storeId}" data-format="pdf"><i class="fas fa-file-pdf me-2"></i>تصدير PDF</button>
       -->
       <button type="button" class="btn btn-outline-primary export-btn" data-type="store" data-store="${storeId}" data-format="printpage"><i class="fas fa-file-alt me-2"></i>فتح صفحة التقرير</button>
+      <button type="button" class="btn btn-outline-info export-btn" data-type="store" data-store="${storeId}" data-format="statement"><i class="fas fa-file-invoice me-2"></i>كشف حساب متحرك</button>
     </div>`;
   const salesTable = document.getElementById('storeSalesTable'); salesTable.innerHTML = '';
   sales.forEach(sale => {
