@@ -4055,69 +4055,134 @@
         /**
          * مشاركة تقرير المحل عبر واتساب
          */
-        function shareViaWhatsApp(storeId) {
+        function shareViaWhatsApp(storeId, dateFrom = null, dateTo = null) {
             const store = data.stores.find(s => s.id === storeId);
             if (!store || !store.phone) return;
             
-            const sales = data.sales.filter(s => s.storeId === storeId)
-                .sort((a, b) => new Date(a.date) - new Date(b.date));
-            const payments = data.payments.filter(p => p.storeId === storeId)
-                .sort((a, b) => new Date(a.date) - new Date(b.date));
+            // فلترة حسب التاريخ إن وُجد
+            let sales = data.sales.filter(s => s.storeId === storeId);
+            let payments = data.payments.filter(p => p.storeId === storeId);
             
-            // دمج وترتيب جميع العمليات حسب التاريخ
+            if (dateFrom || dateTo) {
+                const fromDate = dateFrom ? new Date(dateFrom) : new Date('1900-01-01');
+                const toDate = dateTo ? new Date(dateTo) : new Date();
+                
+                sales = sales.filter(s => {
+                    const saleDate = new Date(s.date);
+                    return saleDate >= fromDate && saleDate <= toDate;
+                });
+                
+                payments = payments.filter(p => {
+                    const paymentDate = new Date(p.date);
+                    return paymentDate >= fromDate && paymentDate <= toDate;
+                });
+            }
+            
+            // دمج وترتيب جميع العمليات
             const allTransactions = [];
             sales.forEach(sale => allTransactions.push({...sale, type: 'sale'}));
             payments.forEach(payment => allTransactions.push({...payment, type: 'payment'}));
-            allTransactions.sort((a, b) => new Date(a.date) - new Date(b.date));
             
-            // بناء التقرير
-            let report = `*تقرير محل ${store.name}*\n`;
-            report += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
-            
-            let runningBalance = 0;
-            let totalSalesSum = 0;
-            
-            // عنوان الجدول
-            report += `*المبيعات* | *التسديدات* | *إجمالي المبيعات* | *الرصيد*\n`;
-            report += `────────────────────────────\n`;
-            
-            allTransactions.forEach(transaction => {
-                if (transaction.type === 'sale') {
-                    totalSalesSum += transaction.total;
-                    runningBalance += transaction.total;
-                    
-                    // الحصول على اسم الباقة
-                    let packageName = 'مبلغ مخصص';
-                    if (transaction.packageId) {
-                        const pkg = data.packages.find(p => p.id === transaction.packageId);
-                        if (pkg) packageName = pkg.name;
-                    }
-                    
-                    report += `*البيع:*\n`;
-                    report += `📅 ${formatDateEn(transaction.date)}\n`;
-                    report += `📦 ${packageName}\n`;
-                    report += `🔢 الكمية: ${transaction.quantity || 1}\n`;
-                    report += `💰 ${formatNumber(transaction.total)} ريال\n`;
-                    report += `| - | ${formatNumber(totalSalesSum)} | ${formatNumber(runningBalance)}\n`;
-                    report += `────────────────────────────\n`;
-                    
-                } else if (transaction.type === 'payment') {
-                    runningBalance -= transaction.amount;
-                    
-                    report += `- | *التسديد:*\n`;
-                    report += `- | 📅 ${formatDateEn(transaction.date)}\n`;
-                    report += `- | 💵 ${formatNumber(transaction.amount)} ريال\n`;
-                    report += `- | ${formatNumber(totalSalesSum)} | ${formatNumber(runningBalance)}\n`;
-                    report += `────────────────────────────\n`;
+            // تجميع العمليات حسب التاريخ
+            const transactionsByDate = {};
+            allTransactions.forEach(t => {
+                const date = t.date;
+                if (!transactionsByDate[date]) {
+                    transactionsByDate[date] = { sales: [], payments: [] };
+                }
+                if (t.type === 'sale') {
+                    transactionsByDate[date].sales.push(t);
+                } else {
+                    transactionsByDate[date].payments.push(t);
                 }
             });
             
+            // ترتيب التواريخ
+            const sortedDates = Object.keys(transactionsByDate).sort();
+            
+            // حساب الرصيد السابق (قبل الفترة المحددة)
+            let runningBalance = 0;
+            let totalSalesSum = 0;
+            
+            if (dateFrom) {
+                const previousSales = data.sales.filter(s => 
+                    s.storeId === storeId && new Date(s.date) < new Date(dateFrom)
+                );
+                const previousPayments = data.payments.filter(p => 
+                    p.storeId === storeId && new Date(p.date) < new Date(dateFrom)
+                );
+                
+                const prevSalesTotal = previousSales.reduce((sum, s) => sum + s.total, 0);
+                const prevPaymentsTotal = previousPayments.reduce((sum, p) => sum + p.amount, 0);
+                runningBalance = prevSalesTotal - prevPaymentsTotal;
+                totalSalesSum = prevSalesTotal;
+            }
+            
+            // بناء التقرير
+            let report = `*تقرير محل ${store.name}*\n`;
+            if (dateFrom || dateTo) {
+                report += `📅 الفترة: ${dateFrom || 'البداية'} إلى ${dateTo || 'اليوم'}\n`;
+            }
+            report += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+            
+            // إضافة الرصيد السابق إن وجد
+            if (runningBalance !== 0 && dateFrom) {
+                report += `💳 *رصيد سابق:* ${formatNumber(Math.abs(runningBalance))} ريال ${runningBalance >= 0 ? '(دائن)' : '(مدين)'}\n`;
+                report += `────────────────────────────\n\n`;
+            }
+            
+            // معالجة كل يوم
+            sortedDates.forEach(date => {
+                const dayTransactions = transactionsByDate[date];
+                const previousBalance = runningBalance;
+                
+                report += `📅 *${formatDateEn(date)}*\n\n`;
+                
+                // إذا كان هناك رصيد دائن سابق، نعرض التسديدات أولاً
+                if (previousBalance > 0 && dayTransactions.payments.length > 0) {
+                    dayTransactions.payments.forEach(payment => {
+                        runningBalance -= payment.amount;
+                        report += `💵 *تسديد:* ${formatNumber(payment.amount)} ريال\n`;
+                        report += `   ← الرصيد: ${formatNumber(Math.abs(runningBalance))} ريال ${runningBalance >= 0 ? '(دائن)' : '(مدين)'}\n\n`;
+                    });
+                }
+                
+                // عرض المبيعات
+                dayTransactions.sales.forEach(sale => {
+                    totalSalesSum += sale.total;
+                    runningBalance += sale.total;
+                    
+                    let packageName = 'مبلغ مخصص';
+                    if (sale.packageId) {
+                        const pkg = data.packages.find(p => p.id === sale.packageId);
+                        if (pkg) packageName = pkg.name;
+                    }
+                    
+                    report += `🛍️ *بيع:* ${packageName}\n`;
+                    report += `   الكمية: ${sale.quantity || 1} | المبلغ: ${formatNumber(sale.total)} ريال\n`;
+                    report += `   ← الرصيد: ${formatNumber(Math.abs(runningBalance))} ريال ${runningBalance >= 0 ? '(دائن)' : '(مدين)'}\n\n`;
+                });
+                
+                // إذا لم يكن هناك رصيد دائن سابق، نعرض التسديدات بعد المبيعات
+                if (previousBalance <= 0 && dayTransactions.payments.length > 0) {
+                    dayTransactions.payments.forEach(payment => {
+                        runningBalance -= payment.amount;
+                        report += `💵 *تسديد:* ${formatNumber(payment.amount)} ريال\n`;
+                        report += `   ← الرصيد: ${formatNumber(Math.abs(runningBalance))} ريال ${runningBalance >= 0 ? '(دائن)' : '(مدين)'}\n\n`;
+                    });
+                }
+                
+                report += `────────────────────────────\n\n`;
+            });
+            
             // ملخص نهائي
-            const totalPayments = payments.reduce((sum, p) => sum + p.amount, 0);
-            report += `\n*الملخص النهائي:*\n`;
-            report += `📊 إجمالي المبيعات: ${formatNumber(totalSalesSum)} ريال\n`;
-            report += `💰 إجمالي التسديدات: ${formatNumber(totalPayments)} ريال\n`;
-            report += `💳 الرصيد النهائي: ${formatNumber(Math.abs(runningBalance))} ريال ${runningBalance >= 0 ? '(دائن)' : '(مدين)'}\n\n`;
+            const periodSales = sales.reduce((sum, s) => sum + s.total, 0);
+            const periodPayments = payments.reduce((sum, p) => sum + p.amount, 0);
+            
+            report += `*📊 الملخص:*\n`;
+            report += `• مبيعات الفترة: ${formatNumber(periodSales)} ريال\n`;
+            report += `• تسديدات الفترة: ${formatNumber(periodPayments)} ريال\n`;
+            report += `• الرصيد النهائي: ${formatNumber(Math.abs(runningBalance))} ريال ${runningBalance >= 0 ? '(دائن)' : '(مدين)'}\n\n`;
             report += `📅 تاريخ التقرير: ${new Date().toLocaleDateString('ar-YE')}`;
             
             // استخدام Web Share API إذا كان متاحاً
