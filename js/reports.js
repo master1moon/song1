@@ -568,13 +568,12 @@ function buildAccountStatementHTML(store, periodText, allTransactions, previousB
         <table>
             <thead>
                 <tr>
-                    <th style="width:10%">التاريخ</th>
-                    <th style="width:8%">المرجع</th>
-                    <th style="width:30%">البيان</th>
-                    <th style="width:12%">مدين</th>
-                    <th style="width:12%">دائن</th>
-                    <th style="width:14%">الرصيد</th>
-                    <th style="width:14%">ملاحظات</th>
+                    <th style="width:12%">التاريخ</th>
+                    <th style="width:35%">البيان</th>
+                    <th style="width:13%">مدين</th>
+                    <th style="width:13%">دائن</th>
+                    <th style="width:15%">الرصيد</th>
+                    <th style="width:12%">ملاحظات</th>
                 </tr>
             </thead>
             <tbody>`;
@@ -585,7 +584,6 @@ function buildAccountStatementHTML(store, periodText, allTransactions, previousB
     const balanceText = previousBalance > 0 ? 'دائن' : 'مدين';
     html += `
                 <tr>
-                    <td>-</td>
                     <td>-</td>
                     <td><strong>رصيد سابق مُرحّل</strong></td>
                     <td>-</td>
@@ -606,7 +604,6 @@ function buildAccountStatementHTML(store, periodText, allTransactions, previousB
       html += `
                 <tr>
                     <td>${formatDateEn(t.date)}</td>
-                    <td>ف-${t.id}</td>
                     <td>بيع: ${packageName}${quantity > 1 ? ` (كمية: ${quantity})` : ''}</td>
                     <td class="debit">${formatNumber(t.amount)}</td>
                     <td>-</td>
@@ -617,7 +614,6 @@ function buildAccountStatementHTML(store, periodText, allTransactions, previousB
       html += `
                 <tr>
                     <td>${formatDateEn(t.date)}</td>
-                    <td>ت-${t.id}</td>
                     <td>تسديد${t.notes ? ': ' + t.notes : ''}</td>
                     <td>-</td>
                     <td class="credit">${formatNumber(t.amount)}</td>
@@ -637,7 +633,7 @@ function buildAccountStatementHTML(store, periodText, allTransactions, previousB
             </tbody>
             <tfoot>
                 <tr class="summary-row">
-                    <td colspan="3"><strong>الإجمالي</strong></td>
+                    <td colspan="2"><strong>الإجمالي</strong></td>
                     <td class="debit"><strong>${formatNumber(totalDebits)}</strong></td>
                     <td class="credit"><strong>${formatNumber(totalCredits)}</strong></td>
                     <td class="${finalBalanceClass}"><strong>${formatNumber(Math.abs(finalBalance))} ${finalBalanceText}</strong></td>
