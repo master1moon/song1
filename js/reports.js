@@ -482,6 +482,32 @@ function buildAccountStatementHTML(store, periodText, allTransactions, previousB
             color: #27ae60; 
             font-weight: bold;
         }
+        /* تمييز المجموعات في نفس اليوم */
+        .date-group-header {
+            background: #2c3e50 !important;
+            color: white !important;
+            font-weight: bold;
+            text-align: center;
+        }
+        .date-group-header td {
+            padding: 8px;
+            border: none;
+        }
+        .same-day-sale {
+            background: #e3f2fd;
+        }
+        .same-day-payment {
+            background: #f3e5f5;
+        }
+        /* فاصل بين الأيام */
+        .day-separator {
+            height: 2px;
+            background: #bdc3c7;
+        }
+        .day-separator td {
+            padding: 0;
+            border: none;
+        }
         .balance-positive {
             background: #e8f5e9;
             font-weight: bold;
@@ -602,6 +628,24 @@ function buildAccountStatementHTML(store, periodText, allTransactions, previousB
                 border-bottom: 3px solid #3498db !important;
                 -webkit-print-color-adjust: exact !important;
             }
+            /* تمييز المجموعات عند الطباعة */
+            .date-group-header {
+                background: #2c3e50 !important;
+                color: white !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            .same-day-sale {
+                background: #e3f2fd !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            .same-day-payment {
+                background: #f3e5f5 !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            .day-separator {
+                background: #bdc3c7 !important;
+                -webkit-print-color-adjust: exact !important;
+            }
         }
         @page {
             size: A4;
@@ -658,28 +702,65 @@ function buildAccountStatementHTML(store, periodText, allTransactions, previousB
                 </tr>`;
   }
   
-  // إضافة العمليات
+  // إضافة العمليات مع التمييز حسب اليوم
+  let currentDate = null;
+  let dayTransactionCount = 0;
+  
   transactionsWithBalance.forEach((t, index) => {
     const balanceClass = t.balance > 0 ? 'balance-positive' : t.balance < 0 ? 'balance-negative' : 'balance-zero';
     const balanceText = t.balance > 0 ? 'دائن' : t.balance < 0 ? 'مدين' : '';
     
+    // إضافة رأس التاريخ وفاصل إذا كان يوم جديد
+    if (t.date !== currentDate) {
+      // إضافة فاصل بين الأيام (إلا في البداية)
+      if (currentDate !== null) {
+        html += `<tr class="day-separator"><td colspan="6"></td></tr>`;
+      }
+      
+      currentDate = t.date;
+      dayTransactionCount = 0;
+      
+      // عد العمليات في هذا اليوم
+      const sameDayTransactions = transactionsWithBalance.filter(trans => trans.date === currentDate);
+      const sameDaySales = sameDayTransactions.filter(trans => trans.type === 'sale').length;
+      const sameDayPayments = sameDayTransactions.filter(trans => trans.type === 'payment').length;
+      
+      // إضافة رأس التاريخ مع عدد العمليات
+      html += `
+                <tr class="date-group-header">
+                    <td colspan="6">
+                        📅 ${formatDateEn(t.date)} 
+                        &nbsp;&nbsp;|&nbsp;&nbsp; 
+                        🛍️ المبيعات: ${sameDaySales} 
+                        &nbsp;&nbsp;|&nbsp;&nbsp; 
+                        💵 التسديدات: ${sameDayPayments}
+                    </td>
+                </tr>`;
+    }
+    
+    dayTransactionCount++;
+    
     if (t.type === 'sale') {
       const packageName = t.packageName || 'مبلغ مخصص';
       const quantity = t.quantity || 1;
+      const rowClass = dayTransactionCount % 2 === 0 ? 'same-day-sale' : '';
+      
       html += `
-                <tr>
-                    <td>${formatDateEn(t.date)}</td>
-                    <td>بيع: ${packageName}${quantity > 1 ? ` (كمية: ${quantity})` : ''}</td>
+                <tr class="${rowClass}">
+                    <td>${dayTransactionCount}</td>
+                    <td>🛍️ بيع: ${packageName}${quantity > 1 ? ` (كمية: ${quantity})` : ''}</td>
                     <td class="debit">${formatNumber(t.amount)}</td>
                     <td>-</td>
                     <td class="${balanceClass}">${formatNumber(Math.abs(t.balance))} ${balanceText}</td>
                     <td>${t.notes || ''}</td>
                 </tr>`;
     } else if (t.type === 'payment') {
+      const rowClass = dayTransactionCount % 2 === 0 ? 'same-day-payment' : '';
+      
       html += `
-                <tr>
-                    <td>${formatDateEn(t.date)}</td>
-                    <td>تسديد${t.notes ? ': ' + t.notes : ''}</td>
+                <tr class="${rowClass}">
+                    <td>${dayTransactionCount}</td>
+                    <td>💵 تسديد${t.notes ? ': ' + t.notes : ''}</td>
                     <td>-</td>
                     <td class="credit">${formatNumber(t.amount)}</td>
                     <td class="${balanceClass}">${formatNumber(Math.abs(t.balance))} ${balanceText}</td>
