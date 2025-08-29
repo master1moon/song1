@@ -385,6 +385,11 @@ function buildAccountStatementHTML(store, periodText, allTransactions, previousB
   const baseUrl = (function () { try { return new URL('.', location.href).href; } catch (e) { return location.href.substring(0, location.href.lastIndexOf('/') + 1); } })();
   const fontUrl = baseUrl + 'fonts/Amiri-Regular.woff2';
   
+  // التأكد من وجود الدوال المطلوبة
+  const formatNumber = window.formatNumber || ((n) => n.toLocaleString('en-US'));
+  const formatDateEn = window.formatDateEn || ((d) => d);
+  const getPriceTypeName = window.getPriceTypeName || ((t) => t);
+  
   // حساب الرصيد المتحرك
   let runningBalance = previousBalance;
   const transactionsWithBalance = allTransactions.map(t => {
@@ -852,6 +857,16 @@ async function exportStoreData(storeId, format) {
         });
       });
       
+      // حساب الرصيد السابق إذا كانت هناك فترة محددة
+      let previousBalance = 0;
+      if (fromDate) {
+        const prevSales = salesAll.filter(s => new Date(s.date) < new Date(fromDate));
+        const prevPayments = paymentsAll.filter(p => new Date(p.date) < new Date(fromDate));
+        const prevTotalSales = prevSales.reduce((sum, s) => sum + s.total, 0);
+        const prevTotalPayments = prevPayments.reduce((sum, p) => sum + p.amount, 0);
+        previousBalance = prevTotalSales - prevTotalPayments;
+      }
+      
       // ترتيب حسب التاريخ أولاً
       allTransactions.sort((a, b) => {
         const dateA = new Date(a.date);
@@ -909,16 +924,6 @@ async function exportStoreData(storeId, format) {
         return reorderedTransactions;
       };
       
-      // حساب الرصيد السابق إذا كانت هناك فترة محددة
-      let previousBalance = 0;
-      if (fromDate) {
-        const prevSales = salesAll.filter(s => new Date(s.date) < new Date(fromDate));
-        const prevPayments = paymentsAll.filter(p => new Date(p.date) < new Date(fromDate));
-        const prevTotalSales = prevSales.reduce((sum, s) => sum + s.total, 0);
-        const prevTotalPayments = prevPayments.reduce((sum, p) => sum + p.amount, 0);
-        previousBalance = prevTotalSales - prevTotalPayments;
-      }
-      
       // تطبيق إعادة الترتيب بناءً على الرصيد السابق
       allTransactions = reorderTransactionsByBalance(allTransactions, previousBalance);
       
@@ -935,7 +940,13 @@ async function exportStoreData(storeId, format) {
       showNotification('تم فتح كشف الحساب المتحرك', 'success');
     } catch (e) {
       console.error('خطأ في إنشاء كشف الحساب:', e);
-      showNotification('تعذر فتح كشف الحساب المتحرك', 'error');
+      console.error('تفاصيل الخطأ:', {
+        message: e.message,
+        stack: e.stack,
+        store: store,
+        transactionsCount: allTransactions.length
+      });
+      showNotification(`تعذر فتح كشف الحساب المتحرك: ${e.message}`, 'error');
     }
   }
 }
