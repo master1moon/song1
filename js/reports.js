@@ -836,8 +836,8 @@ function buildAccountStatementHTML(store, periodText, allTransactions, previousB
             <p style="margin: 5px 0;">
                 <strong>نظام إدارة المبيعات والمخزون</strong><br>
                 جميع الحقوق محفوظة © ${new Date().getFullYear()}<br>
-                تم التطوير بواسطة: [اسمك هنا]<br>
-                للتواصل: [رقم هاتفك أو بريدك الإلكتروني]
+                تم التطوير بواسطة: م / نجيب المقداد<br>
+                للتواصل: 775396439 - 737896431
             </p>
             <p style="margin: 5px 0; font-size: 11px; color: #999;">
                 يُحظر نسخ أو توزيع هذا النظام بدون إذن مسبق
@@ -870,8 +870,8 @@ function buildStoreReportHTML(store, periodText, mappedSalesForExport, mappedPay
     '<p style="margin:5px 0;">' +
     '<strong>نظام إدارة المبيعات والمخزون</strong><br>' +
     'جميع الحقوق محفوظة © ' + new Date().getFullYear() + '<br>' +
-    'تم التطوير بواسطة: [اسمك هنا]<br>' +
-    'للتواصل: [رقم هاتفك أو بريدك الإلكتروني]' +
+    'تم التطوير بواسطة: م / نجيب المقداد<br>' +
+    'للتواصل: 775396439 - 737896431' +
     '</p>' +
     '<p style="margin:5px 0; font-size:11px; color:#999;">يُحظر نسخ أو توزيع هذا النظام بدون إذن مسبق</p>' +
     '</div>';
@@ -942,8 +942,8 @@ function buildExpensesReportHTML(expensesRows, periodText) {
     '<p style="margin:5px 0;">' +
     '<strong>نظام إدارة المبيعات والمخزون</strong><br>' +
     'جميع الحقوق محفوظة © ' + (new Date()).getFullYear() + '<br>' +
-    'تم التطوير بواسطة: [اسمك هنا]<br>' +
-    'للتواصل: [رقم هاتفك أو بريدك الإلكتروني]' +
+    'تم التطوير بواسطة: م / نجيب المقداد<br>' +
+    'للتواصل: 775396439 - 737896431' +
     '</p>' +
     '<p style="margin:5px 0; font-size:11px; color:#999;">يُحظر نسخ أو توزيع هذا النظام بدون إذن مسبق</p>' +
     '</div>';
@@ -1002,8 +1002,8 @@ async function exportStoreData(storeId, format) {
     arabic.حقوق_النشر = {
       النظام: 'نظام إدارة المبيعات والمخزون',
       الحقوق: `جميع الحقوق محفوظة © ${new Date().getFullYear()}`,
-      المطور: '[اسمك هنا]',
-      التواصل: '[رقم هاتفك أو بريدك الإلكتروني]',
+      المطور: 'م / نجيب المقداد',
+      التواصل: '775396439 - 737896431',
       تحذير: 'يُحظر نسخ أو توزيع هذا النظام بدون إذن مسبق'
     };
     const dataStr = JSON.stringify(arabic, null, 2);
@@ -1021,8 +1021,8 @@ async function exportStoreData(storeId, format) {
     const copyrightData = [{
       '': 'نظام إدارة المبيعات والمخزون',
       ' ': `جميع الحقوق محفوظة © ${new Date().getFullYear()}`,
-      '  ': 'تم التطوير بواسطة: [اسمك هنا]',
-      '   ': 'للتواصل: [رقم هاتفك أو بريدك الإلكتروني]',
+      '  ': 'تم التطوير بواسطة: م / نجيب المقداد',
+      '   ': 'للتواصل: 775396439 - 737896431',
       '    ': 'يُحظر نسخ أو توزيع هذا النظام بدون إذن مسبق'
     }];
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(copyrightData), 'حقوق النشر');
@@ -1042,8 +1042,8 @@ async function exportStoreData(storeId, format) {
     txtContent += '\n\n' + '='.repeat(50) + '\n';
     txtContent += 'نظام إدارة المبيعات والمخزون\n';
     txtContent += `جميع الحقوق محفوظة © ${new Date().getFullYear()}\n`;
-    txtContent += 'تم التطوير بواسطة: [اسمك هنا]\n';
-    txtContent += 'للتواصل: [رقم هاتفك أو بريدك الإلكتروني]\n';
+    txtContent += 'تم التطوير بواسطة: م / نجيب المقداد\n';
+    txtContent += 'للتواصل: 775396439 - 737896431\n';
     txtContent += 'يُحظر نسخ أو توزيع هذا النظام بدون إذن مسبق\n';
     txtContent += '='.repeat(50) + '\n';
     const blob = new Blob([txtContent], { type: 'text/plain' }); const url = URL.createObjectURL(blob);
