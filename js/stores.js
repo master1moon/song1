@@ -1391,3 +1391,11 @@ function formatTime(dateStr) {
   // يمكن إضافة منطق لاستخراج الوقت إذا كان متوفراً
   return '';
 }
+
+// تصدير الدوال إلى النطاق العام للاستخدام من HTML
+window.toggleFilterDropdown = toggleFilterDropdown;
+window.applyFilter = applyFilter;
+window.showCustomDateFilter = showCustomDateFilter;
+window.applyCustomDateFilter = applyCustomDateFilter;
+window.toggleFilterType = toggleFilterType;
+window.switchView = switchView;
