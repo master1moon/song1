@@ -465,13 +465,35 @@ function showStoreDetails(storeId) {
       <!-- سيتم ملؤه بواسطة JavaScript -->
     </div>
     
-    <h5>عمليات البيع</h5>
-    <div class="table-responsive mb-4">
-      <table class="data-table"><thead><tr><th>التاريخ</th><th>السبب/الباقة</th><th>الكمية/المبلغ</th><th>الإجمالي</th><th>الإجراءات</th></tr></thead><tbody id="storeSalesTable"></tbody></table>
+    <!-- نوع العرض -->
+    <div class="view-type-selector mb-3">
+      <div class="btn-group" role="group">
+        <button type="button" class="btn btn-sm btn-outline-primary active" id="tableView_${storeId}" onclick="switchView('${storeId}', 'table')">
+          <i class="fas fa-table"></i> عرض جدولي
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-primary" id="timelineView_${storeId}" onclick="switchView('${storeId}', 'timeline')">
+          <i class="fas fa-stream"></i> خط زمني
+        </button>
+      </div>
     </div>
-    <h5>عمليات التسديد</h5>
-    <div class="table-responsive">
-      <table class="data-table"><thead><tr><th>التاريخ</th><th>المبلغ</th><th>ملاحظات</th><th>الإجراءات</th></tr></thead><tbody id="storePaymentsTable"></tbody></table>
+    
+    <!-- العرض الجدولي -->
+    <div id="tableViewContent_${storeId}">
+      <h5>عمليات البيع</h5>
+      <div class="table-responsive mb-4">
+        <table class="data-table"><thead><tr><th>التاريخ</th><th>السبب/الباقة</th><th>الكمية/المبلغ</th><th>الإجمالي</th><th>الإجراءات</th></tr></thead><tbody id="storeSalesTable"></tbody></table>
+      </div>
+      <h5>عمليات التسديد</h5>
+      <div class="table-responsive">
+        <table class="data-table"><thead><tr><th>التاريخ</th><th>المبلغ</th><th>ملاحظات</th><th>الإجراءات</th></tr></thead><tbody id="storePaymentsTable"></tbody></table>
+      </div>
+    </div>
+    
+    <!-- العرض الزمني -->
+    <div id="timelineViewContent_${storeId}" style="display: none;">
+      <div class="timeline-container" id="timelineContainer_${storeId}">
+        <!-- سيتم ملؤه بواسطة JavaScript -->
+      </div>
     </div>
     <!-- تم إزالة فلترة التواريخ المخصصة مؤقتاً - سيتم استبدالها بنظام الفلترة المتقدم -->
     <div class="export-options mt-2">
@@ -993,6 +1015,12 @@ function updateStoreDetailsWithFilter(storeId) {
   // تحديث الجداول
   updateSalesTable(storeId, orderedTransactions.filter(t => t.type === 'sale'));
   updatePaymentsTable(storeId, orderedTransactions.filter(t => t.type === 'payment'));
+  
+  // تحديث العرض الزمني إذا كان نشطاً
+  const timelineView = document.getElementById(`timelineViewContent_${storeId}`);
+  if (timelineView && timelineView.style.display !== 'none') {
+    updateTimelineView(storeId);
+  }
 }
 
 // تحديث ملخص الفلترة
@@ -1047,11 +1075,20 @@ function updateSalesTable(storeId, sales) {
   tbody.innerHTML = '';
   
   sales.forEach(sale => {
+    // الحصول على اسم الباقة
+    let packageName = 'غير محدد';
+    if (sale.packageId === 'custom') {
+      packageName = sale.reason || 'مبلغ مخصص';
+    } else if (sale.packageId && data.packages) {
+      const pkg = data.packages.find(p => p.id === sale.packageId);
+      packageName = pkg ? pkg.name : 'باقة محذوفة';
+    }
+    
     const row = tbody.insertRow();
     row.innerHTML = `
       <td>${formatDate(sale.date)}</td>
-      <td>${sale.reason || getPackageName(sale.packageId) || 'غير محدد'}</td>
-      <td>${sale.quantity > 0 ? sale.quantity : sale.amount}</td>
+      <td>${packageName}</td>
+      <td>${sale.quantity > 0 ? sale.quantity : formatNumber(sale.amount)}</td>
       <td class="currency">${formatNumber(sale.total)}</td>
       <td>
         <button class="btn btn-sm btn-warning" onclick="editSale('${sale.id}')">
@@ -1086,4 +1123,177 @@ function updatePaymentsTable(storeId, payments) {
       </td>
     `;
   });
+}
+
+// تبديل نوع العرض (جدولي/زمني)
+function switchView(storeId, viewType) {
+  const tableView = document.getElementById(`tableViewContent_${storeId}`);
+  const timelineView = document.getElementById(`timelineViewContent_${storeId}`);
+  const tableBtn = document.getElementById(`tableView_${storeId}`);
+  const timelineBtn = document.getElementById(`timelineView_${storeId}`);
+  
+  if (viewType === 'timeline') {
+    tableView.style.display = 'none';
+    timelineView.style.display = 'block';
+    tableBtn.classList.remove('active');
+    timelineBtn.classList.add('active');
+    
+    // تحديث العرض الزمني
+    updateTimelineView(storeId);
+  } else {
+    tableView.style.display = 'block';
+    timelineView.style.display = 'none';
+    tableBtn.classList.add('active');
+    timelineBtn.classList.remove('active');
+  }
+}
+
+// تحديث العرض الزمني
+function updateTimelineView(storeId) {
+  const container = document.getElementById(`timelineContainer_${storeId}`);
+  
+  if (!window.storeFilter) {
+    container.innerHTML = '<p class="text-center text-muted">محرك الفلترة غير متوفر</p>';
+    return;
+  }
+  
+  // الحصول على البيانات المفلترة
+  const filteredData = window.storeFilter.applyStoreFilter(storeId);
+  
+  // دمج وترتيب العمليات
+  const allTransactions = [
+    ...filteredData.sales.map(s => ({ 
+      ...s, 
+      type: 'sale',
+      displayAmount: s.total,
+      impact: -s.total 
+    })),
+    ...filteredData.payments.map(p => ({ 
+      ...p, 
+      type: 'payment',
+      displayAmount: p.amount,
+      impact: p.amount 
+    }))
+  ];
+  
+  // حساب الرصيد السابق
+  const previousBalance = calculatePreviousBalance(storeId, filteredData.filter);
+  
+  // ترتيب ذكي
+  const orderedTransactions = window.storeFilter.applySmartOrdering(allTransactions, previousBalance);
+  
+  // بناء العرض الزمني
+  let html = '';
+  let runningBalance = previousBalance;
+  let currentDate = '';
+  
+  // إضافة الرصيد الافتتاحي إذا كان هناك رصيد سابق
+  if (previousBalance !== 0) {
+    html += `
+      <div class="timeline-date-group">
+        <i class="fas fa-history me-2"></i>
+        الرصيد الافتتاحي
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="border-color: ${previousBalance > 0 ? '#28a745' : '#dc3545'};"></div>
+        <div class="timeline-content">
+          <div class="timeline-balance ${previousBalance > 0 ? 'positive' : 'negative'}">
+            <i class="fas fa-balance-scale me-2"></i>
+            الرصيد: ${formatNumber(Math.abs(previousBalance))} ${previousBalance > 0 ? 'دائن' : 'مدين'}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  
+  orderedTransactions.forEach((transaction, index) => {
+    const transDate = formatDate(transaction.date);
+    
+    // إضافة فاصل التاريخ إذا تغير
+    if (transDate !== currentDate) {
+      currentDate = transDate;
+      html += `<div class="timeline-date-group">${transDate}</div>`;
+    }
+    
+    // حساب الرصيد الجديد
+    runningBalance += transaction.impact;
+    
+    // بناء عنصر العملية
+    const isSale = transaction.type === 'sale';
+    const typeText = isSale ? 'مبيعات' : 'تسديد';
+    const icon = isSale ? 'shopping-cart' : 'money-bill-wave';
+    
+    html += `
+      <div class="timeline-item">
+        <div class="timeline-dot ${transaction.type}"></div>
+        <div class="timeline-content">
+          <div class="timeline-header">
+            <div>
+              <i class="fas fa-${icon} me-2"></i>
+              <span class="timeline-type ${transaction.type}">${typeText}</span>
+            </div>
+            <span class="timeline-date">${formatTime(transaction.date) || ''}</span>
+          </div>
+          
+          <div class="timeline-details">
+            ${isSale ? `
+              <div class="text-muted mb-1">
+                ${transaction.reason || getPackageDisplayName(transaction.packageId)}
+                ${transaction.quantity > 0 ? `<span class="badge bg-secondary ms-2">${transaction.quantity} قطعة</span>` : ''}
+              </div>
+            ` : `
+              <div class="text-muted mb-1">
+                ${transaction.notes || 'تسديد نقدي'}
+              </div>
+            `}
+            
+            <div class="timeline-amount ${transaction.type}">
+              ${isSale ? '-' : '+'} ${formatNumber(transaction.displayAmount)}
+            </div>
+            
+            <div class="timeline-balance ${runningBalance >= 0 ? 'positive' : 'negative'}">
+              <i class="fas fa-balance-scale me-2"></i>
+              الرصيد: ${formatNumber(Math.abs(runningBalance))} ${runningBalance >= 0 ? 'دائن' : 'مدين'}
+            </div>
+          </div>
+          
+          <div class="timeline-actions">
+            <button class="btn btn-sm btn-warning" onclick="edit${isSale ? 'Sale' : 'Payment'}('${transaction.id}')">
+              <i class="fas fa-edit"></i> تعديل
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="delete${isSale ? 'Sale' : 'Payment'}('${transaction.id}')">
+              <i class="fas fa-trash"></i> حذف
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  // إضافة رسالة إذا لم توجد عمليات
+  if (orderedTransactions.length === 0) {
+    html = `
+      <div class="text-center py-5">
+        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+        <p class="text-muted">لا توجد عمليات في الفترة المحددة</p>
+      </div>
+    `;
+  }
+  
+  container.innerHTML = html;
+}
+
+// الحصول على اسم الباقة للعرض
+function getPackageDisplayName(packageId) {
+  if (!packageId) return 'غير محدد';
+  if (packageId === 'custom') return 'مبلغ مخصص';
+  
+  const pkg = data.packages?.find(p => p.id === packageId);
+  return pkg ? pkg.name : 'باقة محذوفة';
+}
+
+// استخراج الوقت من التاريخ
+function formatTime(dateStr) {
+  // يمكن إضافة منطق لاستخراج الوقت إذا كان متوفراً
+  return '';
 }

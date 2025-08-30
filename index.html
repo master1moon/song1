@@ -535,6 +535,37 @@
         .advanced-filter-section .card {
             border: 1px solid #e1e5eb;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 1rem;
+        }
+        
+        /* إصلاح التخطيط للشاشات الصغيرة */
+        @media (max-width: 768px) {
+            .advanced-filter-section .row {
+                gap: 1rem;
+            }
+            
+            .advanced-filter-section .col-md-6 {
+                margin-bottom: 1rem;
+            }
+            
+            .filter-type-btn {
+                min-width: auto;
+                padding: 0.375rem 0.75rem;
+                font-size: 0.875rem;
+            }
+            
+            .filter-selector-btn {
+                font-size: 0.875rem;
+                padding: 8px 12px;
+            }
+            
+            .filter-title {
+                font-size: 0.9rem;
+            }
+            
+            .filter-subtitle {
+                font-size: 0.75rem;
+            }
         }
         
         .filter-selector-wrapper {
@@ -692,6 +723,169 @@
             padding: 15px;
             border-radius: 8px;
             margin-top: 15px;
+        }
+        
+        /* العرض الزمني */
+        .timeline-container {
+            position: relative;
+            padding: 20px 0;
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 40px;
+            margin-bottom: 30px;
+            border-left: 3px solid #e9ecef;
+            padding-bottom: 20px;
+        }
+        
+        .timeline-item:last-child {
+            border-left: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .timeline-dot {
+            position: absolute;
+            left: -8px;
+            top: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #6c757d;
+            z-index: 2;
+        }
+        
+        .timeline-dot.sale {
+            border-color: #dc3545;
+        }
+        
+        .timeline-dot.payment {
+            border-color: #28a745;
+        }
+        
+        .timeline-content {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+        
+        .timeline-content:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .timeline-date {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        .timeline-type {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .timeline-type.sale {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .timeline-type.payment {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .timeline-details {
+            margin: 10px 0;
+        }
+        
+        .timeline-amount {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .timeline-amount.sale {
+            color: #dc3545;
+        }
+        
+        .timeline-amount.payment {
+            color: #28a745;
+        }
+        
+        .timeline-balance {
+            background: #fff3cd;
+            color: #856404;
+            padding: 8px 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .timeline-balance.positive {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .timeline-balance.negative {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .timeline-actions {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        /* تجميع التواريخ */
+        .timeline-date-group {
+            background: #f8f9fa;
+            padding: 10px 20px;
+            margin: 20px 0 10px 0;
+            border-radius: 30px;
+            font-weight: 600;
+            color: #495057;
+            text-align: center;
+            position: relative;
+        }
+        
+        .timeline-date-group:before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: -10px;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 10px;
+            background: #dee2e6;
+        }
+        
+        /* أزرار نوع العرض */
+        .view-type-selector {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+        
+        .view-type-selector .btn-group {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
       </style>
 </head>
