@@ -189,11 +189,13 @@ function applyStoreFilter(storeId, filter = null) {
   }
   
   // تطبيق فلتر النوع
-  if (!filter.data.includeTypes.includes('sales')) {
-    filteredSales = [];
-  }
-  if (!filter.data.includeTypes.includes('payments')) {
-    filteredPayments = [];
+  if (filter.data.includeTypes && filter.data.includeTypes.length > 0) {
+    if (!filter.data.includeTypes.includes('sales')) {
+      filteredSales = [];
+    }
+    if (!filter.data.includeTypes.includes('payments')) {
+      filteredPayments = [];
+    }
   }
   
   return {

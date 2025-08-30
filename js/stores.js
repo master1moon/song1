@@ -876,6 +876,12 @@ function applyFilter(storeId, type, filterId) {
   // إغلاق القائمة
   document.getElementById(`filterDropdown_${storeId}`).style.display = 'none';
   
+  // إخفاء التاريخ المخصص إذا كان مفتوحاً
+  const customDateSection = document.getElementById(`customDateSection_${storeId}`);
+  if (customDateSection) {
+    customDateSection.style.display = 'none';
+  }
+  
   // تحديث الزر
   updateFilterButton(storeId, filter);
   
@@ -940,7 +946,23 @@ function toggleFilterType(storeId, type) {
     document.getElementById(`filterPayments_${storeId}`).classList.add('active');
   }
   
-  // تحديث الفلترة
+  // تحديث الفلترة الحالية مع النوع الجديد
+  if (window.storeFilter) {
+    const currentFilter = window.storeFilter.getActiveStoreFilter(storeId);
+    if (currentFilter) {
+      // تحديث أنواع العمليات المضمنة
+      if (type === 'all') {
+        currentFilter.data.includeTypes = ['sales', 'payments'];
+      } else if (type === 'sales') {
+        currentFilter.data.includeTypes = ['sales'];
+      } else if (type === 'payments') {
+        currentFilter.data.includeTypes = ['payments'];
+      }
+      window.storeFilter.setActiveStoreFilter(storeId, currentFilter);
+    }
+  }
+  
+  // تحديث العرض
   updateStoreDetailsWithFilter(storeId);
 }
 
