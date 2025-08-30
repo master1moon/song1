@@ -89,51 +89,68 @@ function detectFinancialCycles(storeId) {
     return dateA.valueOf() - dateB.valueOf();
   });
   
-  const cycles = [];
-  let currentCycle = null;
-  let runningBalance = 0;
+  if (allTransactions.length === 0) {
+    return [];
+  }
   
+  const cycles = [];
+  let runningBalance = 0;
+  let lastZeroIndex = -1; // آخر نقطة كان فيها الرصيد صفر
+  
+  // البحث عن نقاط التصفير (الرصيد = 0)
   for (let i = 0; i < allTransactions.length; i++) {
     const transaction = allTransactions[i];
-    const prevBalance = runningBalance;
     runningBalance += transaction.amount;
     
-    // بداية دورة جديدة
-    if (!currentCycle) {
-      currentCycle = {
-        startDate: transaction.date,
-        startIndex: i,
-        transactions: [transaction],
-        startBalance: 0
-      };
-    } else {
-      currentCycle.transactions.push(transaction);
-    }
-    
-    // نهاية الدورة عند الوصول لرصيد صفر أو سالب ثم موجب
-    if (prevBalance <= 0 && runningBalance > 0 && currentCycle.transactions.length > 1) {
-      currentCycle.endDate = transaction.date;
-      currentCycle.endIndex = i;
-      currentCycle.endBalance = runningBalance;
-      cycles.push(currentCycle);
-      
-      // بداية دورة جديدة
-      currentCycle = {
-        startDate: transaction.date,
-        startIndex: i,
-        transactions: [],
-        startBalance: runningBalance
-      };
+    // إذا وصل الرصيد إلى الصفر
+    if (runningBalance === 0) {
+      // إنشاء دورة من آخر نقطة صفر إلى النقطة الحالية
+      const cycleStart = lastZeroIndex + 1;
+      if (cycleStart <= i) {
+        cycles.push({
+          startDate: allTransactions[cycleStart].date,
+          endDate: transaction.date,
+          startIndex: cycleStart,
+          endIndex: i,
+          transactions: allTransactions.slice(cycleStart, i + 1),
+          startBalance: 0,
+          endBalance: 0,
+          isComplete: true
+        });
+      }
+      lastZeroIndex = i;
     }
   }
   
-  // الدورة الحالية (غير مكتملة)
-  if (currentCycle && currentCycle.transactions.length > 0) {
-    currentCycle.endDate = null; // لم تكتمل بعد
-    currentCycle.endIndex = allTransactions.length - 1;
-    currentCycle.endBalance = runningBalance;
-    currentCycle.isCurrent = true;
-    cycles.push(currentCycle);
+  // الدورة الحالية (من آخر تصفير حتى الآن)
+  if (lastZeroIndex < allTransactions.length - 1) {
+    const currentCycleStart = lastZeroIndex + 1;
+    cycles.push({
+      startDate: allTransactions[currentCycleStart].date,
+      endDate: null,
+      startIndex: currentCycleStart,
+      endIndex: allTransactions.length - 1,
+      transactions: allTransactions.slice(currentCycleStart),
+      startBalance: 0,
+      endBalance: runningBalance,
+      isCurrent: true,
+      isComplete: false
+    });
+  }
+  
+  // إذا لم توجد نقاط تصفير، كل العمليات في دورة واحدة
+  if (cycles.length === 0 && allTransactions.length > 0) {
+    cycles.push({
+      startDate: allTransactions[0].date,
+      endDate: null,
+      startIndex: 0,
+      endIndex: allTransactions.length - 1,
+      transactions: allTransactions,
+      startBalance: 0,
+      endBalance: runningBalance,
+      isCurrent: true,
+      isComplete: false
+    });
   }
   
   return cycles;
@@ -157,6 +174,7 @@ function applyStoreFilter(storeId, filter = null) {
   switch (filter.type) {
     case FILTER_TYPES.CYCLE:
       const cycles = detectFinancialCycles(storeId);
+      console.log('الدورات المكتشفة:', cycles);
       let targetCycle = null;
       
       if (filter.data.cycleNumber === 'current') {
@@ -164,13 +182,27 @@ function applyStoreFilter(storeId, filter = null) {
       } else if (typeof filter.data.cycleNumber === 'number') {
         targetCycle = cycles[cycles.length - 1 - filter.data.cycleNumber];
       }
+      console.log('الدورة المستهدفة:', targetCycle);
       
-      if (targetCycle) {
-        const startDate = parseDate(targetCycle.startDate);
-        const endDate = targetCycle.endDate ? parseDate(targetCycle.endDate) : moment();
+      if (targetCycle && targetCycle.transactions) {
+        // استخدام العمليات من الدورة مباشرة
+        const cycleTransactions = targetCycle.transactions;
         
-        filteredSales = filterByDateRange(allSales, startDate, endDate);
-        filteredPayments = filterByDateRange(allPayments, startDate, endDate);
+        // فصل المبيعات والتسديدات من عمليات الدورة
+        filteredSales = [];
+        filteredPayments = [];
+        
+        cycleTransactions.forEach(t => {
+          if (t.type === 'sale') {
+            // البحث عن المبيعة الأصلية
+            const originalSale = allSales.find(s => s.id === t.id);
+            if (originalSale) filteredSales.push(originalSale);
+          } else if (t.type === 'payment') {
+            // البحث عن التسديد الأصلي
+            const originalPayment = allPayments.find(p => p.id === t.id);
+            if (originalPayment) filteredPayments.push(originalPayment);
+          }
+        });
       }
       break;
       
