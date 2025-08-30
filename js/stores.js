@@ -379,36 +379,36 @@ function showStoreDetails(storeId) {
                   <div class="filter-option" onclick="applyFilter('${storeId}', 'time', 'today')">
                     <i class="fas fa-calendar-day text-warning"></i>
                     <div class="filter-option-text">
-                      <div>اليوم</div>
-                      <small class="text-muted">${moment().format('DD/MM/YYYY')}</small>
+                                    <div>اليوم</div>
+              <small class="text-muted">${typeof moment !== 'undefined' ? moment().format('DD/MM/YYYY') : new Date().toLocaleDateString('ar')}</small>
                     </div>
                   </div>
                   <div class="filter-option" onclick="applyFilter('${storeId}', 'time', 'last_7_days')">
                     <i class="fas fa-calendar-week text-warning"></i>
                     <div class="filter-option-text">
                       <div>آخر 7 أيام</div>
-                      <small class="text-muted">${moment().subtract(6, 'days').format('DD/MM')} - ${moment().format('DD/MM')}</small>
+                      <small class="text-muted">آخر أسبوع</small>
                     </div>
                   </div>
                   <div class="filter-option" onclick="applyFilter('${storeId}', 'time', 'last_30_days')">
                     <i class="fas fa-calendar-alt text-warning"></i>
                     <div class="filter-option-text">
                       <div>آخر 30 يوم</div>
-                      <small class="text-muted">${moment().subtract(29, 'days').format('DD/MM')} - ${moment().format('DD/MM')}</small>
+                      <small class="text-muted">آخر شهر</small>
                     </div>
                   </div>
                   <div class="filter-option" onclick="applyFilter('${storeId}', 'time', 'this_month')">
                     <i class="fas fa-calendar-check text-warning"></i>
                     <div class="filter-option-text">
                       <div>هذا الشهر</div>
-                      <small class="text-muted">${moment().format('MMMM YYYY')}</small>
+                      <small class="text-muted">الشهر الحالي</small>
                     </div>
                   </div>
                   <div class="filter-option" onclick="applyFilter('${storeId}', 'time', 'last_month')">
                     <i class="fas fa-calendar-minus text-warning"></i>
                     <div class="filter-option-text">
                       <div>الشهر السابق</div>
-                      <small class="text-muted">${moment().subtract(1, 'month').format('MMMM YYYY')}</small>
+                      <small class="text-muted">الشهر الماضي</small>
                     </div>
                   </div>
                   
@@ -546,6 +546,10 @@ function showStoreDetails(storeId) {
   document.querySelectorAll('.delete-sale').forEach(btn => { btn.addEventListener('click', () => deleteSale(btn.dataset.id)); });
   document.querySelectorAll('.edit-payment').forEach(btn => { btn.addEventListener('click', () => editPayment(btn.dataset.id)); });
   document.querySelectorAll('.delete-payment').forEach(btn => { btn.addEventListener('click', () => deletePayment(btn.dataset.id)); });
+  
+  // عرض قسم تفاصيل المحل
+  document.getElementById('stores').style.display = 'none';
+  document.getElementById('storeDetailsSection').style.display = 'block';
   
   // تطبيق الفلترة الافتراضية عند فتح المحل
   setTimeout(() => {
@@ -851,11 +855,11 @@ function applyFilter(storeId, type, filterId) {
     case 'time':
       const quickFilters = {
         'all_time': { desc: 'من البداية', sub: 'كل العمليات المسجلة' },
-        'today': { desc: 'اليوم', sub: moment().format('DD/MM/YYYY') },
-        'last_7_days': { desc: 'آخر 7 أيام', sub: `${moment().subtract(6, 'days').format('DD/MM')} - ${moment().format('DD/MM')}` },
-        'last_30_days': { desc: 'آخر 30 يوم', sub: `${moment().subtract(29, 'days').format('DD/MM')} - ${moment().format('DD/MM')}` },
-        'this_month': { desc: 'هذا الشهر', sub: moment().format('MMMM YYYY') },
-        'last_month': { desc: 'الشهر السابق', sub: moment().subtract(1, 'month').format('MMMM YYYY') }
+        'today': { desc: 'اليوم', sub: new Date().toLocaleDateString('ar') },
+        'last_7_days': { desc: 'آخر 7 أيام', sub: 'آخر أسبوع' },
+        'last_30_days': { desc: 'آخر 30 يوم', sub: 'آخر شهر' },
+        'this_month': { desc: 'هذا الشهر', sub: 'الشهر الحالي' },
+        'last_month': { desc: 'الشهر السابق', sub: 'الشهر الماضي' }
       };
       
       if (quickFilters[filterId]) {
@@ -905,7 +909,7 @@ function applyCustomDateFilter(storeId) {
       includeTypes: getActiveFilterTypes(storeId)
     },
     description: 'فترة مخصصة',
-    subtitle: `${moment(startDate).format('DD/MM/YYYY')} - ${moment(endDate).format('DD/MM/YYYY')}`
+    subtitle: `${new Date(startDate).toLocaleDateString('ar')} - ${new Date(endDate).toLocaleDateString('ar')}`
   };
   
   // حفظ الفلترة
