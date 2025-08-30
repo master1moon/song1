@@ -334,7 +334,7 @@ function showStoreDetails(storeId) {
           <div class="row align-items-center">
             <div class="col-md-6">
               <div class="filter-selector-wrapper">
-                <button class="filter-selector-btn btn btn-outline-primary w-100" onclick="toggleFilterDropdown('${storeId}')">
+                <button class="filter-selector-btn btn btn-outline-primary w-100" data-store-id="${storeId}">
                   <div class="d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center gap-2">
                       <i class="fas fa-sync-alt filter-icon"></i>
@@ -552,6 +552,20 @@ function showStoreDetails(storeId) {
   
   // تطبيق الفلترة الافتراضية عند فتح المحل
   setTimeout(() => {
+    // إضافة event listener مباشرة للزر
+    const filterBtn = document.querySelector(`#storeDetails .filter-selector-btn`);
+    if (filterBtn) {
+      console.log('Adding click event to filter button');
+      filterBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Filter button clicked directly');
+        toggleFilterDropdown(storeId);
+      });
+    } else {
+      console.error('Filter button not found');
+    }
+    
     if (window.storeFilter) {
       updateStoreDetailsWithFilter(storeId);
     }
@@ -804,20 +818,31 @@ function saveStore() {
 
 // تبديل قائمة الفلترة
 function toggleFilterDropdown(storeId) {
+  console.log('toggleFilterDropdown called with storeId:', storeId);
   try {
     const dropdown = document.getElementById(`filterDropdown_${storeId}`);
+    console.log('Dropdown element:', dropdown);
+    
     if (!dropdown) {
       console.error('القائمة المنسدلة غير موجودة:', `filterDropdown_${storeId}`);
+      // محاولة البحث عن العنصر بطريقة أخرى
+      const allDropdowns = document.querySelectorAll('.filter-dropdown');
+      console.log('All filter dropdowns found:', allDropdowns.length);
       return;
     }
     
-    const isOpen = dropdown.style.display !== 'none';
+    const currentDisplay = dropdown.style.display;
+    console.log('Current display:', currentDisplay);
+    
+    const isOpen = currentDisplay !== 'none' && currentDisplay !== '';
+    console.log('Is open:', isOpen);
     
     // إغلاق جميع القوائم
     document.querySelectorAll('.filter-dropdown').forEach(d => d.style.display = 'none');
     
     // فتح/إغلاق القائمة الحالية
     dropdown.style.display = isOpen ? 'none' : 'block';
+    console.log('New display:', dropdown.style.display);
     
     // تحديث حالة الزر
     const btn = dropdown.previousElementSibling;
@@ -826,6 +851,7 @@ function toggleFilterDropdown(storeId) {
     }
   } catch (error) {
     console.error('خطأ في toggleFilterDropdown:', error);
+    console.error('Stack:', error.stack);
   }
 }
 
