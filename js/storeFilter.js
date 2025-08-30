@@ -320,7 +320,8 @@ function applySmartOrdering(transactions, previousBalance = 0) {
   const groupedByDate = {};
   
   transactions.forEach(t => {
-    const date = parseDate(t.date).format('YYYY-MM-DD');
+    const dateObj = parseDate(t.date);
+    const date = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
     if (!groupedByDate[date]) {
       groupedByDate[date] = [];
     }
