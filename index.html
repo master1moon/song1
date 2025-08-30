@@ -536,7 +536,7 @@
             border: 1px solid #e1e5eb;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             margin-bottom: 1rem;
-            overflow: hidden;
+            overflow: visible !important; /* تغيير overflow للسماح بظهور القائمة المنسدلة */
         }
         
         .advanced-filter-section .card-body {
@@ -601,6 +601,7 @@
         .filter-selector-wrapper {
             position: relative;
             width: 100%;
+            z-index: 1000; /* إضافة z-index للعنصر الأب */
         }
         
         /* إصلاح عرض الأزرار */
@@ -659,7 +660,7 @@
             border-radius: 8px;
             margin-top: 5px;
             box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            z-index: 1050;
+            z-index: 9999 !important; /* رفع z-index لضمان الظهور فوق كل شيء */
             max-height: 400px;
             overflow-y: auto;
         }
