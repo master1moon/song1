@@ -174,7 +174,6 @@ function applyStoreFilter(storeId, filter = null) {
   switch (filter.type) {
     case FILTER_TYPES.CYCLE:
       const cycles = detectFinancialCycles(storeId);
-      console.log('الدورات المكتشفة:', cycles);
       let targetCycle = null;
       
       if (filter.data.cycleNumber === 'current') {
@@ -182,7 +181,6 @@ function applyStoreFilter(storeId, filter = null) {
       } else if (typeof filter.data.cycleNumber === 'number') {
         targetCycle = cycles[cycles.length - 1 - filter.data.cycleNumber];
       }
-      console.log('الدورة المستهدفة:', targetCycle);
       
       if (targetCycle && targetCycle.transactions) {
         // استخدام العمليات من الدورة مباشرة
@@ -240,8 +238,8 @@ function applyStoreFilter(storeId, filter = null) {
 /**
  * فلترة حسب نطاق التاريخ
  * @param {Array} items - العناصر للفلترة
- * @param {moment} startDate - تاريخ البداية
- * @param {moment} endDate - تاريخ النهاية
+ * @param {Date} startDate - تاريخ البداية
+ * @param {Date} endDate - تاريخ النهاية
  * @returns {Array} العناصر المفلترة
  */
 function filterByDateRange(items, startDate, endDate) {
@@ -249,8 +247,22 @@ function filterByDateRange(items, startDate, endDate) {
     const itemDate = parseDate(item.date);
     if (!itemDate) return false;
     
-    if (startDate && itemDate.isBefore(startDate, 'day')) return false;
-    if (endDate && itemDate.isAfter(endDate, 'day')) return false;
+    // مقارنة التواريخ
+    if (startDate) {
+      const itemTime = new Date(itemDate);
+      itemTime.setHours(0, 0, 0, 0);
+      const startTime = new Date(startDate);
+      startTime.setHours(0, 0, 0, 0);
+      if (itemTime < startTime) return false;
+    }
+    
+    if (endDate) {
+      const itemTime = new Date(itemDate);
+      itemTime.setHours(23, 59, 59, 999);
+      const endTime = new Date(endDate);
+      endTime.setHours(23, 59, 59, 999);
+      if (itemTime > endTime) return false;
+    }
     
     return true;
   });
@@ -262,29 +274,32 @@ function filterByDateRange(items, startDate, endDate) {
  * @returns {Object} تاريخ البداية والنهاية
  */
 function getDateRangeForQuickFilter(filterId) {
-  const today = moment().startOf('day');
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
   
   switch (filterId) {
     case QUICK_FILTERS.TODAY:
       return { startDate: today, endDate: today };
       
     case QUICK_FILTERS.LAST_7_DAYS:
-      return { startDate: moment().subtract(6, 'days').startOf('day'), endDate: today };
+      const last7Days = new Date(today);
+      last7Days.setDate(today.getDate() - 6);
+      return { startDate: last7Days, endDate: today };
       
     case QUICK_FILTERS.LAST_30_DAYS:
-      return { startDate: moment().subtract(29, 'days').startOf('day'), endDate: today };
+      const last30Days = new Date(today);
+      last30Days.setDate(today.getDate() - 29);
+      return { startDate: last30Days, endDate: today };
       
     case QUICK_FILTERS.THIS_MONTH:
-      return { 
-        startDate: moment().startOf('month'), 
-        endDate: moment().endOf('month') 
-      };
+      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      return { startDate: monthStart, endDate: monthEnd };
       
     case QUICK_FILTERS.LAST_MONTH:
-      return { 
-        startDate: moment().subtract(1, 'month').startOf('month'), 
-        endDate: moment().subtract(1, 'month').endOf('month') 
-      };
+      const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+      return { startDate: lastMonthStart, endDate: lastMonthEnd };
       
     case QUICK_FILTERS.ALL_TIME:
       return { startDate: null, endDate: null };
@@ -352,24 +367,39 @@ function applySmartOrdering(transactions, previousBalance = 0) {
 }
 
 /**
- * تحليل التاريخ (نسخة مبسطة)
+ * تحليل التاريخ (نسخة مبسطة بدون moment)
  * @param {string} dateStr - نص التاريخ
- * @returns {moment|null} كائن moment أو null
+ * @returns {Date|null} كائن Date أو null
  */
 function parseDate(dateStr) {
   if (!dateStr) return null;
   
-  // محاولة تحليل التاريخ بصيغ مختلفة
-  const formats = ['YYYY-MM-DD', 'DD/MM/YYYY', 'D/M/YYYY', 'YYYY-M-D'];
-  
-  for (const format of formats) {
-    const m = moment(dateStr, format, true);
-    if (m.isValid()) return m;
+  try {
+    // محاولة تحليل التاريخ
+    const date = new Date(dateStr);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+    
+    // محاولة تحليل التاريخ العربي
+    if (dateStr.includes('٢٠')) {
+      // تحويل الأرقام العربية إلى إنجليزية
+      const arabicNumerals = '٠١٢٣٤٥٦٧٨٩';
+      const englishNumerals = '0123456789';
+      let englishDate = dateStr;
+      for (let i = 0; i < arabicNumerals.length; i++) {
+        englishDate = englishDate.replace(new RegExp(arabicNumerals[i], 'g'), englishNumerals[i]);
+      }
+      const date2 = new Date(englishDate);
+      if (!isNaN(date2.getTime())) {
+        return date2;
+      }
+    }
+  } catch (e) {
+    // تجاهل الأخطاء
   }
   
-  // محاولة أخيرة
-  const m = moment(dateStr);
-  return m.isValid() ? m : null;
+  return null;
 }
 
 // تصدير الدوال للاستخدام العام
