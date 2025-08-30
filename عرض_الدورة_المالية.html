@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عرض الدورة المالية للمحل</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+        }
+        
+        /* رأس الصفحة */
+        .page-header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+        
+        .store-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        /* مؤشر الدورة المالية */
+        .cycle-indicator {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cycle-indicator::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 200px;
+            height: 200px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+        
+        .cycle-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .cycle-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .cycle-stat {
+            background: rgba(255,255,255,0.2);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .cycle-stat .label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        .cycle-stat .value {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        
+        /* فاصل الدورات */
+        .cycle-separator {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            margin: 30px -25px;
+            text-align: center;
+            position: relative;
+            font-weight: 600;
+        }
+        
+        .cycle-separator::before,
+        .cycle-separator::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 30px;
+            height: 2px;
+            background: #e74c3c;
+        }
+        
+        .cycle-separator::before {
+            right: -30px;
+        }
+        
+        .cycle-separator::after {
+            left: -30px;
+        }
+        
+        .cycle-separator .zero-balance {
+            background: white;
+            color: #e74c3c;
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        
+        /* قسم الدورات السابقة */
+        .previous-cycles {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .previous-cycles-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+        
+        .previous-cycles-header:hover {
+            color: #667eea;
+        }
+        
+        /* حاوية العمليات */
+        .timeline-container {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        /* يوم واحد محسّن */
+        .day-block {
+            margin-bottom: 30px;
+            position: relative;
+            padding-right: 30px;
+        }
+        
+        .day-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-right: 4px solid #667eea;
+        }
+        
+        .day-date {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        
+        .day-summary {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            color: #6c757d;
+        }
+        
+        /* العمليات المحسنة */
+        .transaction {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 8px;
+            border-radius: 10px;
+            background: #fafbfc;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .transaction:hover {
+            background: #f1f3f5;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        /* ترتيب ذكي للعمليات */
+        .smart-order-indicator {
+            position: absolute;
+            right: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .transaction.sale .smart-order-indicator {
+            background: #e74c3c;
+        }
+        
+        .transaction.payment .smart-order-indicator {
+            background: #27ae60;
+        }
+        
+        /* أيقونة نوع العملية */
+        .type-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 15px;
+            font-size: 18px;
+        }
+        
+        .transaction.sale .type-icon {
+            background: #fee2e2;
+            color: #e74c3c;
+        }
+        
+        .transaction.payment .type-icon {
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+        
+        /* تفاصيل العملية */
+        .transaction-info {
+            flex: 1;
+        }
+        
+        .transaction-description {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 3px;
+        }
+        
+        .transaction-meta {
+            font-size: 12px;
+            color: #95a5a6;
+            display: flex;
+            gap: 15px;
+        }
+        
+        /* الأرقام */
+        .transaction-numbers {
+            text-align: left;
+        }
+        
+        .amount {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .transaction.sale .amount {
+            color: #e74c3c;
+        }
+        
+        .transaction.payment .amount {
+            color: #27ae60;
+        }
+        
+        .balance-after {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 3px;
+        }
+        
+        .balance-after .value {
+            font-weight: 600;
+            color: #f39c12;
+        }
+        
+        /* تنبيه الترتيب الذكي */
+        .smart-order-notice {
+            background: #e8f5e9;
+            border-right: 3px solid #4caf50;
+            padding: 12px 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            font-size: 13px;
+            color: #2e7d32;
+        }
+        
+        .smart-order-notice i {
+            margin-left: 8px;
+        }
+        
+        /* مؤشر الرصيد الصفر */
+        .zero-balance-marker {
+            text-align: center;
+            margin: 30px 0;
+            position: relative;
+        }
+        
+        .zero-balance-marker::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 0;
+            left: 0;
+            height: 2px;
+            background: #e74c3c;
+            z-index: 1;
+        }
+        
+        .zero-balance-marker span {
+            background: white;
+            padding: 8px 20px;
+            border: 2px solid #e74c3c;
+            border-radius: 20px;
+            color: #e74c3c;
+            font-weight: 600;
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* شريط الإحصائيات السريعة */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .quick-stat {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+        }
+        
+        .quick-stat .icon {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .quick-stat .value {
+            font-weight: bold;
+            font-size: 16px;
+            color: #2c3e50;
+        }
+        
+        .quick-stat .label {
+            font-size: 11px;
+            color: #7f8c8d;
+        }
+        
+        /* تحذير الدين المتراكم */
+        .debt-warning {
+            background: #fff3cd;
+            border-right: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .debt-warning i {
+            font-size: 24px;
+            color: #ffc107;
+        }
+        
+        /* أزرار الإجراءات */
+        .action-buttons {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: white;
+            padding: 15px;
+            border-radius: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <!-- رأس الصفحة -->
+        <div class="page-header">
+            <div class="store-info">
+                <div>
+                    <h3 class="mb-1">محل: عبدالجبار الدباشي</h3>
+                    <p class="text-muted mb-0">نوع السعر: جملة</p>
+                </div>
+                <div>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-plus"></i> عملية جديدة
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- مؤشر الدورة المالية الحالية -->
+        <div class="cycle-indicator">
+            <div class="cycle-title">
+                <i class="fas fa-sync-alt"></i>
+                الدورة المالية الحالية
+                <span class="badge bg-white text-primary">نشطة</span>
+            </div>
+            <p class="mb-0 opacity-90">من آخر تصفير للرصيد: 15 يوليو 2025 (منذ 37 يوم)</p>
+            
+            <div class="cycle-stats">
+                <div class="cycle-stat">
+                    <div class="label">إجمالي المبيعات</div>
+                    <div class="value">173,500 ريال</div>
+                </div>
+                <div class="cycle-stat">
+                    <div class="label">إجمالي التسديدات</div>
+                    <div class="value">69,000 ريال</div>
+                </div>
+                <div class="cycle-stat">
+                    <div class="label">الرصيد الحالي</div>
+                    <div class="value">104,500 ريال</div>
+                </div>
+                <div class="cycle-stat">
+                    <div class="label">أيام الدورة</div>
+                    <div class="value">37 يوم</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- تحذير إن وجد -->
+        <div class="debt-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div>
+                <strong>تنبيه:</strong> الرصيد المستحق تجاوز 100,000 ريال منذ 5 أيام
+            </div>
+        </div>
+        
+        <!-- العمليات الحالية -->
+        <div class="timeline-container">
+            <h5 class="mb-4">
+                <i class="fas fa-history"></i>
+                عمليات الدورة الحالية
+            </h5>
+            
+            <!-- إحصائيات سريعة -->
+            <div class="quick-stats">
+                <div class="quick-stat">
+                    <div class="icon">📦</div>
+                    <div class="value">8</div>
+                    <div class="label">عملية بيع</div>
+                </div>
+                <div class="quick-stat">
+                    <div class="icon">💰</div>
+                    <div class="value">4</div>
+                    <div class="label">عملية تسديد</div>
+                </div>
+                <div class="quick-stat">
+                    <div class="icon">📈</div>
+                    <div class="value">21,687</div>
+                    <div class="label">متوسط البيع</div>
+                </div>
+                <div class="quick-stat">
+                    <div class="icon">⏱️</div>
+                    <div class="value">3 أيام</div>
+                    <div class="label">آخر عملية</div>
+                </div>
+            </div>
+            
+            <!-- يوم به مبيعات وتسديد مع ترتيب ذكي -->
+            <div class="day-block">
+                <div class="day-header">
+                    <div class="day-date">الأربعاء، 7 أغسطس 2025</div>
+                    <div class="day-summary">
+                        <span>🛒 مبيعات: 49,500 ريال</span>
+                        <span>💵 تسديدات: 20,000 ريال</span>
+                        <span>📊 صافي: -29,500 ريال</span>
+                    </div>
+                </div>
+                
+                <div class="smart-order-notice">
+                    <i class="fas fa-info-circle"></i>
+                    تم ترتيب العمليات بذكاء: التسديد أولاً لتقليل الرصيد المدين
+                </div>
+                
+                <!-- تسديد أولاً (ترتيب ذكي) -->
+                <div class="transaction payment">
+                    <span class="smart-order-indicator">1</span>
+                    <div class="type-icon">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="transaction-info">
+                        <div class="transaction-description">تسديد نقدي</div>
+                        <div class="transaction-meta">
+                            <span><i class="fas fa-clock"></i> 12:30 م</span>
+                            <span><i class="fas fa-sticky-note"></i> دفعة جزئية</span>
+                        </div>
+                    </div>
+                    <div class="transaction-numbers">
+                        <div class="amount">+ 20,000</div>
+                        <div class="balance-after">الرصيد: <span class="value">37,500 ريال</span></div>
+                    </div>
+                </div>
+                
+                <!-- ثم المبيعات -->
+                <div class="transaction sale">
+                    <span class="smart-order-indicator">2</span>
+                    <div class="type-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="transaction-info">
+                        <div class="transaction-description">بيع 200 وحدة من باقة 200</div>
+                        <div class="transaction-meta">
+                            <span><i class="fas fa-clock"></i> 9:00 ص</span>
+                            <span><i class="fas fa-calculator"></i> 180 × 200</span>
+                        </div>
+                    </div>
+                    <div class="transaction-numbers">
+                        <div class="amount">- 36,000</div>
+                        <div class="balance-after">الرصيد: <span class="value">73,500 ريال</span></div>
+                    </div>
+                </div>
+                
+                <div class="transaction sale">
+                    <span class="smart-order-indicator">3</span>
+                    <div class="type-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="transaction-info">
+                        <div class="transaction-description">بيع 30 وحدة من باقة 500</div>
+                        <div class="transaction-meta">
+                            <span><i class="fas fa-clock"></i> 5:45 م</span>
+                            <span><i class="fas fa-calculator"></i> 450 × 30</span>
+                        </div>
+                    </div>
+                    <div class="transaction-numbers">
+                        <div class="amount">- 13,500</div>
+                        <div class="balance-after">الرصيد: <span class="value">87,000 ريال</span></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- يوم عادي -->
+            <div class="day-block">
+                <div class="day-header">
+                    <div class="day-date">الاثنين، 5 أغسطس 2025</div>
+                    <div class="day-summary">
+                        <span>🛒 مبيعات: 49,500 ريال</span>
+                        <span>💵 تسديدات: 0 ريال</span>
+                        <span>📊 صافي: -49,500 ريال</span>
+                    </div>
+                </div>
+                
+                <!-- المبيعات بالترتيب الزمني -->
+                <div class="transaction sale">
+                    <div class="type-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="transaction-info">
+                        <div class="transaction-description">بيع 200 وحدة من باقة 200</div>
+                        <div class="transaction-meta">
+                            <span><i class="fas fa-clock"></i> 10:15 ص</span>
+                        </div>
+                    </div>
+                    <div class="transaction-numbers">
+                        <div class="amount">- 36,000</div>
+                        <div class="balance-after">الرصيد: <span class="value">57,500 ريال</span></div>
+                    </div>
+                </div>
+                
+                <div class="transaction sale">
+                    <div class="type-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="transaction-info">
+                        <div class="transaction-description">بيع 30 وحدة من باقة 500</div>
+                        <div class="transaction-meta">
+                            <span><i class="fas fa-clock"></i> 3:20 م</span>
+                        </div>
+                    </div>
+                    <div class="transaction-numbers">
+                        <div class="amount">- 13,500</div>
+                        <div class="balance-after">الرصيد: <span class="value">71,000 ريال</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- فاصل نهاية الدورة السابقة -->
+        <div class="cycle-separator">
+            <span class="zero-balance">
+                <i class="fas fa-check-circle"></i>
+                تم تصفير الرصيد - 15 يوليو 2025
+            </span>
+        </div>
+        
+        <!-- الدورات السابقة (مطوية) -->
+        <div class="previous-cycles">
+            <div class="previous-cycles-header" data-bs-toggle="collapse" data-bs-target="#oldCycles">
+                <h6 class="mb-0">
+                    <i class="fas fa-history"></i>
+                    الدورات المالية السابقة (3 دورات)
+                </h6>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            
+            <div class="collapse" id="oldCycles">
+                <div class="mt-3">
+                    <div class="alert alert-light">
+                        <strong>الدورة السابقة:</strong> 1 مايو - 15 يوليو 2025
+                        <br>
+                        <small>المدة: 75 يوم | إجمالي المبيعات: 320,000 ريال | تم السداد الكامل</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- أزرار الإجراءات -->
+        <div class="action-buttons">
+            <button class="btn btn-sm btn-light">
+                <i class="fas fa-filter"></i> فلترة
+            </button>
+            <button class="btn btn-sm btn-light">
+                <i class="fas fa-search"></i> بحث
+            </button>
+            <button class="btn btn-sm btn-light">
+                <i class="fas fa-print"></i> طباعة
+            </button>
+            <button class="btn btn-sm btn-light">
+                <i class="fas fa-file-export"></i> تصدير
+            </button>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
