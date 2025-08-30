@@ -548,8 +548,7 @@ function showStoreDetails(storeId) {
   document.querySelectorAll('.delete-payment').forEach(btn => { btn.addEventListener('click', () => deletePayment(btn.dataset.id)); });
   
   // عرض قسم تفاصيل المحل
-  document.getElementById('stores').style.display = 'none';
-  document.getElementById('storeDetailsSection').style.display = 'block';
+  // القسم موجود بالفعل، لا حاجة لإخفاء أو إظهار أي شيء
   
   // تطبيق الفلترة الافتراضية عند فتح المحل
   setTimeout(() => {
