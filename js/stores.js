@@ -472,7 +472,7 @@ function showStoreDetails(storeId) {
           <i class="fas fa-table"></i> عرض جدولي
         </button>
         <button type="button" class="btn btn-sm btn-outline-primary" id="timelineView_${storeId}" onclick="switchView('${storeId}', 'timeline')">
-          <i class="fas fa-stream"></i> خط زمني
+          <i class="fas fa-file-invoice"></i> كشف حساب
         </button>
       </div>
     </div>
@@ -1151,7 +1151,7 @@ function switchView(storeId, viewType) {
   }
 }
 
-// تحديث العرض الزمني
+// تحديث العرض الزمني (كشف حساب متحرك)
 function updateTimelineView(storeId) {
   const container = document.getElementById(`timelineContainer_${storeId}`);
   
@@ -1162,6 +1162,7 @@ function updateTimelineView(storeId) {
   
   // الحصول على البيانات المفلترة
   const filteredData = window.storeFilter.applyStoreFilter(storeId);
+  const store = data.stores.find(s => s.id === storeId);
   
   // دمج وترتيب العمليات
   const allTransactions = [
@@ -1185,93 +1186,145 @@ function updateTimelineView(storeId) {
   // ترتيب ذكي
   const orderedTransactions = window.storeFilter.applySmartOrdering(allTransactions, previousBalance);
   
-  // بناء العرض الزمني
-  let html = '';
+  // بناء كشف الحساب المتحرك
+  let html = `
+    <div class="account-statement-container">
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped account-statement-table">
+          <thead class="table-dark">
+            <tr>
+              <th width="5%">#</th>
+              <th width="12%">التاريخ</th>
+              <th width="30%">البيان</th>
+              <th width="13%">مدين</th>
+              <th width="13%">دائن</th>
+              <th width="14%">الرصيد</th>
+              <th width="13%">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+  `;
+  
   let runningBalance = previousBalance;
+  let rowNumber = 1;
   let currentDate = '';
+  let dateSequence = 1;
   
   // إضافة الرصيد الافتتاحي إذا كان هناك رصيد سابق
   if (previousBalance !== 0) {
     html += `
-      <div class="timeline-date-group">
-        <i class="fas fa-history me-2"></i>
-        الرصيد الافتتاحي
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-dot" style="border-color: ${previousBalance > 0 ? '#28a745' : '#dc3545'};"></div>
-        <div class="timeline-content">
-          <div class="timeline-balance ${previousBalance > 0 ? 'positive' : 'negative'}">
-            <i class="fas fa-balance-scale me-2"></i>
-            الرصيد: ${formatNumber(Math.abs(previousBalance))} ${previousBalance > 0 ? 'دائن' : 'مدين'}
-          </div>
-        </div>
-      </div>
+      <tr class="opening-balance-row">
+        <td class="text-center">${rowNumber++}</td>
+        <td>-</td>
+        <td><strong>رصيد سابق</strong></td>
+        <td class="text-center">-</td>
+        <td class="text-center">-</td>
+        <td class="text-center ${previousBalance >= 0 ? 'text-success' : 'text-danger'}">
+          <strong>${formatNumber(Math.abs(previousBalance))}</strong>
+          <small class="d-block">${previousBalance >= 0 ? 'دائن' : 'مدين'}</small>
+        </td>
+        <td>-</td>
+      </tr>
     `;
   }
   
+  // معالجة العمليات
   orderedTransactions.forEach((transaction, index) => {
     const transDate = formatDateEn(transaction.date);
     
-    // إضافة فاصل التاريخ إذا تغير
+    // إضافة رأس التاريخ إذا تغير
     if (transDate !== currentDate) {
       currentDate = transDate;
-      html += `<div class="timeline-date-group">${transDate}</div>`;
+      dateSequence = 1;
+      html += `
+        <tr class="date-header-row">
+          <td colspan="7" class="text-center table-secondary">
+            <strong>${transDate}</strong>
+          </td>
+        </tr>
+      `;
     }
     
     // حساب الرصيد الجديد
     runningBalance += transaction.impact;
     
-    // بناء عنصر العملية
     const isSale = transaction.type === 'sale';
-    const typeText = isSale ? 'مبيعات' : 'تسديد';
-    const icon = isSale ? 'shopping-cart' : 'money-bill-wave';
+    const rowClass = isSale ? 'sale-row' : 'payment-row';
+    
+    // بناء البيان
+    let description = '';
+    if (isSale) {
+      description = transaction.reason || getPackageDisplayName(transaction.packageId);
+      if (transaction.quantity > 0) {
+        description += ` <span class="badge bg-secondary">${transaction.quantity} قطعة</span>`;
+      }
+    } else {
+      description = 'تسديد نقدي';
+      if (transaction.notes) {
+        description += ` - ${transaction.notes}`;
+      }
+    }
     
     html += `
-      <div class="timeline-item">
-        <div class="timeline-dot ${transaction.type}"></div>
-        <div class="timeline-content">
-          <div class="timeline-header">
-            <div>
-              <i class="fas fa-${icon} me-2"></i>
-              <span class="timeline-type ${transaction.type}">${typeText}</span>
-            </div>
-            <span class="timeline-date">${formatTime(transaction.date) || ''}</span>
-          </div>
-          
-          <div class="timeline-details">
-            ${isSale ? `
-              <div class="text-muted mb-1">
-                ${transaction.reason || getPackageDisplayName(transaction.packageId)}
-                ${transaction.quantity > 0 ? `<span class="badge bg-secondary ms-2">${transaction.quantity} قطعة</span>` : ''}
-              </div>
-            ` : `
-              <div class="text-muted mb-1">
-                ${transaction.notes || 'تسديد نقدي'}
-              </div>
-            `}
-            
-            <div class="timeline-amount ${transaction.type}">
-              ${isSale ? '-' : '+'} ${formatNumber(transaction.displayAmount)}
-            </div>
-            
-            <div class="timeline-balance ${runningBalance >= 0 ? 'positive' : 'negative'}">
-              <i class="fas fa-balance-scale me-2"></i>
-              الرصيد: ${formatNumber(Math.abs(runningBalance))} ${runningBalance >= 0 ? 'دائن' : 'مدين'}
-            </div>
-          </div>
-          
-          <div class="timeline-actions">
-            <button class="btn btn-sm btn-warning" onclick="edit${isSale ? 'Sale' : 'Payment'}('${transaction.id}')">
-              <i class="fas fa-edit"></i> تعديل
+      <tr class="${rowClass}">
+        <td class="text-center">${rowNumber++}</td>
+        <td>
+          ${transDate}
+          <small class="text-muted d-block">(${dateSequence++})</small>
+        </td>
+        <td>
+          ${isSale ? '<i class="fas fa-shopping-cart text-danger me-2"></i>' : '<i class="fas fa-money-bill-wave text-success me-2"></i>'}
+          ${description}
+        </td>
+        <td class="text-center text-danger">
+          ${isSale ? formatNumber(transaction.displayAmount) : '-'}
+        </td>
+        <td class="text-center text-success">
+          ${!isSale ? formatNumber(transaction.displayAmount) : '-'}
+        </td>
+        <td class="text-center ${runningBalance >= 0 ? 'text-success' : 'text-danger'}">
+          <strong>${formatNumber(Math.abs(runningBalance))}</strong>
+          <small class="d-block">${runningBalance >= 0 ? 'دائن' : 'مدين'}</small>
+        </td>
+        <td class="text-center">
+          <div class="btn-group btn-group-sm" role="group">
+            <button class="btn btn-warning" onclick="edit${isSale ? 'Sale' : 'Payment'}('${transaction.id}')" title="تعديل">
+              <i class="fas fa-edit"></i>
             </button>
-            <button class="btn btn-sm btn-danger" onclick="delete${isSale ? 'Sale' : 'Payment'}('${transaction.id}')">
-              <i class="fas fa-trash"></i> حذف
+            <button class="btn btn-danger" onclick="delete${isSale ? 'Sale' : 'Payment'}('${transaction.id}')" title="حذف">
+              <i class="fas fa-trash"></i>
             </button>
           </div>
-        </div>
-      </div>
+        </td>
+      </tr>
     `;
   });
+  
+  // إضافة صف الإجمالي النهائي
+  if (orderedTransactions.length > 0) {
+    const totalSales = orderedTransactions.filter(t => t.type === 'sale').reduce((sum, t) => sum + t.displayAmount, 0);
+    const totalPayments = orderedTransactions.filter(t => t.type === 'payment').reduce((sum, t) => sum + t.displayAmount, 0);
+    
+    html += `
+      <tr class="table-dark total-row">
+        <td colspan="3" class="text-end"><strong>الإجمالي</strong></td>
+        <td class="text-center text-danger"><strong>${formatNumber(totalSales)}</strong></td>
+        <td class="text-center text-success"><strong>${formatNumber(totalPayments)}</strong></td>
+        <td class="text-center ${runningBalance >= 0 ? 'text-success' : 'text-danger'}">
+          <strong>${formatNumber(Math.abs(runningBalance))}</strong>
+          <small class="d-block">${runningBalance >= 0 ? 'دائن' : 'مدين'}</small>
+        </td>
+        <td>-</td>
+      </tr>
+    `;
+  }
+  
+  html += `
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
   
   // إضافة رسالة إذا لم توجد عمليات
   if (orderedTransactions.length === 0) {
