@@ -86,7 +86,17 @@ function detectFinancialCycles(storeId) {
     const dateA = parseDate(a.date);
     const dateB = parseDate(b.date);
     if (!dateA || !dateB) return 0;
-    return dateA.getTime() - dateB.getTime();
+    
+    const timeDiff = dateA.getTime() - dateB.getTime();
+    
+    // إذا كانت العمليات في نفس اليوم
+    if (timeDiff === 0) {
+      // ترتيب التسديدات قبل المبيعات لضمان اكتشاف نقاط التصفير بشكل صحيح
+      if (a.type === 'payment' && b.type === 'sale') return -1;
+      if (a.type === 'sale' && b.type === 'payment') return 1;
+    }
+    
+    return timeDiff;
   });
   
   if (allTransactions.length === 0) {
@@ -102,8 +112,11 @@ function detectFinancialCycles(storeId) {
     const transaction = allTransactions[i];
     runningBalance += transaction.amount;
     
+    console.log(`Transaction ${i}: ${transaction.date}, Amount: ${transaction.amount}, Running Balance: ${runningBalance}`);
+    
     // إذا وصل الرصيد إلى الصفر
     if (runningBalance === 0) {
+      console.log(`Zero balance found at index ${i}, date: ${transaction.date}`);
       // إنشاء دورة من آخر نقطة صفر إلى النقطة الحالية
       const cycleStart = lastZeroIndex + 1;
       if (cycleStart <= i) {
@@ -125,6 +138,8 @@ function detectFinancialCycles(storeId) {
   // الدورة الحالية (من آخر تصفير حتى الآن)
   if (lastZeroIndex < allTransactions.length - 1) {
     const currentCycleStart = lastZeroIndex + 1;
+    console.log(`Current cycle starts from index ${currentCycleStart}, date: ${allTransactions[currentCycleStart].date}`);
+    console.log(`Last zero was at index ${lastZeroIndex}`);
     cycles.push({
       startDate: allTransactions[currentCycleStart].date,
       endDate: null,
