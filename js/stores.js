@@ -481,7 +481,7 @@ function showStoreDetails(storeId) {
     <div id="tableViewContent_${storeId}">
       <h5>عمليات البيع</h5>
       <div class="table-responsive mb-4">
-        <table class="data-table"><thead><tr><th>التاريخ</th><th>السبب/الباقة</th><th>الكمية/المبلغ</th><th>الإجمالي</th><th>الإجراءات</th></tr></thead><tbody id="storeSalesTable"></tbody></table>
+        <table class="data-table"><thead><tr><th>التاريخ</th><th>السبب/الباقة</th><th>عدد الكروت/المبلغ</th><th>الإجمالي</th><th>الإجراءات</th></tr></thead><tbody id="storeSalesTable"></tbody></table>
       </div>
       <h5>عمليات التسديد</h5>
       <div class="table-responsive">
@@ -1278,7 +1278,7 @@ function updateTimelineView(storeId) {
     if (isSale) {
       description = transaction.reason || getPackageDisplayName(transaction.packageId);
       if (transaction.quantity > 0) {
-        description += ` <span class="badge bg-secondary">${transaction.quantity} قطعة</span>`;
+        description += ` <span class="badge bg-secondary">${transaction.quantity} كرت</span>`;
       }
     } else {
       description = 'تسديد نقدي';
