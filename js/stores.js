@@ -1089,7 +1089,7 @@ function updateSalesTable(storeId, sales) {
     
     const row = tbody.insertRow();
     row.innerHTML = `
-      <td>${formatDate(sale.date)}</td>
+      <td>${formatDateEn(sale.date)}</td>
       <td>${packageName}</td>
       <td>${sale.quantity > 0 ? sale.quantity : formatNumber(sale.amount)}</td>
       <td class="currency">${formatNumber(sale.total)}</td>
@@ -1113,7 +1113,7 @@ function updatePaymentsTable(storeId, payments) {
   payments.forEach(payment => {
     const row = tbody.insertRow();
     row.innerHTML = `
-      <td>${formatDate(payment.date)}</td>
+      <td>${formatDateEn(payment.date)}</td>
       <td class="currency">${formatNumber(payment.amount)}</td>
       <td>${payment.notes || '-'}</td>
       <td>
@@ -1210,7 +1210,7 @@ function updateTimelineView(storeId) {
   }
   
   orderedTransactions.forEach((transaction, index) => {
-    const transDate = formatDate(transaction.date);
+    const transDate = formatDateEn(transaction.date);
     
     // إضافة فاصل التاريخ إذا تغير
     if (transDate !== currentDate) {
