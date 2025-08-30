@@ -1020,10 +1020,9 @@ async function exportStoreData(storeId, format) {
   }
   const store = data.stores.find(s => (s.id + '') === (storeId + ''));
   if (!store) { showNotification('تعذر تحديد المحل للتصدير', 'error'); return; }
-  var fromInput = document.getElementById('storeFromDate');
-  var toInput = document.getElementById('storeToDate');
-  const fromDate = (fromInput && fromInput.value) || '';
-  const toDate = (toInput && toInput.value) || '';
+  // مؤقتاً: استخدام كل البيانات بدون فلترة تاريخ - سيتم تحديثه مع نظام الفلترة الجديد
+  const fromDate = '';
+  const toDate = '';
   const salesAll = (data.sales || []).filter(s => (s.storeId + '') === (storeId + ''));
   const paymentsAll = (data.payments || []).filter(p => (p.storeId + '') === (storeId + ''));
   function parseDate(d) {

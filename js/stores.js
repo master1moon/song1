@@ -334,11 +334,7 @@ function showStoreDetails(storeId) {
     <div class="table-responsive">
       <table class="data-table"><thead><tr><th>التاريخ</th><th>المبلغ</th><th>ملاحظات</th><th>الإجراءات</th></tr></thead><tbody id="storePaymentsTable"></tbody></table>
     </div>
-    <div class="card mb-3"><div class="card-body"><div class="row g-2 align-items-end">
-      <div class="col-md-4"><label class="form-label">من تاريخ</label><input type="date" id="storeFromDate" class="form-control"></div>
-      <div class="col-md-4"><label class="form-label">إلى تاريخ</label><input type="date" id="storeToDate" class="form-control"></div>
-      <div class="col-md-4"><button class="btn btn-primary w-100" id="storeApplyFilterBtn">تطبيق الفترة للتصدير</button></div>
-    </div></div></div>
+    <!-- تم إزالة فلترة التواريخ المخصصة مؤقتاً - سيتم استبدالها بنظام الفلترة المتقدم -->
     <div class="export-options mt-2">
       <button type="button" class="btn btn-outline-success export-btn" data-type="store" data-store="${storeId}" data-format="excel"><i class="fas fa-file-excel me-2"></i>تصدير Excel</button>
       <button type="button" class="btn btn-outline-secondary export-btn" data-type="store" data-store="${storeId}" data-format="txt"><i class="fas fa-file-alt me-2"></i>تصدير TXT</button>
