@@ -536,6 +536,11 @@
             border: 1px solid #e1e5eb;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             margin-bottom: 1rem;
+            overflow: hidden;
+        }
+        
+        .advanced-filter-section .card-body {
+            padding: 1rem;
         }
         
         /* إصلاح التخطيط للشاشات الصغيرة */
@@ -546,12 +551,22 @@
             
             .advanced-filter-section .col-md-6 {
                 margin-bottom: 1rem;
+                width: 100%;
+            }
+            
+            /* إصلاح أزرار الفلترة على الجوال */
+            .advanced-filter-section .d-flex.gap-2 {
+                flex-wrap: wrap;
+                justify-content: center !important;
+                margin-top: 0.5rem;
             }
             
             .filter-type-btn {
                 min-width: auto;
                 padding: 0.375rem 0.75rem;
                 font-size: 0.875rem;
+                flex: 1;
+                max-width: 120px;
             }
             
             .filter-selector-btn {
@@ -568,8 +583,37 @@
             }
         }
         
+        /* إصلاح التخطيط لسطح المكتب */
+        @media (min-width: 769px) {
+            .advanced-filter-section .row {
+                align-items: center;
+            }
+            
+            .advanced-filter-section .col-md-6:first-child {
+                padding-right: 0.5rem;
+            }
+            
+            .advanced-filter-section .col-md-6:last-child {
+                padding-left: 0.5rem;
+            }
+        }
+        
         .filter-selector-wrapper {
             position: relative;
+            width: 100%;
+        }
+        
+        /* إصلاح عرض الأزرار */
+        .advanced-filter-section .btn-group {
+            display: flex;
+            gap: 0.25rem;
+        }
+        
+        @media (max-width: 768px) {
+            .advanced-filter-section .btn-group {
+                width: 100%;
+                justify-content: space-between;
+            }
         }
         
         .filter-selector-btn {
