@@ -804,18 +804,29 @@ function saveStore() {
 
 // تبديل قائمة الفلترة
 function toggleFilterDropdown(storeId) {
-  const dropdown = document.getElementById(`filterDropdown_${storeId}`);
-  const isOpen = dropdown.style.display !== 'none';
-  
-  // إغلاق جميع القوائم
-  document.querySelectorAll('.filter-dropdown').forEach(d => d.style.display = 'none');
-  
-  // فتح/إغلاق القائمة الحالية
-  dropdown.style.display = isOpen ? 'none' : 'block';
-  
-  // تحديث حالة الزر
-  const btn = dropdown.previousElementSibling;
-  btn.classList.toggle('active', !isOpen);
+  try {
+    const dropdown = document.getElementById(`filterDropdown_${storeId}`);
+    if (!dropdown) {
+      console.error('القائمة المنسدلة غير موجودة:', `filterDropdown_${storeId}`);
+      return;
+    }
+    
+    const isOpen = dropdown.style.display !== 'none';
+    
+    // إغلاق جميع القوائم
+    document.querySelectorAll('.filter-dropdown').forEach(d => d.style.display = 'none');
+    
+    // فتح/إغلاق القائمة الحالية
+    dropdown.style.display = isOpen ? 'none' : 'block';
+    
+    // تحديث حالة الزر
+    const btn = dropdown.previousElementSibling;
+    if (btn) {
+      btn.classList.toggle('active', !isOpen);
+    }
+  } catch (error) {
+    console.error('خطأ في toggleFilterDropdown:', error);
+  }
 }
 
 // إغلاق القوائم عند النقر خارجها
@@ -1013,38 +1024,43 @@ function updateFilterButton(storeId, filter) {
 
 // تحديث عرض تفاصيل المحل مع الفلترة
 function updateStoreDetailsWithFilter(storeId) {
-  if (!window.storeFilter) {
-    console.error('محرك الفلترة غير متوفر');
-    return;
-  }
-  
-  // الحصول على البيانات المفلترة
-  const filteredData = window.storeFilter.applyStoreFilter(storeId);
-  const filter = filteredData.filter;
-  
-  // تحديث ملخص الفلترة
-  updateFilterSummary(storeId, filteredData);
-  
-  // تطبيق الترتيب الذكي
-  const allTransactions = [
-    ...filteredData.sales.map(s => ({ ...s, type: 'sale', amount: -s.total })),
-    ...filteredData.payments.map(p => ({ ...p, type: 'payment', amount: p.amount }))
-  ];
-  
-  // حساب الرصيد السابق
-  const previousBalance = calculatePreviousBalance(storeId, filter);
-  
-  // ترتيب العمليات
-  const orderedTransactions = window.storeFilter.applySmartOrdering(allTransactions, previousBalance);
-  
-  // تحديث الجداول
-  updateSalesTable(storeId, orderedTransactions.filter(t => t.type === 'sale'));
-  updatePaymentsTable(storeId, orderedTransactions.filter(t => t.type === 'payment'));
-  
-  // تحديث العرض الزمني إذا كان نشطاً
-  const timelineView = document.getElementById(`timelineViewContent_${storeId}`);
-  if (timelineView && timelineView.style.display !== 'none') {
-    updateTimelineView(storeId);
+  try {
+    if (!window.storeFilter) {
+      console.error('محرك الفلترة غير متوفر');
+      return;
+    }
+    
+    // الحصول على البيانات المفلترة
+    const filteredData = window.storeFilter.applyStoreFilter(storeId);
+    const filter = filteredData.filter;
+    
+    // تحديث ملخص الفلترة
+    updateFilterSummary(storeId, filteredData);
+    
+    // تطبيق الترتيب الذكي
+    const allTransactions = [
+      ...filteredData.sales.map(s => ({ ...s, type: 'sale', amount: -s.total })),
+      ...filteredData.payments.map(p => ({ ...p, type: 'payment', amount: p.amount }))
+    ];
+    
+    // حساب الرصيد السابق
+    const previousBalance = calculatePreviousBalance(storeId, filter);
+    
+    // ترتيب العمليات
+    const orderedTransactions = window.storeFilter.applySmartOrdering(allTransactions, previousBalance);
+    
+    // تحديث الجداول
+    updateSalesTable(storeId, orderedTransactions.filter(t => t.type === 'sale'));
+    updatePaymentsTable(storeId, orderedTransactions.filter(t => t.type === 'payment'));
+    
+    // تحديث العرض الزمني إذا كان نشطاً
+    const timelineView = document.getElementById(`timelineViewContent_${storeId}`);
+    if (timelineView && timelineView.style.display !== 'none') {
+      updateTimelineView(storeId);
+    }
+  } catch (error) {
+    console.error('خطأ في updateStoreDetailsWithFilter:', error);
+    console.error('تفاصيل الخطأ:', error.stack);
   }
 }
 

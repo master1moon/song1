@@ -1033,8 +1033,14 @@ async function exportStoreData(storeId, format) {
         toDate = activeFilter.data.endDate;
       } else if (activeFilter.type === 'time') {
         const dateRange = window.storeFilter.getDateRangeForQuickFilter(activeFilter.id);
-        if (dateRange.startDate) fromDate = dateRange.startDate.format('YYYY-MM-DD');
-        if (dateRange.endDate) toDate = dateRange.endDate.format('YYYY-MM-DD');
+        if (dateRange.startDate) {
+          const d = new Date(dateRange.startDate);
+          fromDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+        if (dateRange.endDate) {
+          const d = new Date(dateRange.endDate);
+          toDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
       }
       // للدورات المالية، سيتم معالجتها داخل الفلترة
     }

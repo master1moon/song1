@@ -86,7 +86,7 @@ function detectFinancialCycles(storeId) {
     const dateA = parseDate(a.date);
     const dateB = parseDate(b.date);
     if (!dateA || !dateB) return 0;
-    return dateA.valueOf() - dateB.valueOf();
+    return dateA.getTime() - dateB.getTime();
   });
   
   if (allTransactions.length === 0) {
