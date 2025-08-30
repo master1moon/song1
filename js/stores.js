@@ -326,6 +326,145 @@ function showStoreDetails(storeId) {
         <i class="fas fa-money-bill-wave me-2"></i>تسديد دفعة
       </button>
     </div>
+    
+    <!-- شريط الفلترة المتقدم -->
+    <div class="advanced-filter-section mb-4">
+      <div class="card">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-md-6">
+              <div class="filter-selector-wrapper">
+                <button class="filter-selector-btn btn btn-outline-primary w-100" onclick="toggleFilterDropdown('${storeId}')">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                      <i class="fas fa-sync-alt filter-icon"></i>
+                      <div class="text-start">
+                        <div class="filter-title">الدورة المالية الحالية</div>
+                        <small class="filter-subtitle text-muted">من آخر تصفير حتى الآن</small>
+                      </div>
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+                  </div>
+                </button>
+                
+                <!-- قائمة الفلترة المنسدلة -->
+                <div class="filter-dropdown" id="filterDropdown_${storeId}" style="display: none;">
+                  <!-- الدورات المالية -->
+                  <div class="filter-group-title">الدورات المالية</div>
+                  <div class="filter-option active" onclick="applyFilter('${storeId}', 'cycle', 'current_cycle')">
+                    <i class="fas fa-sync-alt text-primary"></i>
+                    <div class="filter-option-text">
+                      <div>الدورة المالية الحالية</div>
+                      <small class="text-muted">من آخر تصفير حتى الآن</small>
+                    </div>
+                    <span class="badge bg-danger">افتراضي</span>
+                  </div>
+                  <div class="filter-option" onclick="applyFilter('${storeId}', 'cycle', 'previous_cycle')">
+                    <i class="fas fa-history text-info"></i>
+                    <div class="filter-option-text">
+                      <div>الدورة السابقة</div>
+                      <small class="text-muted">الدورة المالية المكتملة السابقة</small>
+                    </div>
+                  </div>
+                  <div class="filter-option" onclick="applyFilter('${storeId}', 'time', 'all_time')">
+                    <i class="fas fa-infinity text-secondary"></i>
+                    <div class="filter-option-text">
+                      <div>من البداية</div>
+                      <small class="text-muted">كل العمليات المسجلة</small>
+                    </div>
+                  </div>
+                  
+                  <!-- الفترات الزمنية -->
+                  <div class="filter-group-title">فترات زمنية سريعة</div>
+                  <div class="filter-option" onclick="applyFilter('${storeId}', 'time', 'today')">
+                    <i class="fas fa-calendar-day text-warning"></i>
+                    <div class="filter-option-text">
+                      <div>اليوم</div>
+                      <small class="text-muted">${moment().format('DD/MM/YYYY')}</small>
+                    </div>
+                  </div>
+                  <div class="filter-option" onclick="applyFilter('${storeId}', 'time', 'last_7_days')">
+                    <i class="fas fa-calendar-week text-warning"></i>
+                    <div class="filter-option-text">
+                      <div>آخر 7 أيام</div>
+                      <small class="text-muted">${moment().subtract(6, 'days').format('DD/MM')} - ${moment().format('DD/MM')}</small>
+                    </div>
+                  </div>
+                  <div class="filter-option" onclick="applyFilter('${storeId}', 'time', 'last_30_days')">
+                    <i class="fas fa-calendar-alt text-warning"></i>
+                    <div class="filter-option-text">
+                      <div>آخر 30 يوم</div>
+                      <small class="text-muted">${moment().subtract(29, 'days').format('DD/MM')} - ${moment().format('DD/MM')}</small>
+                    </div>
+                  </div>
+                  <div class="filter-option" onclick="applyFilter('${storeId}', 'time', 'this_month')">
+                    <i class="fas fa-calendar-check text-warning"></i>
+                    <div class="filter-option-text">
+                      <div>هذا الشهر</div>
+                      <small class="text-muted">${moment().format('MMMM YYYY')}</small>
+                    </div>
+                  </div>
+                  <div class="filter-option" onclick="applyFilter('${storeId}', 'time', 'last_month')">
+                    <i class="fas fa-calendar-minus text-warning"></i>
+                    <div class="filter-option-text">
+                      <div>الشهر السابق</div>
+                      <small class="text-muted">${moment().subtract(1, 'month').format('MMMM YYYY')}</small>
+                    </div>
+                  </div>
+                  
+                  <!-- مخصص -->
+                  <div class="filter-group-title">مخصص</div>
+                  <div class="filter-option" onclick="showCustomDateFilter('${storeId}')">
+                    <i class="fas fa-calendar-plus text-success"></i>
+                    <div class="filter-option-text">
+                      <div>تحديد فترة مخصصة</div>
+                      <small class="text-muted">اختر تاريخ البداية والنهاية</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="d-flex gap-2 justify-content-end">
+                <button class="btn btn-sm btn-outline-secondary filter-type-btn active" id="filterAll_${storeId}" onclick="toggleFilterType('${storeId}', 'all')">
+                  <i class="fas fa-list"></i> الكل
+                </button>
+                <button class="btn btn-sm btn-outline-danger filter-type-btn" id="filterSales_${storeId}" onclick="toggleFilterType('${storeId}', 'sales')">
+                  <i class="fas fa-shopping-cart"></i> مبيعات فقط
+                </button>
+                <button class="btn btn-sm btn-outline-success filter-type-btn" id="filterPayments_${storeId}" onclick="toggleFilterType('${storeId}', 'payments')">
+                  <i class="fas fa-money-bill"></i> تسديدات فقط
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- حقول التاريخ المخصص (مخفية افتراضياً) -->
+          <div class="custom-date-section mt-3" id="customDateSection_${storeId}" style="display: none;">
+            <div class="row g-2">
+              <div class="col-md-5">
+                <input type="date" class="form-control" id="customStartDate_${storeId}" placeholder="من تاريخ">
+              </div>
+              <div class="col-md-5">
+                <input type="date" class="form-control" id="customEndDate_${storeId}" placeholder="إلى تاريخ">
+              </div>
+              <div class="col-md-2">
+                <button class="btn btn-primary w-100" onclick="applyCustomDateFilter('${storeId}')">
+                  <i class="fas fa-check"></i> تطبيق
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- ملخص الفترة المحددة -->
+    <div class="filter-summary mb-3" id="filterSummary_${storeId}">
+      <!-- سيتم ملؤه بواسطة JavaScript -->
+    </div>
+    
     <h5>عمليات البيع</h5>
     <div class="table-responsive mb-4">
       <table class="data-table"><thead><tr><th>التاريخ</th><th>السبب/الباقة</th><th>الكمية/المبلغ</th><th>الإجمالي</th><th>الإجراءات</th></tr></thead><tbody id="storeSalesTable"></tbody></table>
@@ -385,6 +524,13 @@ function showStoreDetails(storeId) {
   document.querySelectorAll('.delete-sale').forEach(btn => { btn.addEventListener('click', () => deleteSale(btn.dataset.id)); });
   document.querySelectorAll('.edit-payment').forEach(btn => { btn.addEventListener('click', () => editPayment(btn.dataset.id)); });
   document.querySelectorAll('.delete-payment').forEach(btn => { btn.addEventListener('click', () => deletePayment(btn.dataset.id)); });
+  
+  // تطبيق الفلترة الافتراضية عند فتح المحل
+  setTimeout(() => {
+    if (window.storeFilter) {
+      updateStoreDetailsWithFilter(storeId);
+    }
+  }, 100);
 }
 
 /**
@@ -626,3 +772,318 @@ function saveStore() {
     addPackage();
   });
 })();
+
+/**
+ * دوال الفلترة المتقدمة للمحلات
+ */
+
+// تبديل قائمة الفلترة
+function toggleFilterDropdown(storeId) {
+  const dropdown = document.getElementById(`filterDropdown_${storeId}`);
+  const isOpen = dropdown.style.display !== 'none';
+  
+  // إغلاق جميع القوائم
+  document.querySelectorAll('.filter-dropdown').forEach(d => d.style.display = 'none');
+  
+  // فتح/إغلاق القائمة الحالية
+  dropdown.style.display = isOpen ? 'none' : 'block';
+  
+  // تحديث حالة الزر
+  const btn = dropdown.previousElementSibling;
+  btn.classList.toggle('active', !isOpen);
+}
+
+// إغلاق القوائم عند النقر خارجها
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.filter-selector-wrapper')) {
+    document.querySelectorAll('.filter-dropdown').forEach(d => d.style.display = 'none');
+    document.querySelectorAll('.filter-selector-btn').forEach(b => b.classList.remove('active'));
+  }
+});
+
+// تطبيق فلترة
+function applyFilter(storeId, type, filterId) {
+  // إنشاء كائن الفلترة
+  let filter = {
+    type: type,
+    id: filterId,
+    data: {
+      includeTypes: getActiveFilterTypes(storeId)
+    }
+  };
+  
+  // معالجة حسب نوع الفلترة
+  switch(type) {
+    case 'cycle':
+      if (filterId === 'current_cycle') {
+        filter.data.cycleNumber = 'current';
+        filter.description = 'الدورة المالية الحالية';
+        filter.subtitle = 'من آخر تصفير حتى الآن';
+      } else if (filterId === 'previous_cycle') {
+        filter.data.cycleNumber = 1;
+        filter.description = 'الدورة السابقة';
+        filter.subtitle = 'الدورة المالية المكتملة السابقة';
+      }
+      break;
+      
+    case 'time':
+      const quickFilters = {
+        'all_time': { desc: 'من البداية', sub: 'كل العمليات المسجلة' },
+        'today': { desc: 'اليوم', sub: moment().format('DD/MM/YYYY') },
+        'last_7_days': { desc: 'آخر 7 أيام', sub: `${moment().subtract(6, 'days').format('DD/MM')} - ${moment().format('DD/MM')}` },
+        'last_30_days': { desc: 'آخر 30 يوم', sub: `${moment().subtract(29, 'days').format('DD/MM')} - ${moment().format('DD/MM')}` },
+        'this_month': { desc: 'هذا الشهر', sub: moment().format('MMMM YYYY') },
+        'last_month': { desc: 'الشهر السابق', sub: moment().subtract(1, 'month').format('MMMM YYYY') }
+      };
+      
+      if (quickFilters[filterId]) {
+        filter.description = quickFilters[filterId].desc;
+        filter.subtitle = quickFilters[filterId].sub;
+      }
+      break;
+  }
+  
+  // حفظ الفلترة
+  if (window.storeFilter) {
+    window.storeFilter.setActiveStoreFilter(storeId, filter);
+  }
+  
+  // إغلاق القائمة
+  document.getElementById(`filterDropdown_${storeId}`).style.display = 'none';
+  
+  // تحديث الزر
+  updateFilterButton(storeId, filter);
+  
+  // تحديث العرض
+  updateStoreDetailsWithFilter(storeId);
+}
+
+// عرض التاريخ المخصص
+function showCustomDateFilter(storeId) {
+  document.getElementById(`filterDropdown_${storeId}`).style.display = 'none';
+  document.getElementById(`customDateSection_${storeId}`).style.display = 'block';
+}
+
+// تطبيق التاريخ المخصص
+function applyCustomDateFilter(storeId) {
+  const startDate = document.getElementById(`customStartDate_${storeId}`).value;
+  const endDate = document.getElementById(`customEndDate_${storeId}`).value;
+  
+  if (!startDate || !endDate) {
+    showNotification('يرجى تحديد تاريخ البداية والنهاية', 'error');
+    return;
+  }
+  
+  const filter = {
+    type: 'custom',
+    id: 'custom_range',
+    data: {
+      startDate: startDate,
+      endDate: endDate,
+      includeTypes: getActiveFilterTypes(storeId)
+    },
+    description: 'فترة مخصصة',
+    subtitle: `${moment(startDate).format('DD/MM/YYYY')} - ${moment(endDate).format('DD/MM/YYYY')}`
+  };
+  
+  // حفظ الفلترة
+  if (window.storeFilter) {
+    window.storeFilter.setActiveStoreFilter(storeId, filter);
+  }
+  
+  // إخفاء حقول التاريخ
+  document.getElementById(`customDateSection_${storeId}`).style.display = 'none';
+  
+  // تحديث الزر
+  updateFilterButton(storeId, filter);
+  
+  // تحديث العرض
+  updateStoreDetailsWithFilter(storeId);
+}
+
+// تبديل نوع الفلترة (مبيعات/تسديدات)
+function toggleFilterType(storeId, type) {
+  // تحديث الأزرار
+  document.querySelectorAll(`#filterAll_${storeId}, #filterSales_${storeId}, #filterPayments_${storeId}`)
+    .forEach(btn => btn.classList.remove('active'));
+  
+  if (type === 'all') {
+    document.getElementById(`filterAll_${storeId}`).classList.add('active');
+  } else if (type === 'sales') {
+    document.getElementById(`filterSales_${storeId}`).classList.add('active');
+  } else if (type === 'payments') {
+    document.getElementById(`filterPayments_${storeId}`).classList.add('active');
+  }
+  
+  // تحديث الفلترة
+  updateStoreDetailsWithFilter(storeId);
+}
+
+// الحصول على أنواع الفلترة النشطة
+function getActiveFilterTypes(storeId) {
+  const types = [];
+  
+  if (document.getElementById(`filterAll_${storeId}`).classList.contains('active')) {
+    types.push('sales', 'payments');
+  } else {
+    if (document.getElementById(`filterSales_${storeId}`).classList.contains('active')) {
+      types.push('sales');
+    }
+    if (document.getElementById(`filterPayments_${storeId}`).classList.contains('active')) {
+      types.push('payments');
+    }
+  }
+  
+  return types;
+}
+
+// تحديث زر الفلترة
+function updateFilterButton(storeId, filter) {
+  const btn = document.querySelector(`#filterDropdown_${storeId}`).previousElementSibling;
+  const titleEl = btn.querySelector('.filter-title');
+  const subtitleEl = btn.querySelector('.filter-subtitle');
+  const iconEl = btn.querySelector('.filter-icon');
+  
+  // تحديث النص
+  titleEl.textContent = filter.description;
+  subtitleEl.textContent = filter.subtitle;
+  
+  // تحديث الأيقونة
+  iconEl.className = 'filter-icon fas ';
+  if (filter.type === 'cycle') {
+    iconEl.className += 'fa-sync-alt';
+  } else if (filter.type === 'time') {
+    iconEl.className += 'fa-calendar';
+  } else if (filter.type === 'custom') {
+    iconEl.className += 'fa-calendar-plus';
+  }
+  
+  // تحديث الخيار النشط في القائمة
+  document.querySelectorAll(`#filterDropdown_${storeId} .filter-option`).forEach(opt => {
+    opt.classList.remove('active');
+  });
+}
+
+// تحديث عرض تفاصيل المحل مع الفلترة
+function updateStoreDetailsWithFilter(storeId) {
+  if (!window.storeFilter) {
+    console.error('محرك الفلترة غير متوفر');
+    return;
+  }
+  
+  // الحصول على البيانات المفلترة
+  const filteredData = window.storeFilter.applyStoreFilter(storeId);
+  const filter = filteredData.filter;
+  
+  // تحديث ملخص الفلترة
+  updateFilterSummary(storeId, filteredData);
+  
+  // تطبيق الترتيب الذكي
+  const allTransactions = [
+    ...filteredData.sales.map(s => ({ ...s, type: 'sale', amount: -s.total })),
+    ...filteredData.payments.map(p => ({ ...p, type: 'payment', amount: p.amount }))
+  ];
+  
+  // حساب الرصيد السابق
+  const previousBalance = calculatePreviousBalance(storeId, filter);
+  
+  // ترتيب العمليات
+  const orderedTransactions = window.storeFilter.applySmartOrdering(allTransactions, previousBalance);
+  
+  // تحديث الجداول
+  updateSalesTable(storeId, orderedTransactions.filter(t => t.type === 'sale'));
+  updatePaymentsTable(storeId, orderedTransactions.filter(t => t.type === 'payment'));
+}
+
+// تحديث ملخص الفلترة
+function updateFilterSummary(storeId, filteredData) {
+  const summaryEl = document.getElementById(`filterSummary_${storeId}`);
+  
+  // حساب الإحصائيات
+  const totalSales = filteredData.sales.reduce((sum, s) => sum + s.total, 0);
+  const totalPayments = filteredData.payments.reduce((sum, p) => sum + p.amount, 0);
+  const balance = totalSales - totalPayments;
+  const transactionCount = filteredData.sales.length + filteredData.payments.length;
+  
+  // عرض الملخص
+  summaryEl.innerHTML = `
+    <div class="filter-summary-title">
+      <i class="fas fa-chart-line me-2"></i>
+      ${filteredData.filter.description}
+      <small class="ms-2 opacity-75">${filteredData.filter.subtitle}</small>
+    </div>
+    <div class="filter-summary-stats">
+      <div class="filter-summary-stat">
+        <div class="value">${formatNumber(totalSales)}</div>
+        <div class="label">إجمالي المبيعات</div>
+      </div>
+      <div class="filter-summary-stat">
+        <div class="value">${formatNumber(totalPayments)}</div>
+        <div class="label">إجمالي التسديدات</div>
+      </div>
+      <div class="filter-summary-stat">
+        <div class="value">${formatNumber(Math.abs(balance))}</div>
+        <div class="label">الرصيد ${balance >= 0 ? 'الدائن' : 'المدين'}</div>
+      </div>
+      <div class="filter-summary-stat">
+        <div class="value">${transactionCount}</div>
+        <div class="label">عدد العمليات</div>
+      </div>
+    </div>
+  `;
+  
+  summaryEl.classList.add('show');
+}
+
+// حساب الرصيد السابق للفترة
+function calculatePreviousBalance(storeId, filter) {
+  // TODO: حساب الرصيد قبل بداية الفترة المحددة
+  return 0;
+}
+
+// تحديث جدول المبيعات
+function updateSalesTable(storeId, sales) {
+  const tbody = document.getElementById('storeSalesTable');
+  tbody.innerHTML = '';
+  
+  sales.forEach(sale => {
+    const row = tbody.insertRow();
+    row.innerHTML = `
+      <td>${formatDate(sale.date)}</td>
+      <td>${sale.reason || getPackageName(sale.packageId) || 'غير محدد'}</td>
+      <td>${sale.quantity > 0 ? sale.quantity : sale.amount}</td>
+      <td class="currency">${formatNumber(sale.total)}</td>
+      <td>
+        <button class="btn btn-sm btn-warning" onclick="editSale('${sale.id}')">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="btn btn-sm btn-danger" onclick="deleteSale('${sale.id}')">
+          <i class="fas fa-trash"></i>
+        </button>
+      </td>
+    `;
+  });
+}
+
+// تحديث جدول التسديدات
+function updatePaymentsTable(storeId, payments) {
+  const tbody = document.getElementById('storePaymentsTable');
+  tbody.innerHTML = '';
+  
+  payments.forEach(payment => {
+    const row = tbody.insertRow();
+    row.innerHTML = `
+      <td>${formatDate(payment.date)}</td>
+      <td class="currency">${formatNumber(payment.amount)}</td>
+      <td>${payment.notes || '-'}</td>
+      <td>
+        <button class="btn btn-sm btn-warning" onclick="editPayment('${payment.id}')">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="btn btn-sm btn-danger" onclick="deletePayment('${payment.id}')">
+          <i class="fas fa-trash"></i>
+        </button>
+      </td>
+    `;
+  });
+}

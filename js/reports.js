@@ -1020,9 +1020,25 @@ async function exportStoreData(storeId, format) {
   }
   const store = data.stores.find(s => (s.id + '') === (storeId + ''));
   if (!store) { showNotification('تعذر تحديد المحل للتصدير', 'error'); return; }
-  // مؤقتاً: استخدام كل البيانات بدون فلترة تاريخ - سيتم تحديثه مع نظام الفلترة الجديد
-  const fromDate = '';
-  const toDate = '';
+  // استخدام الفلترة النشطة
+  let fromDate = '';
+  let toDate = '';
+  
+  // الحصول على الفلترة النشطة إن وجدت
+  if (window.storeFilter) {
+    const activeFilter = window.storeFilter.getActiveStoreFilter(storeId);
+    if (activeFilter) {
+      if (activeFilter.type === 'custom') {
+        fromDate = activeFilter.data.startDate;
+        toDate = activeFilter.data.endDate;
+      } else if (activeFilter.type === 'time') {
+        const dateRange = window.storeFilter.getDateRangeForQuickFilter(activeFilter.id);
+        if (dateRange.startDate) fromDate = dateRange.startDate.format('YYYY-MM-DD');
+        if (dateRange.endDate) toDate = dateRange.endDate.format('YYYY-MM-DD');
+      }
+      // للدورات المالية، سيتم معالجتها داخل الفلترة
+    }
+  }
   const salesAll = (data.sales || []).filter(s => (s.storeId + '') === (storeId + ''));
   const paymentsAll = (data.payments || []).filter(p => (p.storeId + '') === (storeId + ''));
   function parseDate(d) {
