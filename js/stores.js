@@ -300,6 +300,15 @@ function showStoreDetails(storeId) {
       </div>
     </div>` : '';
     
+  // معلومات الخصم إن وجدت
+  const discountInfo = store.discount && store.discount.isActive ? 
+    `<div class="alert alert-success mt-3">
+      <i class="fas ${store.discount.type === 'percentage' ? 'fa-percentage' : 'fa-coins'} me-2"></i>
+      <strong>خصم دائم:</strong> 
+      ${store.discount.type === 'fixed' ? formatNumber(store.discount.value) : store.discount.value}${store.discount.type === 'percentage' ? '%' : ' ريال'} 
+      على جميع المبيعات الجديدة
+    </div>` : '';
+  
   details.innerHTML = `
     <!-- معلومات المحل الأساسية -->
     <div class="row mb-4">
@@ -592,7 +601,12 @@ function addStore() {
   document.getElementById('storePhone').value = '';
   document.getElementById('storeDate').value = getTodayDate();
   
-
+  // تنظيف حقول الخصم
+  document.getElementById('storeDiscountActive').checked = false;
+  document.getElementById('storeDiscountType').value = 'percentage';
+  document.getElementById('storeDiscountValue').value = '';
+  document.getElementById('discountSettings').style.display = 'none';
+  document.getElementById('discountUnit').textContent = '%';
   
   const modal = new bootstrap.Modal(document.getElementById('storeModal')); modal.show();
 }
@@ -611,7 +625,20 @@ function editStore(id) {
   document.getElementById('storePhone').value = store.phone || '';
   document.getElementById('storeDate').value = store.createdAt || getTodayDate();
   
-
+  // عرض بيانات الخصم إن وجدت
+  if (store.discount && store.discount.isActive) {
+    document.getElementById('storeDiscountActive').checked = true;
+    document.getElementById('storeDiscountType').value = store.discount.type || 'percentage';
+    document.getElementById('storeDiscountValue').value = store.discount.value || '';
+    document.getElementById('discountSettings').style.display = 'block';
+    document.getElementById('discountUnit').textContent = store.discount.type === 'fixed' ? 'ريال' : '%';
+  } else {
+    document.getElementById('storeDiscountActive').checked = false;
+    document.getElementById('storeDiscountType').value = 'percentage';
+    document.getElementById('storeDiscountValue').value = '';
+    document.getElementById('discountSettings').style.display = 'none';
+    document.getElementById('discountUnit').textContent = '%';
+  }
   
   const modal = new bootstrap.Modal(document.getElementById('storeModal')); modal.show();
 }
@@ -703,7 +730,12 @@ function saveStore() {
   const phone = document.getElementById('storePhone').value.trim();
   const date = document.getElementById('storeDate').value ? formatDateEn(document.getElementById('storeDate').value) : getTodayDate();
   
-
+  // جمع بيانات الخصم الجديدة
+  const discountActive = document.getElementById('storeDiscountActive').checked;
+  const discountType = document.getElementById('storeDiscountType').value;
+  // إزالة الفواصل من المبلغ قبل الحفظ
+  const discountValueStr = document.getElementById('storeDiscountValue').value.replace(/,/g, '');
+  const discountValue = parseFloat(discountValueStr) || 0;
   
   if (!name) { 
     showNotification('يرجى إدخال اسم المحل', 'error'); 
@@ -740,7 +772,17 @@ function saveStore() {
       store.phone = phone;
       store.createdAt = date;
       
-
+      // حفظ بيانات الخصم
+      if (discountActive && discountValue > 0) {
+        store.discount = {
+          type: discountType,
+          value: discountValue,
+          isActive: true
+        };
+      } else {
+        // إزالة الخصم إذا تم تعطيله
+        delete store.discount;
+      }
     }
     showNotification('تم تحديث المحل بنجاح', 'success');
   } else {

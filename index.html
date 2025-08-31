@@ -1833,6 +1833,40 @@
                             <input type="date" id="storeDate" class="form-control">
                         </div>
                         
+                        <!-- حقول الخصم الجديدة -->
+                        <div class="discount-section border rounded p-3 bg-light">
+                            <h6 class="mb-3">
+                                <i class="fas fa-percentage text-success me-2"></i>
+                                إعدادات الخصم الدائم
+                            </h6>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" id="storeDiscountActive">
+                                <label class="form-check-label" for="storeDiscountActive">
+                                    تفعيل خصم دائم لهذا المحل
+                                </label>
+                            </div>
+                            <div id="discountSettings" style="display: none;">
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <label class="form-label">نوع الخصم</label>
+                                        <select id="storeDiscountType" class="form-select">
+                                            <option value="percentage">نسبة مئوية %</option>
+                                            <option value="fixed">مبلغ ثابت</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">قيمة الخصم</label>
+                                        <div class="input-group">
+                                            <input type="text" id="storeDiscountValue" class="form-control formatted-input" data-type="number" placeholder="0">
+                                            <span class="input-group-text" id="discountUnit">%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <small class="text-muted mt-1 d-block">
+                                    <i class="fas fa-info-circle"></i> سيتم تطبيق هذا الخصم تلقائياً على جميع عمليات البيع لهذا المحل
+                                </small>
+                            </div>
+                        </div>
 
                     </form>
                 </div>
@@ -1932,6 +1966,64 @@
                             <input type="date" id="saleDate" class="form-control">
                         </div>
                         
+                        <!-- حقول الخصم الإضافي -->
+                        <div class="additional-discount-section border rounded p-3 bg-light mt-3">
+                            <h6 class="mb-3">
+                                <i class="fas fa-tags text-warning me-2"></i>
+                                خصم إضافي للعملية
+                            </h6>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" id="saleAdditionalDiscountActive">
+                                <label class="form-check-label" for="saleAdditionalDiscountActive">
+                                    تطبيق خصم إضافي لهذه العملية
+                                </label>
+                            </div>
+                            <div id="additionalDiscountSettings" style="display: none;">
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <label class="form-label">نوع الخصم</label>
+                                        <select id="saleAdditionalDiscountType" class="form-select">
+                                            <option value="percentage">نسبة مئوية %</option>
+                                            <option value="fixed">مبلغ ثابت</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">قيمة الخصم</label>
+                                        <div class="input-group">
+                                            <input type="text" id="saleAdditionalDiscountValue" class="form-control formatted-input" data-type="number" placeholder="0">
+                                            <span class="input-group-text" id="additionalDiscountUnit">%</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">سبب الخصم</label>
+                                        <input type="text" id="saleAdditionalDiscountReason" class="form-control" placeholder="مثال: عرض خاص، كمية كبيرة، عميل مميز">
+                                        <small class="text-muted">اختياري - سيظهر في التقارير</small>
+                                    </div>
+                                </div>
+                                
+                                <!-- معاينة الحساب -->
+                                <div class="discount-preview mt-3 p-2 bg-white rounded" style="display: none;">
+                                    <table class="table table-sm mb-0">
+                                        <tr>
+                                            <td>المبلغ الأساسي:</td>
+                                            <td class="text-end"><span id="previewOriginalAmount">0</span> ريال</td>
+                                        </tr>
+                                        <tr id="previewStoreDiscountRow" style="display: none;">
+                                            <td>خصم المحل (<span id="previewStoreDiscountRate"></span>):</td>
+                                            <td class="text-end text-success">-<span id="previewStoreDiscountAmount">0</span> ريال</td>
+                                        </tr>
+                                        <tr>
+                                            <td>خصم إضافي (<span id="previewAdditionalDiscountRate"></span>):</td>
+                                            <td class="text-end text-warning">-<span id="previewAdditionalDiscountAmount">0</span> ريال</td>
+                                        </tr>
+                                        <tr class="fw-bold">
+                                            <td>المبلغ النهائي:</td>
+                                            <td class="text-end"><span id="previewFinalAmount">0</span> ريال</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
 
                     </form>
                 </div>
@@ -5174,7 +5266,151 @@
     </div>
     
     <!-- سكريبت للتحكم في حقول الخصم -->
-
+    <script>
+        // التحكم في إظهار/إخفاء إعدادات الخصم
+        document.addEventListener('DOMContentLoaded', function() {
+            const discountCheckbox = document.getElementById('storeDiscountActive');
+            if (discountCheckbox) {
+                discountCheckbox.addEventListener('change', function() {
+                    const discountSettings = document.getElementById('discountSettings');
+                    if (discountSettings) {
+                        discountSettings.style.display = this.checked ? 'block' : 'none';
+                        
+                        // تنظيف القيم عند الإخفاء
+                        if (!this.checked) {
+                            document.getElementById('storeDiscountValue').value = '';
+                        }
+                    }
+                });
+            }
+            
+            // تغيير وحدة الخصم حسب النوع
+            const discountType = document.getElementById('storeDiscountType');
+            if (discountType) {
+                discountType.addEventListener('change', function() {
+                    const unit = document.getElementById('discountUnit');
+                    if (unit) {
+                        unit.textContent = this.value === 'percentage' ? '%' : 'ريال';
+                    }
+                });
+            }
+            
+            // التحكم في الخصم الإضافي في البيع
+            const additionalDiscountCheckbox = document.getElementById('saleAdditionalDiscountActive');
+            if (additionalDiscountCheckbox) {
+                additionalDiscountCheckbox.addEventListener('change', function() {
+                    const additionalDiscountSettings = document.getElementById('additionalDiscountSettings');
+                    if (additionalDiscountSettings) {
+                        additionalDiscountSettings.style.display = this.checked ? 'block' : 'none';
+                        
+                        // تنظيف القيم عند الإخفاء
+                        if (!this.checked) {
+                            document.getElementById('saleAdditionalDiscountValue').value = '';
+                            document.getElementById('saleAdditionalDiscountReason').value = '';
+                            document.querySelector('.discount-preview').style.display = 'none';
+                        } else {
+                            updateDiscountPreview();
+                        }
+                    }
+                });
+            }
+            
+            // تغيير وحدة الخصم الإضافي حسب النوع
+            const additionalDiscountType = document.getElementById('saleAdditionalDiscountType');
+            if (additionalDiscountType) {
+                additionalDiscountType.addEventListener('change', function() {
+                    const unit = document.getElementById('additionalDiscountUnit');
+                    if (unit) {
+                        unit.textContent = this.value === 'percentage' ? '%' : 'ريال';
+                    }
+                    updateDiscountPreview();
+                });
+            }
+            
+            // تحديث المعاينة عند تغيير القيم
+            ['saleStoreId', 'saleType', 'salePackageId', 'saleAmount', 'saleQuantity', 
+             'saleAdditionalDiscountValue', 'saleAdditionalDiscountType'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('input', updateDiscountPreview);
+                    element.addEventListener('change', updateDiscountPreview);
+                }
+            });
+        });
+        
+        // دالة تحديث معاينة الخصم
+        function updateDiscountPreview() {
+            if (!document.getElementById('saleAdditionalDiscountActive').checked) {
+                document.querySelector('.discount-preview').style.display = 'none';
+                return;
+            }
+            
+            const storeId = document.getElementById('saleStoreId').value;
+            const saleType = document.getElementById('saleType').value;
+            let originalAmount = 0;
+            
+            if (saleType === 'package') {
+                const packageId = document.getElementById('salePackageId').value;
+                const quantity = parseInt(document.getElementById('saleQuantity').value) || 0;
+                const pkg = data.packages.find(p => p.id === packageId);
+                if (pkg && storeId) {
+                    const store = data.stores.find(s => s.id === storeId);
+                    if (store) {
+                        const priceField = store.priceType + 'Price';
+                        originalAmount = (pkg[priceField] || 0) * quantity;
+                    }
+                }
+            } else {
+                originalAmount = parseFloat(document.getElementById('saleAmount').value.replace(/,/g, '')) || 0;
+            }
+            
+            // خصم المحل
+            let storeDiscountAmount = 0;
+            let storeDiscountRate = '';
+            const store = data.stores.find(s => s.id === storeId);
+            if (store && store.discount && store.discount.isActive) {
+                if (store.discount.type === 'percentage') {
+                    storeDiscountAmount = originalAmount * (store.discount.value / 100);
+                    storeDiscountRate = store.discount.value + '%';
+                } else {
+                    storeDiscountAmount = Math.min(store.discount.value, originalAmount);
+                    storeDiscountRate = formatNumber(store.discount.value) + ' ريال';
+                }
+                document.getElementById('previewStoreDiscountRow').style.display = '';
+                document.getElementById('previewStoreDiscountRate').textContent = storeDiscountRate;
+                document.getElementById('previewStoreDiscountAmount').textContent = formatNumber(storeDiscountAmount);
+            } else {
+                document.getElementById('previewStoreDiscountRow').style.display = 'none';
+            }
+            
+            // الخصم الإضافي (يطبق على المبلغ بعد خصم المحل)
+            const afterStoreDiscount = originalAmount - storeDiscountAmount;
+            const additionalDiscountType = document.getElementById('saleAdditionalDiscountType').value;
+            const additionalDiscountValue = parseFloat(document.getElementById('saleAdditionalDiscountValue').value.replace(/,/g, '')) || 0;
+            let additionalDiscountAmount = 0;
+            let additionalDiscountRate = '';
+            
+            if (additionalDiscountValue > 0) {
+                if (additionalDiscountType === 'percentage') {
+                    additionalDiscountAmount = afterStoreDiscount * (additionalDiscountValue / 100);
+                    additionalDiscountRate = additionalDiscountValue + '%';
+                } else {
+                    additionalDiscountAmount = Math.min(additionalDiscountValue, afterStoreDiscount);
+                    additionalDiscountRate = formatNumber(additionalDiscountValue) + ' ريال';
+                }
+            }
+            
+            const finalAmount = originalAmount - storeDiscountAmount - additionalDiscountAmount;
+            
+            // تحديث المعاينة
+            document.getElementById('previewOriginalAmount').textContent = formatNumber(originalAmount);
+            document.getElementById('previewAdditionalDiscountRate').textContent = additionalDiscountRate;
+            document.getElementById('previewAdditionalDiscountAmount').textContent = formatNumber(additionalDiscountAmount);
+            document.getElementById('previewFinalAmount').textContent = formatNumber(finalAmount);
+            
+            document.querySelector('.discount-preview').style.display = originalAmount > 0 ? 'block' : 'none';
+        }
+    </script>
 
 </body>
 </html>
