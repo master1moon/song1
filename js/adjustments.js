@@ -117,16 +117,12 @@ function updateAdjustmentPreview(storeId) {
  */
 function saveAdjustment() {
   try {
-    console.log('بداية دالة saveAdjustment');
-    
     const storeId = document.getElementById('adjustmentStoreId').value;
     const amountValue = parseFloat(document.getElementById('adjustmentAmount').value.replace(/,/g, '')) || 0;
     const reason = document.getElementById('adjustmentReason').value.trim();
     const date = document.getElementById('adjustmentDate').value || (typeof getTodayDate === 'function' ? getTodayDate() : new Date().toISOString().split('T')[0]);
     const type = document.getElementById('typeDiscount').checked ? 'discount' : 'addition';
     const calcType = document.getElementById('adjustmentCalcType').value; // fixed أو percentage
-    
-    console.log('البيانات المدخلة:', { storeId, amountValue, reason, date, type, calcType });
   
   // التحقق من صحة البيانات
   if (!storeId) {
@@ -189,7 +185,6 @@ function saveAdjustment() {
   // إنشاء مصفوفة التعديلات إذا لم تكن موجودة
   if (!data.adjustments) {
     data.adjustments = [];
-    console.log('تم إنشاء مصفوفة التعديلات');
   }
   
   // إضافة التعديل الجديد
@@ -205,16 +200,10 @@ function saveAdjustment() {
     createdAt: new Date().toISOString()
   };
   
-  console.log('التعديل الجديد:', newAdjustment);
-  
   data.adjustments.push(newAdjustment);
   
-  console.log('التعديلات بعد الإضافة:', data.adjustments);
-  
   // حفظ البيانات
-  console.log('حفظ البيانات...');
   saveData();
-  console.log('تم حفظ البيانات');
   
   // تحديث العرض
   if (typeof refreshCurrentView === 'function') {

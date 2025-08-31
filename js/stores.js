@@ -1312,9 +1312,6 @@ function updateTimelineView(storeId) {
   // استخدام التعديلات المفلترة من storeFilter
   const filteredAdjustments = filteredData.adjustments || [];
   
-  console.log('التعديلات المفلترة في updateTimelineView:', filteredAdjustments);
-  console.log('البيانات المفلترة الكاملة:', filteredData);
-  
   const allTransactions = [
     ...filteredData.sales.map(s => ({ 
       ...s, 

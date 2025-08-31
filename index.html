@@ -4390,6 +4390,7 @@
                                 expenses: toArraySafe(importedData.expenses),
                                 sales: toArraySafe(importedData.sales),
                                 payments: toArraySafe(importedData.payments),
+                                adjustments: toArraySafe(importedData.adjustments),
                                 trash: toArraySafe(importedData.trash)
                             };
                             // تحديث المتغير العام
@@ -4403,6 +4404,7 @@
                             data.expenses = mergeUniqueById(data.expenses, importedData.expenses);
                             data.sales = mergeUniqueById(data.sales, importedData.sales);
                             data.payments = mergeUniqueById(data.payments, importedData.payments);
+                            data.adjustments = mergeUniqueById(data.adjustments, importedData.adjustments);
                             data.trash = mergeUniqueById(data.trash, importedData.trash);
                             // تحديث المتغير العام
                             window.data = data;
@@ -5551,17 +5553,11 @@
         // حفظ التعديل
         const saveAdjustmentBtn = document.getElementById('saveAdjustmentBtn');
         if (saveAdjustmentBtn) {
-            console.log('ربط حدث حفظ التعديل');
             saveAdjustmentBtn.addEventListener('click', function() {
-                console.log('تم النقر على زر حفظ التعديل');
                 if (typeof saveAdjustment === 'function') {
                     saveAdjustment();
-                } else {
-                    console.error('دالة saveAdjustment غير موجودة');
                 }
             });
-        } else {
-            console.error('زر حفظ التعديل غير موجود');
         }
     </script>
 
