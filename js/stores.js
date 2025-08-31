@@ -52,15 +52,11 @@ function renderStoresList() {
   filteredStores = filteredStores.map(store => {
     const sales = data.sales.filter(s => s.storeId === store.id);
     const payments = data.payments.filter(p => p.storeId === store.id);
-    const adjustments = data.adjustments ? data.adjustments.filter(a => a.storeId === store.id) : [];
     
     const totalSales = sales.reduce((sum, sale) => sum + (sale.total || 0), 0);
     const totalPayments = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
-    const totalAdjustments = adjustments.reduce((sum, adj) => {
-      return sum + (adj.type === 'discount' ? adj.amount : -adj.amount);
-    }, 0);
     
-    const balance = totalSales - totalPayments - totalAdjustments;
+    const balance = totalSales - totalPayments;
     return { ...store, balance };
   });
   
@@ -277,15 +273,11 @@ function showStoreDetails(storeId) {
   const details = document.getElementById('storeDetails');
   const sales = data.sales.filter(s => s.storeId === storeId);
   const payments = data.payments.filter(p => p.storeId === storeId);
-  const adjustments = data.adjustments ? data.adjustments.filter(a => a.storeId === storeId) : [];
   
   const totalSales = sales.reduce((sum, sale) => sum + sale.total, 0);
   const totalPayments = payments.reduce((sum, payment) => sum + payment.amount, 0);
-  const totalAdjustments = adjustments.reduce((sum, adj) => {
-    return sum + (adj.type === 'discount' ? adj.amount : -adj.amount);
-  }, 0);
   
-  const balance = totalSales - totalPayments - totalAdjustments;
+  const balance = totalSales - totalPayments;
   
   // عرض معلومات الهاتف إذا كانت موجودة مع خيارات التواصل
   const phoneInfo = store.phone ? 
@@ -308,15 +300,6 @@ function showStoreDetails(storeId) {
       </div>
     </div>` : '';
     
-  // معلومات الخصم إن وجدت
-  const discountInfo = store.discount && store.discount.isActive ? 
-    `<div class="alert alert-success mt-3">
-      <i class="fas ${store.discount.type === 'percentage' ? 'fa-percentage' : 'fa-coins'} me-2"></i>
-      <strong>خصم دائم:</strong> 
-      ${store.discount.type === 'fixed' ? formatNumber(store.discount.value) : store.discount.value}${store.discount.type === 'percentage' ? '%' : ' ريال'} 
-      على جميع المبيعات الجديدة
-    </div>` : '';
-  
   details.innerHTML = `
     <!-- معلومات المحل الأساسية -->
     <div class="row mb-4">
@@ -348,9 +331,7 @@ function showStoreDetails(storeId) {
       <button class="btn btn-info" id="addPaymentBtn" data-store="${storeId}">
         <i class="fas fa-money-bill-wave me-2"></i>تسديد دفعة
       </button>
-      <button class="btn btn-warning" onclick="showAdjustmentModal('${storeId}')">
-        <i class="fas fa-balance-scale me-2"></i>خصم/تعديل رصيد
-      </button>
+
     </div>
     
     <!-- شريط الفلترة المتقدم -->
@@ -611,12 +592,7 @@ function addStore() {
   document.getElementById('storePhone').value = '';
   document.getElementById('storeDate').value = getTodayDate();
   
-  // تنظيف حقول الخصم
-  document.getElementById('storeDiscountActive').checked = false;
-  document.getElementById('storeDiscountType').value = 'percentage';
-  document.getElementById('storeDiscountValue').value = '';
-  document.getElementById('discountSettings').style.display = 'none';
-  document.getElementById('discountUnit').textContent = '%';
+
   
   const modal = new bootstrap.Modal(document.getElementById('storeModal')); modal.show();
 }
@@ -635,20 +611,7 @@ function editStore(id) {
   document.getElementById('storePhone').value = store.phone || '';
   document.getElementById('storeDate').value = store.createdAt || getTodayDate();
   
-  // عرض بيانات الخصم إن وجدت
-  if (store.discount && store.discount.isActive) {
-    document.getElementById('storeDiscountActive').checked = true;
-    document.getElementById('storeDiscountType').value = store.discount.type || 'percentage';
-    document.getElementById('storeDiscountValue').value = store.discount.value || '';
-    document.getElementById('discountSettings').style.display = 'block';
-    document.getElementById('discountUnit').textContent = store.discount.type === 'fixed' ? 'ريال' : '%';
-  } else {
-    document.getElementById('storeDiscountActive').checked = false;
-    document.getElementById('storeDiscountType').value = 'percentage';
-    document.getElementById('storeDiscountValue').value = '';
-    document.getElementById('discountSettings').style.display = 'none';
-    document.getElementById('discountUnit').textContent = '%';
-  }
+
   
   const modal = new bootstrap.Modal(document.getElementById('storeModal')); modal.show();
 }
@@ -740,12 +703,7 @@ function saveStore() {
   const phone = document.getElementById('storePhone').value.trim();
   const date = document.getElementById('storeDate').value ? formatDateEn(document.getElementById('storeDate').value) : getTodayDate();
   
-  // جمع بيانات الخصم الجديدة
-  const discountActive = document.getElementById('storeDiscountActive').checked;
-  const discountType = document.getElementById('storeDiscountType').value;
-  // إزالة الفواصل من المبلغ قبل الحفظ
-  const discountValueStr = document.getElementById('storeDiscountValue').value.replace(/,/g, '');
-  const discountValue = parseFloat(discountValueStr) || 0;
+
   
   if (!name) { 
     showNotification('يرجى إدخال اسم المحل', 'error'); 
@@ -782,17 +740,7 @@ function saveStore() {
       store.phone = phone;
       store.createdAt = date;
       
-      // حفظ بيانات الخصم
-      if (discountActive && discountValue > 0) {
-        store.discount = {
-          type: discountType,
-          value: discountValue,
-          isActive: true
-        };
-      } else {
-        // إزالة الخصم إذا تم تعطيله
-        delete store.discount;
-      }
+
     }
     showNotification('تم تحديث المحل بنجاح', 'success');
   } else {
@@ -1069,7 +1017,7 @@ function toggleFilterType(storeId, type) {
     if (currentFilter) {
       // تحديث أنواع العمليات المضمنة
       if (type === 'all') {
-        currentFilter.data.includeTypes = ['sales', 'payments', 'adjustments'];
+        currentFilter.data.includeTypes = ['sales', 'payments'];
       } else if (type === 'sales') {
         currentFilter.data.includeTypes = ['sales'];
       } else if (type === 'payments') {
@@ -1309,9 +1257,6 @@ function updateTimelineView(storeId) {
   const store = data.stores.find(s => s.id === storeId);
   
   // دمج وترتيب العمليات
-  // استخدام التعديلات المفلترة من storeFilter
-  const filteredAdjustments = filteredData.adjustments || [];
-  
   const allTransactions = [
     ...filteredData.sales.map(s => ({ 
       ...s, 
@@ -1324,12 +1269,6 @@ function updateTimelineView(storeId) {
       type: 'payment',
       displayAmount: p.amount,
       impact: p.amount 
-    })),
-    ...filteredAdjustments.map(a => ({
-      ...a,
-      type: 'adjustment',
-      displayAmount: a.amount,
-      impact: a.type === 'discount' ? a.amount : -a.amount // الخصم يقلل المديونية، الإضافة تزيدها
     }))
   ];
   
@@ -1403,12 +1342,10 @@ function updateTimelineView(storeId) {
     
     const isSale = transaction.type === 'sale';
     const isPayment = transaction.type === 'payment';
-    const isAdjustment = transaction.type === 'adjustment';
     
     let rowClass = '';
     if (isSale) rowClass = 'sale-row';
     else if (isPayment) rowClass = 'payment-row';
-    else if (isAdjustment) rowClass = transaction.type === 'discount' ? 'table-warning' : 'table-info';
     
     // بناء البيان
     let description = '';
@@ -1452,21 +1389,7 @@ function updateTimelineView(storeId) {
       if (transaction.notes) {
         description += ` - ${transaction.notes}`;
       }
-    } else if (isAdjustment) {
-      // عرض التعديلات
-      const adjustmentType = transaction.type === 'discount' ? 'خصم' : 'إضافة للرصيد';
-      description = `<strong>${adjustmentType}</strong>`;
-      if (transaction.reason) {
-        description += `: ${transaction.reason}`;
-      }
-      
-      // إضافة تفاصيل النسبة المئوية إن وجدت
-      if (transaction.calcType === 'percentage') {
-        description += ` <small class="text-info">(${transaction.calcValue}%)</small>`;
-      }
-      
-      description += ` <span class="badge ${transaction.type === 'discount' ? 'bg-success' : 'bg-danger'}">${adjustmentType}</span>`;
-    }
+
     
     html += `
       <tr class="${rowClass}">
@@ -1491,18 +1414,12 @@ function updateTimelineView(storeId) {
         </td>
         <td class="text-center">
           <div class="btn-group btn-group-sm" role="group">
-            ${isAdjustment ? `
-              <button class="btn btn-danger" onclick="deleteAdjustment('${transaction.id}')" title="حذف التعديل">
-                <i class="fas fa-trash"></i>
-              </button>
-            ` : `
-              <button class="btn btn-warning" onclick="edit${isSale ? 'Sale' : 'Payment'}('${transaction.id}')" title="تعديل">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-danger" onclick="delete${isSale ? 'Sale' : 'Payment'}('${transaction.id}')" title="حذف">
-                <i class="fas fa-trash"></i>
-              </button>
-            `}
+            <button class="btn btn-warning" onclick="edit${isSale ? 'Sale' : 'Payment'}('${transaction.id}')" title="تعديل">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-danger" onclick="delete${isSale ? 'Sale' : 'Payment'}('${transaction.id}')" title="حذف">
+              <i class="fas fa-trash"></i>
+            </button>
           </div>
         </td>
       </tr>
