@@ -69,15 +69,22 @@ function updateAdjustmentPreview(storeId) {
   const currentBalance = totalSales - totalPayments - totalAdjustments;
   
   // جلب قيم النموذج
-  const amount = parseFloat(document.getElementById('adjustmentAmount').value.replace(/,/g, '')) || 0;
+  const amountValue = parseFloat(document.getElementById('adjustmentAmount').value.replace(/,/g, '')) || 0;
   const isDiscount = document.getElementById('typeDiscount').checked;
+  const calcType = document.getElementById('adjustmentCalcType').value;
+  
+  // حساب المبلغ الفعلي
+  let actualAmount = amountValue;
+  if (calcType === 'percentage' && amountValue > 0) {
+    actualAmount = Math.abs(currentBalance) * (amountValue / 100);
+  }
   
   // حساب الرصيد الجديد
   let newBalance;
   if (isDiscount) {
-    newBalance = currentBalance - amount; // الخصم يقلل المديونية
+    newBalance = currentBalance - actualAmount; // الخصم يقلل المديونية
   } else {
-    newBalance = currentBalance + amount; // الإضافة تزيد المديونية
+    newBalance = currentBalance + actualAmount; // الإضافة تزيد المديونية
   }
   
   // تحديث المعاينة
@@ -86,7 +93,11 @@ function updateAdjustmentPreview(storeId) {
   document.getElementById('previewCurrentStatus').className = currentBalance >= 0 ? 'text-success' : 'text-danger';
   
   document.getElementById('previewOperationType').textContent = isDiscount ? 'خصم' : 'إضافة';
-  document.getElementById('previewOperationAmount').textContent = (isDiscount ? '-' : '+') + formatNumber(amount);
+  let operationText = (isDiscount ? '-' : '+') + formatNumber(actualAmount);
+  if (calcType === 'percentage') {
+    operationText += ` (${amountValue}%)`;
+  }
+  document.getElementById('previewOperationAmount').textContent = operationText;
   document.getElementById('previewOperationAmount').className = isDiscount ? 'text-success' : 'text-danger';
   
   document.getElementById('previewNewBalance').textContent = formatNumber(Math.abs(newBalance));
@@ -94,7 +105,7 @@ function updateAdjustmentPreview(storeId) {
   document.getElementById('previewNewStatus').className = newBalance >= 0 ? 'text-success' : 'text-danger';
   
   // إظهار المعاينة
-  document.getElementById('adjustmentPreview').style.display = amount > 0 ? 'block' : 'none';
+  document.getElementById('adjustmentPreview').style.display = amountValue > 0 ? 'block' : 'none';
 }
 
 /**
@@ -102,10 +113,11 @@ function updateAdjustmentPreview(storeId) {
  */
 function saveAdjustment() {
   const storeId = document.getElementById('adjustmentStoreId').value;
-  const amount = parseFloat(document.getElementById('adjustmentAmount').value.replace(/,/g, '')) || 0;
+  const amountValue = parseFloat(document.getElementById('adjustmentAmount').value.replace(/,/g, '')) || 0;
   const reason = document.getElementById('adjustmentReason').value.trim();
   const date = document.getElementById('adjustmentDate').value || getTodayDate();
   const type = document.getElementById('typeDiscount').checked ? 'discount' : 'addition';
+  const calcType = document.getElementById('adjustmentCalcType').value; // fixed أو percentage
   
   // التحقق من صحة البيانات
   if (!storeId) {
@@ -113,9 +125,35 @@ function saveAdjustment() {
     return;
   }
   
-  if (amount <= 0) {
-    showNotification('يرجى إدخال مبلغ صحيح', 'error');
+  if (amountValue <= 0) {
+    showNotification('يرجى إدخال قيمة صحيحة', 'error');
     return;
+  }
+  
+  // حساب المبلغ الفعلي بناءً على النوع
+  let actualAmount = amountValue;
+  if (calcType === 'percentage') {
+    // حساب الرصيد الحالي للمحل
+    const store = data.stores.find(s => s.id === storeId);
+    if (!store) {
+      showNotification('المحل غير موجود', 'error');
+      return;
+    }
+    
+    const sales = data.sales.filter(s => s.storeId === storeId);
+    const payments = data.payments.filter(p => p.storeId === storeId);
+    const adjustments = data.adjustments ? data.adjustments.filter(a => a.storeId === storeId) : [];
+    
+    const totalSales = sales.reduce((sum, sale) => sum + (sale.total || 0), 0);
+    const totalPayments = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+    const totalAdjustments = adjustments.reduce((sum, adj) => {
+      return sum + (adj.type === 'discount' ? adj.amount : -adj.amount);
+    }, 0);
+    
+    const currentBalance = totalSales - totalPayments - totalAdjustments;
+    
+    // حساب المبلغ من النسبة المئوية
+    actualAmount = Math.abs(currentBalance) * (amountValue / 100);
   }
   
   if (!reason) {
@@ -133,7 +171,9 @@ function saveAdjustment() {
     id: 'adj_' + Date.now(),
     storeId: storeId,
     type: type,
-    amount: amount,
+    amount: actualAmount,
+    calcType: calcType,
+    calcValue: amountValue, // القيمة الأصلية (مبلغ أو نسبة)
     reason: reason,
     date: formatDateEn(date),
     createdAt: new Date().toISOString()
@@ -151,7 +191,8 @@ function saveAdjustment() {
   
   // إظهار رسالة نجاح
   const typeText = type === 'discount' ? 'خصم' : 'إضافة';
-  showNotification(`تم ${typeText} ${formatNumber(amount)} ريال بنجاح`, 'success');
+  const valueText = calcType === 'percentage' ? `${amountValue}% (${formatNumber(actualAmount)} ريال)` : `${formatNumber(actualAmount)} ريال`;
+  showNotification(`تم ${typeText} ${valueText} بنجاح`, 'success');
   
   // إغلاق النموذج
   const modal = bootstrap.Modal.getInstance(document.getElementById('adjustmentModal'));

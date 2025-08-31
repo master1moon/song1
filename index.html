@@ -2052,7 +2052,7 @@
                             <div class="btn-group w-100" role="group">
                                 <input type="radio" class="btn-check" name="adjustmentType" id="typeDiscount" value="discount" checked>
                                 <label class="btn btn-outline-success" for="typeDiscount">
-                                    <i class="fas fa-percentage me-2"></i>خصم من الرصيد
+                                    <i class="fas fa-minus-circle me-2"></i>خصم من الرصيد
                                 </label>
                                 
                                 <input type="radio" class="btn-check" name="adjustmentType" id="typeAddition" value="addition">
@@ -2065,12 +2065,21 @@
                             </small>
                         </div>
                         
-                        <!-- المبلغ -->
-                        <div class="mb-3">
-                            <label class="form-label">المبلغ *</label>
-                            <div class="input-group">
-                                <input type="text" id="adjustmentAmount" class="form-control formatted-input" data-type="number" placeholder="0" required>
-                                <span class="input-group-text">ريال</span>
+                        <!-- نوع ومقدار الخصم/التعديل -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">طريقة الحساب</label>
+                                <select id="adjustmentCalcType" class="form-select">
+                                    <option value="fixed">مبلغ ثابت</option>
+                                    <option value="percentage">نسبة مئوية</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">القيمة *</label>
+                                <div class="input-group">
+                                    <input type="text" id="adjustmentAmount" class="form-control formatted-input" data-type="number" placeholder="0" required>
+                                    <span class="input-group-text" id="adjustmentUnit">ريال</span>
+                                </div>
                             </div>
                         </div>
                         
@@ -5202,14 +5211,14 @@
     <script src="./js/sales.js?v=3"></script>
     <script src="./js/payments.js"></script>
     <script src="./js/expenses.js"></script>
-    <script src="./js/stores.js?v=15"></script>
+    <script src="./js/stores.js?v=16"></script>
     <script src="./js/packages.js"></script>
     <script src="./js/storage.js"></script>
     <script src="./js/backup.js"></script>
     <script src="./js/backupManager.js"></script>
     <script src="./js/expensesTypes.js"></script>
     <script src="./js/trash.js"></script>
-    <script src="./js/adjustments.js"></script>
+    <script src="./js/adjustments.js?v=2"></script>
 
 
 
@@ -5495,6 +5504,21 @@
         }
         
         // أحداث نموذج تعديل الرصيد
+        // تغيير طريقة الحساب (مبلغ/نسبة)
+        const adjustmentCalcType = document.getElementById('adjustmentCalcType');
+        if (adjustmentCalcType) {
+            adjustmentCalcType.addEventListener('change', function() {
+                const unit = document.getElementById('adjustmentUnit');
+                if (unit) {
+                    unit.textContent = this.value === 'percentage' ? '%' : 'ريال';
+                }
+                const storeId = document.getElementById('adjustmentStoreId').value;
+                if (storeId) {
+                    updateAdjustmentPreview(storeId);
+                }
+            });
+        }
+        
         // تغيير نوع التعديل
         document.querySelectorAll('input[name="adjustmentType"]').forEach(radio => {
             radio.addEventListener('change', function() {

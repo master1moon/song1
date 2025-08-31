@@ -1459,6 +1459,12 @@ function updateTimelineView(storeId) {
       if (transaction.reason) {
         description += `: ${transaction.reason}`;
       }
+      
+      // إضافة تفاصيل النسبة المئوية إن وجدت
+      if (transaction.calcType === 'percentage') {
+        description += ` <small class="text-info">(${transaction.calcValue}%)</small>`;
+      }
+      
       description += ` <span class="badge ${transaction.type === 'discount' ? 'bg-success' : 'bg-danger'}">${adjustmentType}</span>`;
     }
     
