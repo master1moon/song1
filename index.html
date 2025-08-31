@@ -5218,7 +5218,7 @@
     <script src="./js/backupManager.js"></script>
     <script src="./js/expensesTypes.js"></script>
     <script src="./js/trash.js"></script>
-    <script src="./js/adjustments.js?v=3"></script>
+    <script src="./js/adjustments.js?v=5"></script>
 
 
 
@@ -5550,7 +5550,17 @@
         // حفظ التعديل
         const saveAdjustmentBtn = document.getElementById('saveAdjustmentBtn');
         if (saveAdjustmentBtn) {
-            saveAdjustmentBtn.addEventListener('click', saveAdjustment);
+            console.log('ربط حدث حفظ التعديل');
+            saveAdjustmentBtn.addEventListener('click', function() {
+                console.log('تم النقر على زر حفظ التعديل');
+                if (typeof saveAdjustment === 'function') {
+                    saveAdjustment();
+                } else {
+                    console.error('دالة saveAdjustment غير موجودة');
+                }
+            });
+        } else {
+            console.error('زر حفظ التعديل غير موجود');
         }
     </script>
 
