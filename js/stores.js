@@ -52,9 +52,15 @@ function renderStoresList() {
   filteredStores = filteredStores.map(store => {
     const sales = data.sales.filter(s => s.storeId === store.id);
     const payments = data.payments.filter(p => p.storeId === store.id);
+    const adjustments = data.adjustments ? data.adjustments.filter(a => a.storeId === store.id) : [];
+    
     const totalSales = sales.reduce((sum, sale) => sum + (sale.total || 0), 0);
     const totalPayments = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
-    const balance = totalSales - totalPayments;
+    const totalAdjustments = adjustments.reduce((sum, adj) => {
+      return sum + (adj.type === 'discount' ? adj.amount : -adj.amount);
+    }, 0);
+    
+    const balance = totalSales - totalPayments - totalAdjustments;
     return { ...store, balance };
   });
   
@@ -271,9 +277,15 @@ function showStoreDetails(storeId) {
   const details = document.getElementById('storeDetails');
   const sales = data.sales.filter(s => s.storeId === storeId);
   const payments = data.payments.filter(p => p.storeId === storeId);
+  const adjustments = data.adjustments ? data.adjustments.filter(a => a.storeId === storeId) : [];
+  
   const totalSales = sales.reduce((sum, sale) => sum + sale.total, 0);
   const totalPayments = payments.reduce((sum, payment) => sum + payment.amount, 0);
-  const balance = totalSales - totalPayments;
+  const totalAdjustments = adjustments.reduce((sum, adj) => {
+    return sum + (adj.type === 'discount' ? adj.amount : -adj.amount);
+  }, 0);
+  
+  const balance = totalSales - totalPayments - totalAdjustments;
   
   // عرض معلومات الهاتف إذا كانت موجودة مع خيارات التواصل
   const phoneInfo = store.phone ? 
@@ -329,12 +341,15 @@ function showStoreDetails(storeId) {
     ${discountInfo}
     
     <!-- أزرار الإجراءات السريعة -->
-    <div class="d-flex gap-2 mb-4">
+    <div class="d-flex gap-2 mb-4 flex-wrap">
       <button class="btn btn-success" id="addSaleBtn" data-store="${storeId}">
         <i class="fas fa-cart-plus me-2"></i>إضافة بيع
       </button>
       <button class="btn btn-info" id="addPaymentBtn" data-store="${storeId}">
         <i class="fas fa-money-bill-wave me-2"></i>تسديد دفعة
+      </button>
+      <button class="btn btn-warning" onclick="showAdjustmentModal('${storeId}')">
+        <i class="fas fa-balance-scale me-2"></i>خصم/تعديل رصيد
       </button>
     </div>
     
@@ -1294,6 +1309,9 @@ function updateTimelineView(storeId) {
   const store = data.stores.find(s => s.id === storeId);
   
   // دمج وترتيب العمليات
+  // جمع كل العمليات بما فيها التعديلات
+  const adjustments = data.adjustments ? data.adjustments.filter(a => a.storeId === storeId) : [];
+  
   const allTransactions = [
     ...filteredData.sales.map(s => ({ 
       ...s, 
@@ -1306,6 +1324,12 @@ function updateTimelineView(storeId) {
       type: 'payment',
       displayAmount: p.amount,
       impact: p.amount 
+    })),
+    ...adjustments.map(a => ({
+      ...a,
+      type: 'adjustment',
+      displayAmount: a.amount,
+      impact: a.type === 'discount' ? a.amount : -a.amount // الخصم يقلل المديونية، الإضافة تزيدها
     }))
   ];
   
@@ -1378,7 +1402,13 @@ function updateTimelineView(storeId) {
     runningBalance += transaction.impact;
     
     const isSale = transaction.type === 'sale';
-    const rowClass = isSale ? 'sale-row' : 'payment-row';
+    const isPayment = transaction.type === 'payment';
+    const isAdjustment = transaction.type === 'adjustment';
+    
+    let rowClass = '';
+    if (isSale) rowClass = 'sale-row';
+    else if (isPayment) rowClass = 'payment-row';
+    else if (isAdjustment) rowClass = transaction.type === 'discount' ? 'table-warning' : 'table-info';
     
     // بناء البيان
     let description = '';
@@ -1417,11 +1447,19 @@ function updateTimelineView(storeId) {
         
         description += '</div>';
       }
-    } else {
+    } else if (isPayment) {
       description = 'تسديد نقدي';
       if (transaction.notes) {
         description += ` - ${transaction.notes}`;
       }
+    } else if (isAdjustment) {
+      // عرض التعديلات
+      const adjustmentType = transaction.type === 'discount' ? 'خصم' : 'إضافة للرصيد';
+      description = `<strong>${adjustmentType}</strong>`;
+      if (transaction.reason) {
+        description += `: ${transaction.reason}`;
+      }
+      description += ` <span class="badge ${transaction.type === 'discount' ? 'bg-success' : 'bg-danger'}">${adjustmentType}</span>`;
     }
     
     html += `
@@ -1447,12 +1485,18 @@ function updateTimelineView(storeId) {
         </td>
         <td class="text-center">
           <div class="btn-group btn-group-sm" role="group">
-            <button class="btn btn-warning" onclick="edit${isSale ? 'Sale' : 'Payment'}('${transaction.id}')" title="تعديل">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="btn btn-danger" onclick="delete${isSale ? 'Sale' : 'Payment'}('${transaction.id}')" title="حذف">
-              <i class="fas fa-trash"></i>
-            </button>
+            ${isAdjustment ? `
+              <button class="btn btn-danger" onclick="deleteAdjustment('${transaction.id}')" title="حذف التعديل">
+                <i class="fas fa-trash"></i>
+              </button>
+            ` : `
+              <button class="btn btn-warning" onclick="edit${isSale ? 'Sale' : 'Payment'}('${transaction.id}')" title="تعديل">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn btn-danger" onclick="delete${isSale ? 'Sale' : 'Payment'}('${transaction.id}')" title="حذف">
+                <i class="fas fa-trash"></i>
+              </button>
+            `}
           </div>
         </td>
       </tr>

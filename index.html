@@ -2032,6 +2032,87 @@
             </div>
         </div>
     </div>
+    
+    <!-- Modal لخصم/تعديل رصيد -->
+    <div class="modal fade" id="adjustmentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="adjustmentModalTitle">خصم / تعديل رصيد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="adjustmentForm">
+                        <input type="hidden" id="adjustmentId">
+                        <input type="hidden" id="adjustmentStoreId">
+                        
+                        <!-- اختيار نوع التعديل -->
+                        <div class="mb-3">
+                            <label class="form-label">نوع التعديل *</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="adjustmentType" id="typeDiscount" value="discount" checked>
+                                <label class="btn btn-outline-success" for="typeDiscount">
+                                    <i class="fas fa-percentage me-2"></i>خصم من الرصيد
+                                </label>
+                                
+                                <input type="radio" class="btn-check" name="adjustmentType" id="typeAddition" value="addition">
+                                <label class="btn btn-outline-danger" for="typeAddition">
+                                    <i class="fas fa-plus me-2"></i>إضافة للرصيد
+                                </label>
+                            </div>
+                            <small class="text-muted mt-1 d-block" id="adjustmentTypeHint">
+                                <i class="fas fa-info-circle"></i> الخصم يقلل دين المحل (يصبح أقل مديونية)
+                            </small>
+                        </div>
+                        
+                        <!-- المبلغ -->
+                        <div class="mb-3">
+                            <label class="form-label">المبلغ *</label>
+                            <div class="input-group">
+                                <input type="text" id="adjustmentAmount" class="form-control formatted-input" data-type="number" placeholder="0" required>
+                                <span class="input-group-text">ريال</span>
+                            </div>
+                        </div>
+                        
+                        <!-- السبب -->
+                        <div class="mb-3">
+                            <label class="form-label">السبب / الوصف *</label>
+                            <textarea id="adjustmentReason" class="form-control" rows="3" placeholder="مثال: خصم نهاية السنة، تعويض عن تأخير، مرتجعات بضاعة، خطأ في الحساب..." required></textarea>
+                        </div>
+                        
+                        <!-- التاريخ -->
+                        <div class="mb-3">
+                            <label class="form-label">التاريخ</label>
+                            <input type="date" id="adjustmentDate" class="form-control">
+                        </div>
+                        
+                        <!-- معاينة التأثير -->
+                        <div class="alert alert-info" id="adjustmentPreview" style="display: none;">
+                            <h6 class="mb-2">معاينة التأثير على الرصيد:</h6>
+                            <table class="table table-sm mb-0">
+                                <tr>
+                                    <td>الرصيد الحالي:</td>
+                                    <td class="text-end"><span id="previewCurrentBalance">0</span> ريال <span id="previewCurrentStatus"></span></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="previewOperationType">التعديل</span>:</td>
+                                    <td class="text-end"><span id="previewOperationAmount">0</span> ريال</td>
+                                </tr>
+                                <tr class="fw-bold">
+                                    <td>الرصيد الجديد:</td>
+                                    <td class="text-end"><span id="previewNewBalance">0</span> ريال <span id="previewNewStatus"></span></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary" id="saveAdjustmentBtn">حفظ التعديل</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal لإضافة تسديد -->
     <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
@@ -5121,13 +5202,14 @@
     <script src="./js/sales.js?v=3"></script>
     <script src="./js/payments.js"></script>
     <script src="./js/expenses.js"></script>
-    <script src="./js/stores.js?v=14"></script>
+    <script src="./js/stores.js?v=15"></script>
     <script src="./js/packages.js"></script>
     <script src="./js/storage.js"></script>
     <script src="./js/backup.js"></script>
     <script src="./js/backupManager.js"></script>
     <script src="./js/expensesTypes.js"></script>
     <script src="./js/trash.js"></script>
+    <script src="./js/adjustments.js"></script>
 
 
 
@@ -5410,6 +5492,41 @@
             document.getElementById('previewFinalAmount').textContent = formatNumber(finalAmount);
             
             document.querySelector('.discount-preview').style.display = 'block';
+        }
+        
+        // أحداث نموذج تعديل الرصيد
+        // تغيير نوع التعديل
+        document.querySelectorAll('input[name="adjustmentType"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const hint = document.getElementById('adjustmentTypeHint');
+                if (this.value === 'discount') {
+                    hint.innerHTML = '<i class="fas fa-info-circle"></i> الخصم يقلل دين المحل (يصبح أقل مديونية)';
+                } else {
+                    hint.innerHTML = '<i class="fas fa-info-circle"></i> الإضافة تزيد دين المحل (يصبح أكثر مديونية)';
+                }
+                
+                const storeId = document.getElementById('adjustmentStoreId').value;
+                if (storeId) {
+                    updateAdjustmentPreview(storeId);
+                }
+            });
+        });
+        
+        // تحديث المعاينة عند تغيير المبلغ
+        const adjustmentAmount = document.getElementById('adjustmentAmount');
+        if (adjustmentAmount) {
+            adjustmentAmount.addEventListener('input', function() {
+                const storeId = document.getElementById('adjustmentStoreId').value;
+                if (storeId) {
+                    updateAdjustmentPreview(storeId);
+                }
+            });
+        }
+        
+        // حفظ التعديل
+        const saveAdjustmentBtn = document.getElementById('saveAdjustmentBtn');
+        if (saveAdjustmentBtn) {
+            saveAdjustmentBtn.addEventListener('click', saveAdjustment);
         }
     </script>
 
