@@ -295,6 +295,15 @@ function showStoreDetails(storeId) {
         </div>
       </div>
     </div>` : '';
+    
+  // معلومات الخصم إن وجدت
+  const discountInfo = store.discount && store.discount.isActive ? 
+    `<div class="alert alert-success mt-3">
+      <i class="fas fa-percentage me-2"></i>
+      <strong>خصم دائم:</strong> 
+      ${store.discount.value}${store.discount.type === 'percentage' ? '%' : ' ريال'} 
+      على جميع المبيعات
+    </div>` : '';
   
   details.innerHTML = `
     <!-- معلومات المحل الأساسية -->
@@ -316,6 +325,8 @@ function showStoreDetails(storeId) {
       </div>
       ${phoneInfo}
     </div>
+    
+    ${discountInfo}
     
     <!-- أزرار الإجراءات السريعة -->
     <div class="d-flex gap-2 mb-4">
@@ -584,6 +595,14 @@ function addStore() {
   document.getElementById('storePriceType').value = 'retail';
   document.getElementById('storePhone').value = '';
   document.getElementById('storeDate').value = getTodayDate();
+  
+  // تنظيف حقول الخصم
+  document.getElementById('storeDiscountActive').checked = false;
+  document.getElementById('storeDiscountType').value = 'percentage';
+  document.getElementById('storeDiscountValue').value = '';
+  document.getElementById('discountSettings').style.display = 'none';
+  document.getElementById('discountUnit').textContent = '%';
+  
   const modal = new bootstrap.Modal(document.getElementById('storeModal')); modal.show();
 }
 
@@ -600,6 +619,22 @@ function editStore(id) {
   document.getElementById('storePriceType').value = store.priceType;
   document.getElementById('storePhone').value = store.phone || '';
   document.getElementById('storeDate').value = store.createdAt || getTodayDate();
+  
+  // عرض بيانات الخصم إن وجدت
+  if (store.discount && store.discount.isActive) {
+    document.getElementById('storeDiscountActive').checked = true;
+    document.getElementById('storeDiscountType').value = store.discount.type || 'percentage';
+    document.getElementById('storeDiscountValue').value = store.discount.value || '';
+    document.getElementById('discountSettings').style.display = 'block';
+    document.getElementById('discountUnit').textContent = store.discount.type === 'fixed' ? 'ريال' : '%';
+  } else {
+    document.getElementById('storeDiscountActive').checked = false;
+    document.getElementById('storeDiscountType').value = 'percentage';
+    document.getElementById('storeDiscountValue').value = '';
+    document.getElementById('discountSettings').style.display = 'none';
+    document.getElementById('discountUnit').textContent = '%';
+  }
+  
   const modal = new bootstrap.Modal(document.getElementById('storeModal')); modal.show();
 }
 
@@ -690,6 +725,11 @@ function saveStore() {
   const phone = document.getElementById('storePhone').value.trim();
   const date = document.getElementById('storeDate').value ? formatDateEn(document.getElementById('storeDate').value) : getTodayDate();
   
+  // جمع بيانات الخصم الجديدة
+  const discountActive = document.getElementById('storeDiscountActive').checked;
+  const discountType = document.getElementById('storeDiscountType').value;
+  const discountValue = parseFloat(document.getElementById('storeDiscountValue').value) || 0;
+  
   if (!name) { 
     showNotification('يرجى إدخال اسم المحل', 'error'); 
     return; 
@@ -723,18 +763,41 @@ function saveStore() {
       store.name = name; 
       store.priceType = priceType; 
       store.phone = phone;
-      store.createdAt = date; 
+      store.createdAt = date;
+      
+      // حفظ بيانات الخصم
+      if (discountActive && discountValue > 0) {
+        store.discount = {
+          type: discountType,
+          value: discountValue,
+          isActive: true
+        };
+      } else {
+        // إزالة الخصم إذا تم تعطيله
+        delete store.discount;
+      }
     }
     showNotification('تم تحديث المحل بنجاح', 'success');
   } else {
     const newId = 'store_' + Date.now();
-    data.stores.push({ 
+    const newStore = { 
       id: newId, 
       name, 
       priceType, 
       phone,
       createdAt: date 
-    });
+    };
+    
+    // إضافة بيانات الخصم للمحل الجديد
+    if (discountActive && discountValue > 0) {
+      newStore.discount = {
+        type: discountType,
+        value: discountValue,
+        isActive: true
+      };
+    }
+    
+    data.stores.push(newStore);
     showNotification('تم إضافة المحل بنجاح', 'success');
   }
   saveData();
