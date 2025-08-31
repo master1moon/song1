@@ -44,7 +44,7 @@ function getActiveStoreFilter(storeId) {
       id: QUICK_FILTERS.CURRENT_CYCLE,
       data: {
         cycleNumber: 'current',
-        includeTypes: ['sales', 'payments']
+        includeTypes: ['sales', 'payments', 'adjustments']
       },
       description: 'الدورة المالية الحالية',
       subtitle: 'من آخر تصفير حتى الآن'
@@ -77,11 +77,17 @@ function setActiveStoreFilter(storeId, filter) {
 function detectFinancialCycles(storeId) {
   const sales = (data.sales || []).filter(s => s.storeId === storeId);
   const payments = (data.payments || []).filter(p => p.storeId === storeId);
+  const adjustments = (data.adjustments || []).filter(a => a.storeId === storeId);
   
   // دمج وترتيب كل العمليات حسب التاريخ
   const allTransactions = [
     ...sales.map(s => ({ ...s, type: 'sale', amount: -s.total })),
-    ...payments.map(p => ({ ...p, type: 'payment', amount: p.amount }))
+    ...payments.map(p => ({ ...p, type: 'payment', amount: p.amount })),
+    ...adjustments.map(a => ({ 
+      ...a, 
+      type: 'adjustment', 
+      amount: a.type === 'discount' ? a.amount : -a.amount 
+    }))
   ].sort((a, b) => {
     const dateA = parseDate(a.date);
     const dateB = parseDate(b.date);
@@ -182,9 +188,11 @@ function applyStoreFilter(storeId, filter = null) {
   
   let filteredSales = [];
   let filteredPayments = [];
+  let filteredAdjustments = [];
   
   const allSales = (data.sales || []).filter(s => s.storeId === storeId);
   const allPayments = (data.payments || []).filter(p => p.storeId === storeId);
+  const allAdjustments = (data.adjustments || []).filter(a => a.storeId === storeId);
   
   switch (filter.type) {
     case FILTER_TYPES.CYCLE:
@@ -201,9 +209,10 @@ function applyStoreFilter(storeId, filter = null) {
         // استخدام العمليات من الدورة مباشرة
         const cycleTransactions = targetCycle.transactions;
         
-        // فصل المبيعات والتسديدات من عمليات الدورة
+        // فصل المبيعات والتسديدات والتعديلات من عمليات الدورة
         filteredSales = [];
         filteredPayments = [];
+        filteredAdjustments = [];
         
         cycleTransactions.forEach(t => {
           if (t.type === 'sale') {
@@ -214,6 +223,10 @@ function applyStoreFilter(storeId, filter = null) {
             // البحث عن التسديد الأصلي
             const originalPayment = allPayments.find(p => p.id === t.id);
             if (originalPayment) filteredPayments.push(originalPayment);
+          } else if (t.type === 'adjustment') {
+            // البحث عن التعديل الأصلي
+            const originalAdjustment = allAdjustments.find(a => a.id === t.id);
+            if (originalAdjustment) filteredAdjustments.push(originalAdjustment);
           }
         });
       }
@@ -223,6 +236,7 @@ function applyStoreFilter(storeId, filter = null) {
       const { startDate, endDate } = getDateRangeForQuickFilter(filter.id);
       filteredSales = filterByDateRange(allSales, startDate, endDate);
       filteredPayments = filterByDateRange(allPayments, startDate, endDate);
+      filteredAdjustments = filterByDateRange(allAdjustments, startDate, endDate);
       break;
       
     case FILTER_TYPES.CUSTOM:
@@ -230,6 +244,7 @@ function applyStoreFilter(storeId, filter = null) {
       const customEnd = parseDate(filter.data.endDate);
       filteredSales = filterByDateRange(allSales, customStart, customEnd);
       filteredPayments = filterByDateRange(allPayments, customStart, customEnd);
+      filteredAdjustments = filterByDateRange(allAdjustments, customStart, customEnd);
       break;
   }
   
@@ -241,11 +256,15 @@ function applyStoreFilter(storeId, filter = null) {
     if (!filter.data.includeTypes.includes('payments')) {
       filteredPayments = [];
     }
+    if (!filter.data.includeTypes.includes('adjustments')) {
+      filteredAdjustments = [];
+    }
   }
   
   return {
     sales: filteredSales,
     payments: filteredPayments,
+    adjustments: filteredAdjustments,
     filter: filter
   };
 }

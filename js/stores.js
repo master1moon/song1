@@ -1069,7 +1069,7 @@ function toggleFilterType(storeId, type) {
     if (currentFilter) {
       // تحديث أنواع العمليات المضمنة
       if (type === 'all') {
-        currentFilter.data.includeTypes = ['sales', 'payments'];
+        currentFilter.data.includeTypes = ['sales', 'payments', 'adjustments'];
       } else if (type === 'sales') {
         currentFilter.data.includeTypes = ['sales'];
       } else if (type === 'payments') {
@@ -1309,8 +1309,8 @@ function updateTimelineView(storeId) {
   const store = data.stores.find(s => s.id === storeId);
   
   // دمج وترتيب العمليات
-  // جمع كل العمليات بما فيها التعديلات
-  const adjustments = data.adjustments ? data.adjustments.filter(a => a.storeId === storeId) : [];
+  // استخدام التعديلات المفلترة من storeFilter
+  const filteredAdjustments = filteredData.adjustments || [];
   
   const allTransactions = [
     ...filteredData.sales.map(s => ({ 
@@ -1325,7 +1325,7 @@ function updateTimelineView(storeId) {
       displayAmount: p.amount,
       impact: p.amount 
     })),
-    ...adjustments.map(a => ({
+    ...filteredAdjustments.map(a => ({
       ...a,
       type: 'adjustment',
       displayAmount: a.amount,
