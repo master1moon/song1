@@ -79,6 +79,8 @@ function detectFinancialCycles(storeId) {
   const payments = (data.payments || []).filter(p => p.storeId === storeId);
   const adjustments = (data.adjustments || []).filter(a => a.storeId === storeId);
   
+  console.log('التعديلات في detectFinancialCycles:', adjustments);
+  
   // دمج وترتيب كل العمليات حسب التاريخ
   const allTransactions = [
     ...sales.map(s => ({ ...s, type: 'sale', amount: -s.total })),
@@ -193,6 +195,8 @@ function applyStoreFilter(storeId, filter = null) {
   const allSales = (data.sales || []).filter(s => s.storeId === storeId);
   const allPayments = (data.payments || []).filter(p => p.storeId === storeId);
   const allAdjustments = (data.adjustments || []).filter(a => a.storeId === storeId);
+  
+  console.log('التعديلات في applyStoreFilter:', allAdjustments);
   
   switch (filter.type) {
     case FILTER_TYPES.CYCLE:
