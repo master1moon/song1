@@ -2410,6 +2410,7 @@
                             expenses: Array.isArray(parsedData.expenses) ? parsedData.expenses : [],
                             sales: Array.isArray(parsedData.sales) ? parsedData.sales : [],
                             payments: Array.isArray(parsedData.payments) ? parsedData.payments : [],
+                            adjustments: Array.isArray(parsedData.adjustments) ? parsedData.adjustments : [],
                             trash: Array.isArray(parsedData.trash) ? parsedData.trash : []
                         };
                         // تحديث البيانات العامة
@@ -4404,7 +4405,10 @@
                             data.expenses = mergeUniqueById(data.expenses, importedData.expenses);
                             data.sales = mergeUniqueById(data.sales, importedData.sales);
                             data.payments = mergeUniqueById(data.payments, importedData.payments);
-                            data.adjustments = mergeUniqueById(data.adjustments, importedData.adjustments);
+                            // التعامل مع التعديلات بشكل خاص - الحفاظ على التعديلات الحالية إذا لم تكن موجودة في الملف المستورد
+                            if (importedData.adjustments) {
+                                data.adjustments = mergeUniqueById(data.adjustments, importedData.adjustments);
+                            }
                             data.trash = mergeUniqueById(data.trash, importedData.trash);
                             // تحديث المتغير العام
                             window.data = data;
