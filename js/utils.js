@@ -1,3 +1,14 @@
+/**
+ * ملف utils.js - دوال مساعدة عامة للتطبيق
+ * يحتوي على دوال تحويل الأرقام، تنسيق التاريخ، عرض الإشعارات، والتنقل بين الأقسام
+ * 
+ * المشاكل المحتملة:
+ * - دالة formatDateEn قد لا تتعامل مع جميع صيغ التاريخ بشكل صحيح
+ * - setupFormattedInputs معقدة وقد تحتوي على أخطاء في موضع المؤشر
+ * - لا يوجد معالجة للأخطاء في بعض الدوال
+ * - التبديل بين الأقسام لا يحفظ الحالة أو التاريخ
+ */
+
 // رقمية: تحويل الأرقام العربية/الفارسية إلى إنجليزية
 
 /**
@@ -267,6 +278,70 @@ document.addEventListener('DOMContentLoaded', function () {
 
 function setTextSafe(el, text){ if (el) el.textContent = text; }
 
+/**
+ * الحصول على تاريخ اليوم بصيغة YYYY-MM-DD
+ * يستخدم كقيمة افتراضية عندما لا يكون هناك تاريخ محدد
+ * @returns {string} التاريخ الحالي بصيغة YYYY-MM-DD
+ */
+function getTodayDate() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * تحديث عرض البيانات في جميع الأقسام المرئية
+ * يحدث القوائم والجداول والتقارير بناءً على القسم النشط
+ * يستخدم بعد أي عملية تعديل للبيانات لضمان ظهور التغييرات مباشرة
+ * آمن للاستخدام - يتحقق من وجود الدوال قبل استدعائها
+ */
+function refreshCurrentView() {
+  // تحديث قائمة المحلات دائماً (قد تكون في الشريط الجانبي)
+  if (typeof renderStoresList === 'function') {
+    renderStoresList();
+  }
+  
+  // تحديث تفاصيل المحل إذا كانت مفتوحة
+  const storeDetailsSection = document.getElementById('storeDetailsSection');
+  if (storeDetailsSection && storeDetailsSection.style.display !== 'none') {
+    const storeId = document.querySelector('#storeHeader [data-id]')?.dataset.id;
+    if (storeId && typeof showStoreDetails === 'function') {
+      showStoreDetails(storeId);
+    }
+  }
+  
+  // تحديث لوحة المعلومات (دائماً مفيد)
+  if (typeof updateDashboard === 'function') {
+    updateDashboard();
+  }
+  
+  // تحديث القسم النشط حالياً
+  const activeSection = document.querySelector('.section.show');
+  if (activeSection) {
+    switch(activeSection.id) {
+      case 'inventory':
+        if (typeof renderInventoryTable === 'function') renderInventoryTable();
+        break;
+      case 'expenses':
+        if (typeof renderExpensesTable === 'function') renderExpensesTable();
+        break;
+      case 'packages':
+        if (typeof renderPackagesTable === 'function') renderPackagesTable();
+        break;
+      case 'reports':
+        if (typeof updateProfitReport === 'function') updateProfitReport();
+        if (typeof generateDebtReport === 'function') generateDebtReport();
+        if (typeof generatePartnerReports === 'function') generatePartnerReports();
+        break;
+      case 'trash':
+        if (typeof renderTrashTable === 'function') renderTrashTable();
+        break;
+    }
+  }
+}
+
 // تصدير الدوال للنطاق العام
 if (typeof window !== 'undefined') {
   window.toEnglishDigits = toEnglishDigits;
@@ -275,4 +350,6 @@ if (typeof window !== 'undefined') {
   window.formatDateEn = formatDateEn;
   window.showNotification = showNotification;
   window.switchSection = switchSection;
+  window.getTodayDate = getTodayDate;
+  window.refreshCurrentView = refreshCurrentView;
 }

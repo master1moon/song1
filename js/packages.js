@@ -1,3 +1,17 @@
+/**
+ * ملف packages.js - نظام إدارة الباقات
+ * يتعامل مع إضافة، تعديل، حذف، وعرض الباقات
+ * يدعم ثلاثة أنواع من الأسعار: قطاعي، جملة، موزع
+ * يتكامل مع نظام المخزون والمبيعات
+ * 
+ * المشاكل المحتملة:
+ * - متغير today غير معرف
+ * - لا يوجد تحقق من تكرار أسماء الباقات
+ * - لا يمنع حذف الباقات المستخدمة في المخزون أو المبيعات
+ * - العرض الافتراضي للجداول الكبيرة يعتمد على window.$dom غير الموجود
+ * - معالجة الأخطاء ضعيفة
+ */
+
 // إدارة الباقات
 
 /**
@@ -6,6 +20,7 @@
  * يستخدم الطريقة الآمنة لعرض البيانات إذا كانت متاحة
  * يعرض اسم الباقة مع أنواع الأسعار الثلاثة (قطاعي، جملة، موزع)
  * يضيف أزرار التحكم (تعديل، حذف) لكل باقة
+ * مشكلة: window.$dom غير موجود في التطبيق
  */
 function renderPackagesTable() {
   const table = document.getElementById('packagesTable');
@@ -128,7 +143,7 @@ function addPackage() {
   document.getElementById('retailPrice').value = '';
   document.getElementById('wholesalePrice').value = '';
   document.getElementById('distributorPrice').value = '';
-  document.getElementById('packageDate').value = today;
+  document.getElementById('packageDate').value = getTodayDate();
   const modal = new bootstrap.Modal(document.getElementById('packageModal')); modal.show();
 }
 
@@ -146,7 +161,7 @@ function editPackage(id) {
   document.getElementById('retailPrice').value = pkg.retailPrice ? formatNumber(pkg.retailPrice) : '';
   document.getElementById('wholesalePrice').value = pkg.wholesalePrice ? formatNumber(pkg.wholesalePrice) : '';
   document.getElementById('distributorPrice').value = pkg.distributorPrice ? formatNumber(pkg.distributorPrice) : '';
-  document.getElementById('packageDate').value = pkg.createdAt || today;
+  document.getElementById('packageDate').value = pkg.createdAt || getTodayDate();
   const modal = new bootstrap.Modal(document.getElementById('packageModal')); modal.show();
 }
 
@@ -162,7 +177,7 @@ function deletePackage(id) {
   const pkg = data.packages.find(p => p.id === id);
   data.packages = data.packages.filter(p => p.id !== id);
   saveData();
-  (async()=>{ try{ if (pkg && typeof addToTrash==='function') await addToTrash('packages', pkg); }catch{}; renderPackagesTable(); updateDashboard(); })();
+  (async()=>{ try{ if (pkg && typeof addToTrash==='function') await addToTrash('packages', pkg); }catch{}; refreshCurrentView(); })();
   showNotification('تم حذف الباقة بنجاح', 'success');
 }
 
@@ -179,7 +194,7 @@ function savePackage() {
   const retailPrice = parseFormattedNumber(document.getElementById('retailPrice').value) || null;
   const wholesalePrice = parseFormattedNumber(document.getElementById('wholesalePrice').value) || null;
   const distributorPrice = parseFormattedNumber(document.getElementById('distributorPrice').value) || null;
-  const date = document.getElementById('packageDate').value ? formatDateEn(document.getElementById('packageDate').value) : today;
+  const date = document.getElementById('packageDate').value ? formatDateEn(document.getElementById('packageDate').value) : getTodayDate();
   if (!name) { showNotification('يرجى إدخال اسم الباقة', 'error'); return; }
   if (id) {
     const pkg = data.packages.find(p => p.id === id);
@@ -193,7 +208,6 @@ function savePackage() {
     showNotification('تم إضافة الباقة بنجاح', 'success');
   }
   saveData();
-  renderPackagesTable();
-  updateDashboard();
+  refreshCurrentView(); // تحديث جميع العروض المرئية
   const modal = bootstrap.Modal.getInstance(document.getElementById('packageModal')); modal.hide();
 }

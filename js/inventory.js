@@ -1,3 +1,17 @@
+/**
+ * ملف inventory.js - نظام إدارة المخزون
+ * يتعامل مع إضافة، تعديل، حذف، وعرض المخزون
+ * يدعم خصم وإضافة الكميات بشكل آمن
+ * يتكامل مع نظام المبيعات لتتبع الكميات
+ * 
+ * المشاكل المحتملة:
+ * - متغير today غير معرف في عدة أماكن
+ * - لا يوجد تتبع لتاريخ حركة المخزون
+ * - خصم المخزون لا يسجل من قام بالعملية
+ * - التحذير عند انخفاض المخزون ثابت عند 200 كرت
+ * - لا يوجد آلية لجرد المخزون أو التعامل مع الفروقات
+ */
+
 // إدارة المخزون
 
 /**
@@ -44,7 +58,7 @@ function deductFromInventory(packageId, quantity) {
 function addToInventory(packageId, quantity) {
   const existing = data.inventory.find(i => i.packageId === packageId);
   if (existing) { existing.quantity = (existing.quantity || 0) + quantity; }
-  else { data.inventory.push({ id: 'inv_' + Date.now(), packageId, quantity, createdAt: today }); }
+  else { data.inventory.push({ id: 'inv_' + Date.now(), packageId, quantity, createdAt: getTodayDate() }); }
 }
 
 /**
@@ -168,7 +182,7 @@ function addInventory() {
   document.getElementById('inventoryModalTitle').textContent = 'إضافة كمية جديدة';
   document.getElementById('inventoryId').value = '';
   document.getElementById('inventoryQuantity').value = '';
-  document.getElementById('inventoryDate').value = today;
+  document.getElementById('inventoryDate').value = getTodayDate();
   const modal = new bootstrap.Modal(document.getElementById('inventoryModal')); modal.show();
 }
 
@@ -185,7 +199,7 @@ function editInventory(id) {
   document.getElementById('inventoryModalTitle').textContent = 'تعديل الكمية';
   document.getElementById('inventoryId').value = item.id;
   document.getElementById('inventoryQuantity').value = formatNumber(item.quantity);
-  document.getElementById('inventoryDate').value = item.createdAt || today;
+  document.getElementById('inventoryDate').value = item.createdAt || getTodayDate();
   const modal = new bootstrap.Modal(document.getElementById('inventoryModal')); modal.show();
 }
 
@@ -200,7 +214,7 @@ function deleteInventory(id) {
   const inv = data.inventory.find(i => i.id === id);
   data.inventory = data.inventory.filter(i => i.id !== id);
   saveData();
-  (async()=>{ try{ if (inv && typeof addToTrash==='function') await addToTrash('inventory', inv); }catch{}; renderInventoryTable(); updateDashboard(); })();
+  (async()=>{ try{ if (inv && typeof addToTrash==='function') await addToTrash('inventory', inv); }catch{}; refreshCurrentView(); })();
   showNotification('تم حذف الكمية بنجاح', 'success');
 }
 
@@ -214,7 +228,7 @@ function saveInventory() {
   const id = document.getElementById('inventoryId').value;
   const packageId = document.getElementById('inventoryPackage').value;
   const quantity = parseFormattedNumber(document.getElementById('inventoryQuantity').value);
-  const date = document.getElementById('inventoryDate').value ? formatDateEn(document.getElementById('inventoryDate').value) : today;
+  const date = document.getElementById('inventoryDate').value ? formatDateEn(document.getElementById('inventoryDate').value) : getTodayDate();
   if (!packageId || isNaN(quantity) || quantity <= 0) { showNotification('يرجى ملء جميع الحقول المطلوبة', 'error'); return; }
   if (id) {
     const item = data.inventory.find(i => i.id === id);
@@ -226,7 +240,6 @@ function saveInventory() {
     showNotification('تم إضافة الكمية بنجاح', 'success');
   }
   saveData();
-  renderInventoryTable();
-  updateDashboard();
+  refreshCurrentView(); // تحديث جميع العروض المرئية
   const modal = bootstrap.Modal.getInstance(document.getElementById('inventoryModal')); modal.hide();
 }

@@ -1,3 +1,17 @@
+/**
+ * ملف expensesTypes.js - نظام إدارة أنواع المصروفات
+ * يدير قائمة أنواع المصروفات المحفوظة في localStorage
+ * يوفر واجهة لإضافة، تعديل، وحذف أنواع المصروفات
+ * يستخدم في نموذج إضافة المصروف لتوفير خيارات سريعة
+ * 
+ * المشاكل المحتملة:
+ * - لا يوجد تحقق من تكرار الأنواع عند التعديل
+ * - عدم معالجة الأخطاء بشكل صحيح (catch فارغ)
+ * - واجهة المستخدم بسيطة جداً
+ * - لا يوجد تأكيد قبل حذف نوع
+ * - التعديلات تتم مباشرة دون زر حفظ
+ */
+
 // Expense Types Manager: CRUD with localStorage persistence
 (function(){
   function loadSavedExpenseTypes(){ try { return JSON.parse(localStorage.getItem('expenseTypes')||'[]'); } catch { return []; } }

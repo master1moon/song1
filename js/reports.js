@@ -1,4 +1,24 @@
+/**
+ * ملف reports.js - نظام التقارير الشامل
+ * يتعامل مع جميع أنواع التقارير: المبيعات، المدفوعات، المصروفات، الأرباح، والديون
+ * يدعم التصدير إلى Excel وPDF
+ * يوفر تقارير مفصلة للمحلات والشركاء
+ * 
+ * المشاكل المحتملة:
+ * - الملف كبير جداً (1380 سطر) مما يصعب الصيانة
+ * - بعض الدوال مكررة أو متشابهة جداً
+ * - معالجة التواريخ غير موحدة في جميع التقارير
+ * - التصدير إلى PDF قد يواجه مشاكل مع النصوص العربية
+ * - الحسابات المعقدة قد تحتوي على أخطاء منطقية
+ * - لا يوجد تخزين مؤقت للتقارير المحسوبة
+ */
+
 // تحديث لوحة التحكم (تقارير) - تمت إعادة تسميته لتجنب التعارض مع دالة لوحة التحكم في index.html
+/**
+ * تحديث إحصائيات لوحة التحكم الرئيسية
+ * يحسب ويعرض الإحصائيات الأساسية للفترة المحددة
+ * مشكلة: يستخدم دالة getPeriodRange التي قد لا تكون معرفة
+ */
 function updateDashboardReports() {
   try {
     const { fromDate, toDate } = getPeriodRange();
@@ -352,6 +372,533 @@ function exportData() {
   }
 }
 
+/**
+ * بناء تقرير كشف الحساب المتحرك - نموذج جديد احترافي
+ * يعرض جميع العمليات بترتيب زمني مع رصيد متحرك بعد كل عملية
+ * @param {Object} store - بيانات المحل
+ * @param {string} periodText - نص الفترة الزمنية
+ * @param {Array} allTransactions - جميع العمليات (مبيعات وتسديدات) مرتبة زمنياً
+ * @param {number} previousBalance - الرصيد السابق (قبل الفترة المحددة)
+ * @returns {string} كود HTML للتقرير
+ */
+function buildAccountStatementHTML(store, periodText, allTransactions, previousBalance = 0) {
+  const baseUrl = (function () { try { return new URL('.', location.href).href; } catch (e) { return location.href.substring(0, location.href.lastIndexOf('/') + 1); } })();
+  const fontUrl = baseUrl + 'fonts/Amiri-Regular.woff2';
+  
+  // التأكد من وجود الدوال المطلوبة
+  const formatNumber = window.formatNumber || ((n) => n.toLocaleString('en-US'));
+  const formatDateEn = window.formatDateEn || ((d) => d);
+  const getPriceTypeName = window.getPriceTypeName || ((t) => t);
+  
+  // حساب الرصيد المتحرك
+  let runningBalance = previousBalance;
+  const transactionsWithBalance = allTransactions.map(t => {
+    if (t.type === 'sale') {
+      runningBalance += t.amount;
+    } else if (t.type === 'payment') {
+      runningBalance -= t.amount;
+    }
+    return { ...t, balance: runningBalance };
+  });
+  
+  // حساب الإجماليات
+  const totalDebits = allTransactions.filter(t => t.type === 'sale').reduce((sum, t) => sum + t.amount, 0);
+  const totalCredits = allTransactions.filter(t => t.type === 'payment').reduce((sum, t) => sum + t.amount, 0);
+  
+  // بناء HTML
+  let html = `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <title>كشف حساب متحرك - ${store.name}</title>
+    <style>
+        @font-face { 
+            font-family: 'AmiriExport'; 
+            src: url('${fontUrl}') format('woff2'); 
+            font-weight: 400; 
+            font-style: normal; 
+        }
+        body { 
+            font-family: 'AmiriExport', 'Arial', sans-serif; 
+            padding: 20px;
+            background: #f5f5f5;
+            margin: 0;
+        }
+        .report-container {
+            background: white;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 1200px;
+            margin: 0 auto;
+            border-radius: 8px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+        .info-section {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            padding: 15px;
+            background: #ecf0f1;
+            border-radius: 5px;
+        }
+        .info-section div {
+            line-height: 1.8;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        th {
+            background: #34495e;
+            color: white;
+            padding: 12px 8px;
+            text-align: right;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #ddd;
+            text-align: right;
+        }
+        tr:hover {
+            background: #f8f9fa;
+        }
+        .debit { 
+            color: #e74c3c; 
+            font-weight: bold;
+        }
+        .credit { 
+            color: #27ae60; 
+            font-weight: bold;
+        }
+        /* تمييز المجموعات في نفس اليوم */
+        .date-group-header {
+            background: #2c3e50 !important;
+            color: white !important;
+            font-weight: bold;
+            text-align: center;
+        }
+        .date-group-header td {
+            padding: 8px;
+            border: none;
+        }
+        .same-day-sale {
+            background: #e3f2fd;
+        }
+        .same-day-payment {
+            background: #f3e5f5;
+        }
+        /* فاصل بين الأيام */
+        .day-separator {
+            height: 2px;
+            background: #bdc3c7;
+        }
+        .day-separator td {
+            padding: 0;
+            border: none;
+        }
+        .balance-positive {
+            background: #e8f5e9;
+            font-weight: bold;
+            color: #2e7d32;
+        }
+        .balance-negative {
+            background: #ffebee;
+            font-weight: bold;
+            color: #c62828;
+        }
+        .balance-zero {
+            background: #f5f5f5;
+            font-weight: bold;
+        }
+        .summary-row {
+            background: #f0f0f0;
+            font-weight: bold;
+            border-top: 3px double #333;
+        }
+        .summary-box {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border: 2px solid #3498db;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .print-button {
+            background: #2c3e50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        .print-button:hover {
+            background: #34495e;
+        }
+        @media print {
+            .no-print { display: none; }
+            body { 
+                background: white; 
+                padding: 0;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            .report-container { 
+                box-shadow: none; 
+                padding: 20px;
+                max-width: 100%;
+            }
+            table { 
+                font-size: 12px;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            th { 
+                position: static;
+                background: #34495e !important;
+                color: white !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            /* الاحتفاظ بألوان الخلايا */
+            .debit { 
+                color: #e74c3c !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            .credit { 
+                color: #27ae60 !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            .balance-positive {
+                background: #e8f5e9 !important;
+                color: #2e7d32 !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            .balance-negative {
+                background: #ffebee !important;
+                color: #c62828 !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            .balance-zero {
+                background: #f5f5f5 !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            .summary-row {
+                background: #f0f0f0 !important;
+                border-top: 3px double #333 !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            .info-section {
+                background: #ecf0f1 !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            .summary-box {
+                background: #f8f9fa !important;
+                border: 2px solid #3498db !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            tr:hover {
+                background: transparent !important;
+            }
+            /* تأكيد طباعة الحدود */
+            table, th, td {
+                border: 1px solid #ddd !important;
+            }
+            h1 {
+                color: #2c3e50 !important;
+                border-bottom: 3px solid #3498db !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            /* تمييز المجموعات عند الطباعة */
+            .date-group-header {
+                background: #2c3e50 !important;
+                color: white !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            .same-day-sale {
+                background: #e3f2fd !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            .same-day-payment {
+                background: #f3e5f5 !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            .day-separator {
+                background: #bdc3c7 !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+        }
+        /* إعدادات أفضل للطباعة متعددة الصفحات */
+        .page-break-before {
+            page-break-before: always;
+        }
+        .page-break-avoid {
+            page-break-inside: avoid;
+        }
+        /* رأس وتذييل الصفحة */
+        @page {
+            size: A4;
+            margin: 15mm;
+            @top-center {
+                content: "كشف حساب متحرك";
+            }
+            @bottom-center {
+                content: "صفحة " counter(page) " من " counter(pages);
+            }
+        }
+        /* تأكد من عدم قطع الصفوف */
+        tr {
+            page-break-inside: avoid;
+        }
+        .date-group-header {
+            page-break-after: avoid;
+        }
+        /* الإجمالي النهائي في آخر صفحة فقط */
+        .final-summary {
+            page-break-inside: avoid;
+        }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <button onclick="window.print()" class="print-button no-print">
+            <i class="fas fa-print"></i> طباعة / حفظ كـ PDF
+        </button>
+        
+        <h1>كشف حساب متحرك</h1>
+        
+        <div class="info-section">
+            <div>
+                <strong>اسم المحل:</strong> ${store.name}<br>
+                <strong>نوع السعر:</strong> ${getPriceTypeName(store.priceType)}<br>
+                ${store.phone ? `<strong>رقم الهاتف:</strong> ${store.phone}` : ''}
+            </div>
+            <div>
+                <strong>الفترة:</strong> ${periodText}<br>
+                <strong>تاريخ الطباعة:</strong> ${new Date().toLocaleDateString('ar-YE')}<br>
+                <strong>عدد العمليات:</strong> ${allTransactions.length}
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:12%">التاريخ</th>
+                    <th style="width:35%">البيان</th>
+                    <th style="width:13%">مدين</th>
+                    <th style="width:13%">دائن</th>
+                    <th style="width:15%">الرصيد</th>
+                    <th style="width:12%">ملاحظات</th>
+                </tr>
+            </thead>
+            <tbody>`;
+  
+  // إضافة رصيد سابق إن وجد
+  if (previousBalance !== 0) {
+    const balanceClass = previousBalance > 0 ? 'balance-positive' : 'balance-negative';
+    const balanceText = previousBalance > 0 ? 'دائن' : 'مدين';
+    html += `
+                <tr>
+                    <td>-</td>
+                    <td><strong>رصيد سابق مُرحّل</strong></td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td class="${balanceClass}">${formatNumber(Math.abs(previousBalance))} ${balanceText}</td>
+                    <td>من الفترة السابقة</td>
+                </tr>`;
+  }
+  
+  // إضافة العمليات مع التمييز حسب اليوم
+  let currentDate = null;
+  let dayTransactionCount = 0;
+  
+  transactionsWithBalance.forEach((t, index) => {
+    const balanceClass = t.balance > 0 ? 'balance-positive' : t.balance < 0 ? 'balance-negative' : 'balance-zero';
+    const balanceText = t.balance > 0 ? 'دائن' : t.balance < 0 ? 'مدين' : '';
+    
+    // إضافة رأس التاريخ وفاصل إذا كان يوم جديد
+    if (t.date !== currentDate) {
+      // إضافة فاصل بين الأيام (إلا في البداية)
+      if (currentDate !== null) {
+        html += `<tr class="day-separator"><td colspan="6"></td></tr>`;
+      }
+      
+      currentDate = t.date;
+      dayTransactionCount = 0;
+      
+      // عد العمليات في هذا اليوم
+      const sameDayTransactions = transactionsWithBalance.filter(trans => trans.date === currentDate);
+      const sameDaySales = sameDayTransactions.filter(trans => trans.type === 'sale').length;
+      const sameDayPayments = sameDayTransactions.filter(trans => trans.type === 'payment').length;
+      
+      // إضافة رأس التاريخ مع عدد العمليات
+      html += `
+                <tr class="date-group-header">
+                    <td colspan="6">
+                        📅 ${formatDateEn(t.date)} 
+                        &nbsp;&nbsp;|&nbsp;&nbsp; 
+                        🛍️ المبيعات: ${sameDaySales} 
+                        &nbsp;&nbsp;|&nbsp;&nbsp; 
+                        💵 التسديدات: ${sameDayPayments}
+                    </td>
+                </tr>`;
+    }
+    
+    dayTransactionCount++;
+    
+    if (t.type === 'sale') {
+      const packageName = t.packageName || 'مبلغ مخصص';
+      const quantity = t.quantity || 1;
+      const rowClass = dayTransactionCount % 2 === 0 ? 'same-day-sale' : '';
+      
+      html += `
+                <tr class="${rowClass}">
+                    <td>${dayTransactionCount}</td>
+                    <td>🛍️ بيع: ${packageName}${quantity > 1 ? ` (كمية: ${quantity})` : ''}</td>
+                    <td class="debit">${formatNumber(t.amount)}</td>
+                    <td>-</td>
+                    <td class="${balanceClass}">${formatNumber(Math.abs(t.balance))} ${balanceText}</td>
+                    <td>${t.notes || ''}</td>
+                </tr>`;
+    } else if (t.type === 'payment') {
+      const rowClass = dayTransactionCount % 2 === 0 ? 'same-day-payment' : '';
+      
+      html += `
+                <tr class="${rowClass}">
+                    <td>${dayTransactionCount}</td>
+                    <td>💵 تسديد${t.notes ? ': ' + t.notes : ''}</td>
+                    <td>-</td>
+                    <td class="credit">${formatNumber(t.amount)}</td>
+                    <td class="${balanceClass}">${formatNumber(Math.abs(t.balance))} ${balanceText}</td>
+                    <td>${t.paymentMethod || 'نقدي'}</td>
+                </tr>`;
+    }
+  });
+  
+  // صف الإجمالي
+  const finalBalance = transactionsWithBalance.length > 0 ? 
+    transactionsWithBalance[transactionsWithBalance.length - 1].balance : previousBalance;
+  const finalBalanceClass = finalBalance > 0 ? 'balance-positive' : finalBalance < 0 ? 'balance-negative' : 'balance-zero';
+  const finalBalanceText = finalBalance > 0 ? 'دائن' : finalBalance < 0 ? 'مدين' : '';
+  
+  html += `
+            </tbody>
+        </table>
+        
+        <!-- الإجمالي النهائي - يظهر فقط في آخر الصفحة الأخيرة -->
+        <div class="final-summary" style="margin-top: 30px; page-break-inside: avoid;">
+            <table style="width: 100%;">
+                <tbody>
+                    <tr class="summary-row">
+                        <td colspan="2" style="width: 47%;"><strong>الإجمالي النهائي</strong></td>
+                        <td class="debit" style="width: 13%;"><strong>${formatNumber(totalDebits)}</strong></td>
+                        <td class="credit" style="width: 13%;"><strong>${formatNumber(totalCredits)}</strong></td>
+                        <td class="${finalBalanceClass}" style="width: 15%;"><strong>${formatNumber(Math.abs(finalBalance))} ${finalBalanceText}</strong></td>
+                        <td style="width: 12%;"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="summary-box">
+            <h3>📊 ملخص الحساب</h3>
+            <div class="summary-grid">
+                <div>• إجمالي المبيعات: <strong>${formatNumber(totalDebits)} ريال</strong></div>
+                <div>• إجمالي التسديدات: <strong>${formatNumber(totalCredits)} ريال</strong></div>
+                <div>• عدد عمليات البيع: <strong>${allTransactions.filter(t => t.type === 'sale').length}</strong></div>
+                <div>• عدد عمليات التسديد: <strong>${allTransactions.filter(t => t.type === 'payment').length}</strong></div>
+                <div>• صافي الحركة: <strong>${formatNumber(totalDebits - totalCredits)} ريال</strong></div>
+                <div>• الرصيد النهائي: <strong>${formatNumber(Math.abs(finalBalance))} ريال ${finalBalanceText}</strong></div>
+            </div>
+        </div>
+        
+        <!-- حقوق الطبع والنشر -->
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-top: 50px; padding: 30px; border-radius: 15px; color: white; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; backdrop-filter: blur(10px);">
+                <h4 style="margin: 0 0 15px 0; font-size: 18px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                    💼 نظام إدارة المبيعات والمخزون والمصروفات
+                </h4>
+                <p style="margin: 10px 0; font-size: 14px;">
+                    جميع الحقوق محفوظة © ${new Date().getFullYear()}
+                </p>
+                <div style="margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 8px;">
+                    <p style="margin: 5px 0; font-size: 16px; font-weight: bold;">
+                        👨‍💻 تم التطوير بواسطة: م / نجيب المقداد
+                    </p>
+                    <p style="margin: 10px 0; font-size: 14px;">
+                        📱 للتواصل: 
+                        <span style="background: rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 5px; margin: 0 5px; cursor: pointer; transition: all 0.3s ease;" 
+                              onclick="copyPhoneNumber('775396439')" 
+                              onmouseover="this.style.background='rgba(255,255,255,0.5)'" 
+                              onmouseout="this.style.background='rgba(255,255,255,0.3)'">
+                            775396439
+                        </span>
+                        أو
+                        <span style="background: rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 5px; margin: 0 5px; cursor: pointer; transition: all 0.3s ease;" 
+                              onclick="copyPhoneNumber('737896431')" 
+                              onmouseover="this.style.background='rgba(255,255,255,0.5)'" 
+                              onmouseout="this.style.background='rgba(255,255,255,0.3)'">
+                            737896431
+                        </span>
+                    </p>
+                </div>
+                <p style="margin: 15px 0 0 0; font-size: 12px; opacity: 0.9; font-style: italic;">
+                    ⚖️ يُحظر نسخ أو توزيع هذا النظام بدون إذن مسبق
+                </p>
+            </div>
+        </div>
+        
+        <script>
+        function copyPhoneNumber(number) {
+            // نسخ الرقم إلى الحافظة
+            navigator.clipboard.writeText(number).then(function() {
+                // إظهار إشعار مؤقت
+                const notification = document.createElement('div');
+                notification.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #4CAF50; color: white; padding: 15px 30px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 10000; font-size: 16px; animation: fadeInOut 2s ease-in-out;';
+                notification.innerHTML = '✅ تم نسخ الرقم: ' + number;
+                document.body.appendChild(notification);
+                
+                // إضافة الأنيميشن
+                const style = document.createElement('style');
+                style.textContent = '@keyframes fadeInOut { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 80% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } }';
+                document.head.appendChild(style);
+                
+                // إزالة الإشعار بعد 2 ثانية
+                setTimeout(function() {
+                    notification.remove();
+                    style.remove();
+                }, 2000);
+            }).catch(function(err) {
+                alert('تعذر نسخ الرقم. يمكنك نسخه يدوياً: ' + number);
+            });
+        }
+        </script>
+    </div>
+</body>
+</html>`;
+  
+  return html;
+}
+
 function buildStoreReportHTML(store, periodText, mappedSalesForExport, mappedPaymentsForExport, totalSales, totalPayments, remaining) {
   const baseUrl = (function () { try { return new URL('.', location.href).href; } catch (e) { return location.href.substring(0, location.href.lastIndexOf('/') + 1); } })();
   const fontUrl = baseUrl + 'fonts/Amiri-Regular.woff2';
@@ -361,12 +908,27 @@ function buildStoreReportHTML(store, periodText, mappedSalesForExport, mappedPay
   html += '<!doctype html><html lang="ar" dir="rtl">';
   html += '<head><meta charset="utf-8"><title>كشف حساب: ' + store.name + '</title>';
   html += '<style>' + "@font-face { font-family:'AmiriExport'; src: url('" + fontUrl + "') format('woff2'); font-weight:400; font-style:normal; }" +
-    "body { font-family:'AmiriExport','Arial',sans-serif; padding:16px; }" + '.summary{ display:flex; gap:12px; justify-content:flex-end; margin:10px 0; }' + '.box{ border:1px solid #ddd; padding:8px 12px; }' + 'table{ width:100%; border-collapse:collapse; text-align:right; margin-top:8px; }' + 'th,td{ border:1px solid #ccc; padding:6px; }' + 'h3,h4{ margin:12px 0 6px; text-align:right; }' + '.actions{ display:flex; justify-content:flex-start; margin-bottom:12px; gap:8px; }' + '.actions button{ padding:8px 12px; border:1px solid #2c3e50; background:#2c3e50; color:#fff; border-radius:6px; font-size:14px; }' + '@media print { .actions{ display:none } }' + '@page{ size:A4; margin:12mm; }' + '</style></head>';
+    "body { font-family:'AmiriExport','Arial',sans-serif; padding:16px; }" + '.summary{ display:flex; gap:12px; justify-content:flex-end; margin:10px 0; }' + '.box{ border:1px solid #ddd; padding:8px 12px; }' + 'table{ width:100%; border-collapse:collapse; text-align:right; margin-top:8px; }' + 'th,td{ border:1px solid #ccc; padding:6px; }' + 'h3,h4{ margin:12px 0 6px; text-align:right; }' + '.actions{ display:flex; justify-content:flex-start; margin-bottom:12px; gap:8px; }' + '.actions button{ padding:8px 12px; border:1px solid #2c3e50; background:#2c3e50; color:#fff; border-radius:6px; font-size:14px; }' + '@media print { .actions{ display:none } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; } }' + '@page{ size:A4; margin:12mm; }' + '</style></head>';
   html += '<body>' + '<div class="actions"><button onclick="window.print()">حفظ التقرير كـ PDF</button></div>' + '<h3>كشف حساب: ' + store.name + '</h3>' + '<div>الفترة: ' + periodText + ' | تاريخ التصدير: ' + (new Date()).toISOString().slice(0, 10) + '</div>' + '<div class="summary">' + '<div class="box">إجمالي المبيعات: <span class="currency">' + (totalSales || 0).toLocaleString('en-US') + '</span></div>' + '<div class="box">إجمالي التسديدات: <span class="currency">' + (totalPayments || 0).toLocaleString('en-US') + '</span></div>' + '<div class="box">المتبقي: <span class="currency">' + (remaining || 0).toLocaleString('en-US') + '</span></div>' + '</div>';
   html += '<h4>المبيعات</h4>';
   if (mappedSalesForExport.length > 0) html += '<table><thead><tr><th>التاريخ</th><th>التفاصيل</th><th>الباقة</th><th>الكمية/المبلغ</th><th>الإجمالي</th></tr></thead><tbody>' + buildSalesRows() + '</tbody></table>'; else html += '<div>لا توجد مبيعات ضمن الفترة</div>';
   html += '<h4>التسديدات</h4>';
   if (mappedPaymentsForExport.length > 0) html += '<table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>ملاحظات</th></tr></thead><tbody>' + buildPaymentRows() + '</tbody></table>'; else html += '<div>لا توجد تسديدات ضمن الفترة</div>';
+  // حقوق الطبع والنشر
+  html += '<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-top: 50px; padding: 30px; border-radius: 15px; color: white; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">' +
+    '<div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; backdrop-filter: blur(10px);">' +
+    '<h4 style="margin: 0 0 15px 0; font-size: 18px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">💼 نظام إدارة المبيعات والمخزون والمصروفات</h4>' +
+    '<p style="margin: 10px 0; font-size: 14px;">جميع الحقوق محفوظة © ' + new Date().getFullYear() + '</p>' +
+    '<div style="margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 8px;">' +
+    '<p style="margin: 5px 0; font-size: 16px; font-weight: bold;">👨‍💻 تم التطوير بواسطة: م / نجيب المقداد</p>' +
+    '<p style="margin: 10px 0; font-size: 14px;">📱 للتواصل: ' +
+    '<span style="background: rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 5px; margin: 0 5px; cursor: pointer;" onclick="copyPhoneNumber(\'775396439\')">775396439</span>' +
+    ' أو ' +
+    '<span style="background: rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 5px; margin: 0 5px; cursor: pointer;" onclick="copyPhoneNumber(\'737896431\')">737896431</span>' +
+    '</p></div>' +
+    '<p style="margin: 15px 0 0 0; font-size: 12px; opacity: 0.9; font-style: italic;">⚖️ يُحظر نسخ أو توزيع هذا النظام بدون إذن مسبق</p>' +
+    '</div></div>' +
+    '<script>function copyPhoneNumber(number){navigator.clipboard.writeText(number).then(function(){const n=document.createElement("div");n.style.cssText="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#4CAF50;color:white;padding:15px 30px;border-radius:8px;box-shadow:0 5px 15px rgba(0,0,0,0.3);z-index:10000;font-size:16px;animation:fadeInOut 2s ease-in-out;";n.innerHTML="✅ تم نسخ الرقم: "+number;document.body.appendChild(n);const s=document.createElement("style");s.textContent="@keyframes fadeInOut{0%{opacity:0;transform:translate(-50%,-50%) scale(0.8);}20%{opacity:1;transform:translate(-50%,-50%) scale(1);}80%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-50%) scale(0.8);}}";document.head.appendChild(s);setTimeout(function(){n.remove();s.remove();},2000);}).catch(function(err){alert("تعذر نسخ الرقم. يمكنك نسخه يدوياً: "+number);});}</script>';
   html += '</body></html>';
   return html;
 }
@@ -429,6 +991,22 @@ function buildExpensesReportHTML(expensesRows, periodText) {
     html += renderTable(rows);
   }
 
+  // حقوق الطبع والنشر
+  html += '<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-top: 50px; padding: 30px; border-radius: 15px; color: white; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">' +
+    '<div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; backdrop-filter: blur(10px);">' +
+    '<h4 style="margin: 0 0 15px 0; font-size: 18px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">💼 نظام إدارة المبيعات والمخزون والمصروفات</h4>' +
+    '<p style="margin: 10px 0; font-size: 14px;">جميع الحقوق محفوظة © ' + (new Date()).getFullYear() + '</p>' +
+    '<div style="margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 8px;">' +
+    '<p style="margin: 5px 0; font-size: 16px; font-weight: bold;">👨‍💻 تم التطوير بواسطة: م / نجيب المقداد</p>' +
+    '<p style="margin: 10px 0; font-size: 14px;">📱 للتواصل: ' +
+    '<span style="background: rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 5px; margin: 0 5px; cursor: pointer;" onclick="copyPhoneNumber(\'775396439\')">775396439</span>' +
+    ' أو ' +
+    '<span style="background: rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 5px; margin: 0 5px; cursor: pointer;" onclick="copyPhoneNumber(\'737896431\')">737896431</span>' +
+    '</p></div>' +
+    '<p style="margin: 15px 0 0 0; font-size: 12px; opacity: 0.9; font-style: italic;">⚖️ يُحظر نسخ أو توزيع هذا النظام بدون إذن مسبق</p>' +
+    '</div></div>' +
+    '<script>function copyPhoneNumber(number){navigator.clipboard.writeText(number).then(function(){const n=document.createElement("div");n.style.cssText="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#4CAF50;color:white;padding:15px 30px;border-radius:8px;box-shadow:0 5px 15px rgba(0,0,0,0.3);z-index:10000;font-size:16px;animation:fadeInOut 2s ease-in-out;";n.innerHTML="✅ تم نسخ الرقم: "+number;document.body.appendChild(n);const s=document.createElement("style");s.textContent="@keyframes fadeInOut{0%{opacity:0;transform:translate(-50%,-50%) scale(0.8);}20%{opacity:1;transform:translate(-50%,-50%) scale(1);}80%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-50%) scale(0.8);}}";document.head.appendChild(s);setTimeout(function(){n.remove();s.remove();},2000);}).catch(function(err){alert("تعذر نسخ الرقم. يمكنك نسخه يدوياً: "+number);});}</script>';
+  
   html += '</body></html>';
   return html;
 }
@@ -442,10 +1020,31 @@ async function exportStoreData(storeId, format) {
   }
   const store = data.stores.find(s => (s.id + '') === (storeId + ''));
   if (!store) { showNotification('تعذر تحديد المحل للتصدير', 'error'); return; }
-  var fromInput = document.getElementById('storeFromDate');
-  var toInput = document.getElementById('storeToDate');
-  const fromDate = (fromInput && fromInput.value) || '';
-  const toDate = (toInput && toInput.value) || '';
+  // استخدام الفلترة النشطة
+  let fromDate = '';
+  let toDate = '';
+  
+  // الحصول على الفلترة النشطة إن وجدت
+  if (window.storeFilter) {
+    const activeFilter = window.storeFilter.getActiveStoreFilter(storeId);
+    if (activeFilter) {
+      if (activeFilter.type === 'custom') {
+        fromDate = activeFilter.data.startDate;
+        toDate = activeFilter.data.endDate;
+      } else if (activeFilter.type === 'time') {
+        const dateRange = window.storeFilter.getDateRangeForQuickFilter(activeFilter.id);
+        if (dateRange.startDate) {
+          const d = new Date(dateRange.startDate);
+          fromDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+        if (dateRange.endDate) {
+          const d = new Date(dateRange.endDate);
+          toDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+      }
+      // للدورات المالية، سيتم معالجتها داخل الفلترة
+    }
+  }
   const salesAll = (data.sales || []).filter(s => (s.storeId + '') === (storeId + ''));
   const paymentsAll = (data.payments || []).filter(p => (p.storeId + '') === (storeId + ''));
   function parseDate(d) {
@@ -479,6 +1078,14 @@ async function exportStoreData(storeId, format) {
     const periodText = `${formatDate(fromDate) || 'من البداية'} إلى ${formatDate(toDate) || 'حتى الآن'}`;
   if (format === 'json') {
     const arabic = { المحل: { اسم: store.name, نوع_السعر: getPriceTypeName(store.priceType) }, الفترة: periodText, الملخص: { إجمالي_المبيعات: totalSales, إجمالي_التسديدات: totalPayments, المتبقي: remaining }, المبيعات: mappedSalesForExport, التسديدات: mappedPaymentsForExport };
+    // إضافة حقوق الطبع في JSON
+    arabic.حقوق_النشر = {
+      النظام: 'نظام إدارة المبيعات والمخزون والمصروفات',
+      الحقوق: `جميع الحقوق محفوظة © ${new Date().getFullYear()}`,
+      المطور: 'م / نجيب المقداد',
+      التواصل: '775396439 - 737896431',
+      تحذير: 'يُحظر نسخ أو توزيع هذا النظام بدون إذن مسبق'
+    };
     const dataStr = JSON.stringify(arabic, null, 2);
     const blob = new Blob([dataStr], { type: 'application/json' }); const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `${filename}.json`;
@@ -490,6 +1097,15 @@ async function exportStoreData(storeId, format) {
     const summaryWs = XLSX.utils.json_to_sheet([{ إجمالي_المبيعات: totalSales, إجمالي_التسديدات: totalPayments, المتبقي: remaining }]); XLSX.utils.book_append_sheet(wb, summaryWs, 'الملخص');
     if (mappedSalesForExport.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mappedSalesForExport), 'المبيعات');
     if (mappedPaymentsForExport.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mappedPaymentsForExport), 'التسديدات');
+    // إضافة ورقة حقوق النشر
+    const copyrightData = [{
+      '': 'نظام إدارة المبيعات والمخزون والمصروفات',
+      ' ': `جميع الحقوق محفوظة © ${new Date().getFullYear()}`,
+      '  ': 'تم التطوير بواسطة: م / نجيب المقداد',
+      '   ': 'للتواصل: 775396439 - 737896431',
+      '    ': 'يُحظر نسخ أو توزيع هذا النظام بدون إذن مسبق'
+    }];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(copyrightData), 'حقوق النشر');
     XLSX.writeFile(wb, `${filename}.xlsx`); showNotification('تم تصدير بيانات المحل إلى ملف Excel', 'success');
   } else if (format === 'txt') {
     let txtContent = `تفاصيل المحل: ${store.name}\n\n` + `الفترة: ${periodText}\n` + `إجمالي المبيعات: ${totalSales}\n` + `إجمالي التسديدات: ${totalPayments}\n` + `المتبقي: ${remaining}\n\n` + '===== المبيعات =====\n\n';
@@ -502,6 +1118,14 @@ async function exportStoreData(storeId, format) {
       txtContent += ['التاريخ', 'المبلغ', 'ملاحظات'].join('\t') + '\n';
       mappedPaymentsForExport.forEach(p => { txtContent += [p.التاريخ, p.المبلغ, p.ملاحظات].join('\t') + '\n'; });
     } else { txtContent += 'لا توجد تسديدات\n'; }
+    // إضافة حقوق النشر
+    txtContent += '\n\n' + '='.repeat(50) + '\n';
+    txtContent += 'نظام إدارة المبيعات والمخزون والمصروفات\n';
+    txtContent += `جميع الحقوق محفوظة © ${new Date().getFullYear()}\n`;
+    txtContent += 'تم التطوير بواسطة: م / نجيب المقداد\n';
+    txtContent += 'للتواصل: 775396439 - 737896431\n';
+    txtContent += 'يُحظر نسخ أو توزيع هذا النظام بدون إذن مسبق\n';
+    txtContent += '='.repeat(50) + '\n';
     const blob = new Blob([txtContent], { type: 'text/plain' }); const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `${filename}.txt`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
@@ -513,6 +1137,129 @@ async function exportStoreData(storeId, format) {
       win.document.open(); win.document.write(html); win.document.close();
       showNotification(format === 'pdf' ? 'تم فتح صفحة الطباعة. اضغط حفظ كـ PDF.' : 'تم فتح صفحة التقرير.', 'success');
     } catch (e) { showNotification(format === 'pdf' ? 'حدث خطأ أثناء إنشاء PDF' : 'تعذر فتح صفحة التقرير', 'error'); }
+  } else if (format === 'statement') {
+    // كشف الحساب المتحرك الجديد
+    try {
+      // تحضير جميع العمليات بترتيب زمني
+      let allTransactions = [];
+      
+      // إضافة المبيعات
+      storeSales.forEach(sale => {
+        const pkg = data.packages.find(p => p.id === sale.packageId);
+        allTransactions.push({
+          id: sale.id,
+          date: sale.date,
+          type: 'sale',
+          amount: sale.total,
+          packageName: pkg ? pkg.name : (sale.packageId === 'custom' ? 'مبلغ مخصص' : 'غير معروف'),
+          quantity: sale.quantity || 1,
+          notes: sale.reason || ''
+        });
+      });
+      
+      // إضافة التسديدات
+      storePayments.forEach(payment => {
+        allTransactions.push({
+          id: payment.id,
+          date: payment.date,
+          type: 'payment',
+          amount: payment.amount,
+          notes: payment.notes || '',
+          paymentMethod: payment.method || 'نقدي'
+        });
+      });
+      
+      // حساب الرصيد السابق إذا كانت هناك فترة محددة
+      let previousBalance = 0;
+      if (fromDate) {
+        const prevSales = salesAll.filter(s => new Date(s.date) < new Date(fromDate));
+        const prevPayments = paymentsAll.filter(p => new Date(p.date) < new Date(fromDate));
+        const prevTotalSales = prevSales.reduce((sum, s) => sum + s.total, 0);
+        const prevTotalPayments = prevPayments.reduce((sum, p) => sum + p.amount, 0);
+        previousBalance = prevTotalSales - prevTotalPayments;
+      }
+      
+      // ترتيب حسب التاريخ أولاً
+      allTransactions.sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        return dateA - dateB;
+      });
+      
+      // إعادة ترتيب العمليات في نفس اليوم حسب الرصيد
+      const reorderTransactionsByBalance = (transactions, startBalance) => {
+        const transactionsByDate = {};
+        
+        // تجميع العمليات حسب التاريخ
+        transactions.forEach(t => {
+          const dateKey = t.date;
+          if (!transactionsByDate[dateKey]) {
+            transactionsByDate[dateKey] = { sales: [], payments: [] };
+          }
+          if (t.type === 'sale') {
+            transactionsByDate[dateKey].sales.push(t);
+          } else if (t.type === 'payment') {
+            transactionsByDate[dateKey].payments.push(t);
+          }
+        });
+        
+        // إعادة بناء قائمة العمليات بالترتيب الصحيح
+        const reorderedTransactions = [];
+        let currentBalance = startBalance;
+        
+        Object.keys(transactionsByDate).sort().forEach(date => {
+          const dayTransactions = transactionsByDate[date];
+          
+          // إذا كان هناك رصيد دائن سابق، ضع التسديدات أولاً
+          if (currentBalance > 0 && dayTransactions.payments.length > 0) {
+            dayTransactions.payments.forEach(payment => {
+              reorderedTransactions.push(payment);
+              currentBalance -= payment.amount;
+            });
+            dayTransactions.sales.forEach(sale => {
+              reorderedTransactions.push(sale);
+              currentBalance += sale.amount;
+            });
+          } else {
+            // وإلا، ضع المبيعات أولاً ثم التسديدات
+            dayTransactions.sales.forEach(sale => {
+              reorderedTransactions.push(sale);
+              currentBalance += sale.amount;
+            });
+            dayTransactions.payments.forEach(payment => {
+              reorderedTransactions.push(payment);
+              currentBalance -= payment.amount;
+            });
+          }
+        });
+        
+        return reorderedTransactions;
+      };
+      
+      // تطبيق إعادة الترتيب بناءً على الرصيد السابق
+      allTransactions = reorderTransactionsByBalance(allTransactions, previousBalance);
+      
+      // بناء التقرير
+      const html = buildAccountStatementHTML(store, periodText, allTransactions, previousBalance);
+      const win = window.open('', '_blank');
+      if (!win || !win.document) {
+        showNotification('يمنع المتصفح النوافذ المنبثقة. الرجاء السماح بها.', 'error');
+        return;
+      }
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+      showNotification('تم فتح كشف الحساب المتحرك', 'success');
+    } catch (e) {
+      console.error('خطأ في إنشاء كشف الحساب:', e);
+      console.error('تفاصيل الخطأ:', {
+        message: e.message,
+        stack: e.stack,
+        store: store,
+        transactionsCount: allTransactions.length
+      });
+      showNotification(`تعذر فتح كشف الحساب المتحرك: ${e.message}`, 'error');
+    }
   }
 }
 
@@ -869,6 +1616,12 @@ function initReportsControls(){
 }
 
 // دوال تصدير التقارير الإضافية
+/**
+ * تصدير الملخصات المرئية بصيغ مختلفة
+ * يدعم: Excel, TXT, PDF (صفحة طباعة), Print
+ * ملاحظة: PDF لا ينشئ ملف PDF حقيقي، بل يفتح صفحة HTML قابلة للطباعة
+ * @param {string} format - صيغة التصدير المطلوبة
+ */
 function exportSummaries(format) {
   const { fromDate, toDate } = getPeriodRange('summaries');
   const salesData = data.sales.filter(s => inPeriod(s.date, fromDate, toDate));
@@ -899,10 +1652,18 @@ function exportSummaries(format) {
     downloadTextFile(content, `ملخصات_${moment().format('YYYY-MM-DD')}.txt`);
     showNotification('تم تصدير الملخصات إلى ملف نصي', 'success');
   } else if (format === 'pdf' || format === 'print') {
+    // ملاحظة: كلا الخيارين (pdf و print) يفتحان نفس صفحة الطباعة
+    // يمكن للمستخدم طباعتها أو حفظها كـ PDF من المتصفح
     openSummariesPrintPage(fromDate, toDate, totalSales, totalPayments, totalExpenses);
   }
 }
 
+/**
+ * تصدير تقرير الديون بصيغ مختلفة
+ * يدعم: Excel, TXT, PDF (صفحة طباعة), Print
+ * ملاحظة: PDF لا ينشئ ملف PDF حقيقي، بل يفتح صفحة HTML قابلة للطباعة
+ * @param {string} format - صيغة التصدير المطلوبة
+ */
 function exportDebts(format) {
   const { fromDate, toDate } = getPeriodRange('debts');
   const debtData = generateDebtReportDataForExport();
@@ -1015,7 +1776,16 @@ function openProfitPrintPage(fromDate, toDate, profitData) {
   openPrintWindow(html);
 }
 
-// دالة مساعدة لبناء صفحة الطباعة
+/**
+ * بناء صفحة HTML قابلة للطباعة للتقارير
+ * تستخدم لإنشاء صفحات قابلة للطباعة أو الحفظ كـ PDF
+ * ملاحظة: هذه الدالة تنشئ HTML فقط، ولا تنشئ ملف PDF حقيقي
+ * @param {string} title - عنوان التقرير
+ * @param {string} period - فترة التقرير
+ * @param {Array|Object} data - بيانات التقرير
+ * @param {string} type - نوع التقرير (debts, profit, إلخ)
+ * @returns {string} كود HTML للصفحة
+ */
 function buildPrintPageHTML(title, period, data, type) {
   let html = `<!DOCTYPE html>
 <html lang="ar" dir="rtl">

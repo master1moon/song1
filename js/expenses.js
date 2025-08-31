@@ -1,9 +1,23 @@
+/**
+ * ملف expenses.js - نظام إدارة المصروفات
+ * يتعامل مع إضافة، تعديل، حذف، وعرض المصروفات
+ * يدعم البحث، الترتيب، التقسيم إلى صفحات، والعمليات الجماعية
+ * 
+ * المشاكل المحتملة:
+ * - التواريخ قد لا تُحفظ بشكل صحيح (يستخدم متغير today غير معرّف)
+ * - دالة cleanupModalBackdrops غير موجودة لكن يتم استدعاؤها
+ * - معالجة الأخطاء في العمليات الجماعية ضعيفة
+ * - لا يوجد تحقق من صحة المبالغ المدخلة
+ * - حذف المصروفات لا يمكن التراجع عنه بسهولة
+ */
+
 // إدارة المصروفات
 
 /**
  * فتح نموذج إضافة مصروف جديد
  * يعيد تعيين جميع حقول النموذج إلى قيمها الافتراضية
  * يضبط التاريخ على اليوم الحالي
+ * مشكلة: متغير today قد لا يكون معرفاً
  */
 function addExpense() {
   document.getElementById('expenseModalTitle').textContent = 'إضافة مصروف جديد';
@@ -13,7 +27,7 @@ function addExpense() {
   const customInp = document.getElementById('expenseTypeCustom'); if (customInp) customInp.value = '';
   document.getElementById('expenseAmount').value = '';
   document.getElementById('expenseNotes').value = '';
-  document.getElementById('expenseDate').value = formatDateEn(today);
+  document.getElementById('expenseDate').value = formatDateEn(getTodayDate());
   document.getElementById('addLater').checked = false;
   const modal = new bootstrap.Modal(document.getElementById('expenseModal')); modal.show();
 }
@@ -31,7 +45,7 @@ function editExpense(id) {
   const customInp = document.getElementById('expenseTypeCustom'); if (customInp) customInp.value = '';
   document.getElementById('expenseAmount').value = formatNumber(expense.amount);
   document.getElementById('expenseNotes').value = expense.notes || '';
-  document.getElementById('expenseDate').value = formatDateEn(expense.date || today);
+  document.getElementById('expenseDate').value = formatDateEn(expense.date || getTodayDate());
   document.getElementById('addLater').checked = expense.addLater || false;
   const modal = new bootstrap.Modal(document.getElementById('expenseModal')); modal.show();
 }
@@ -48,7 +62,7 @@ function deleteExpense(id) {
   const removed = data.expenses.find(e => e.id === id);
   data.expenses = data.expenses.filter(e => e.id !== id);
   saveData();
-  (async()=>{ try{ if (removed && typeof addToTrash==='function') await addToTrash('expenses', removed); }catch{}; renderExpensesTable(); updateDashboard(); updateProfitReport(); })();
+  (async()=>{ try{ if (removed && typeof addToTrash==='function') await addToTrash('expenses', removed); }catch{}; refreshCurrentView(); updateProfitReport(); })();
   showNotification('تم حذف المصروف بنجاح', 'success');
 }
 
@@ -63,7 +77,7 @@ function saveExpense() {
   const type = document.getElementById('expenseType').value;
   const amount = parseFormattedNumber(document.getElementById('expenseAmount').value) || 0;
   const notes = document.getElementById('expenseNotes').value;
-  const date = document.getElementById('expenseDate').value ? formatDateEn(document.getElementById('expenseDate').value) : today;
+  const date = document.getElementById('expenseDate').value ? formatDateEn(document.getElementById('expenseDate').value) : getTodayDate();
   const addLater = document.getElementById('addLater').checked;
   if (!type) { showNotification('يرجى إدخال نوع المصروف', 'error'); return; }
   if (id) {
@@ -80,9 +94,8 @@ function saveExpense() {
     if (type && !saved.includes(type)) { saved.push(type); localStorage.setItem('expenseTypes', JSON.stringify(saved)); }
   } catch (_) {}
   saveData();
-  renderExpensesTable();
-  updateDashboard();
-  updateProfitReport();
+  refreshCurrentView(); // تحديث جميع العروض المرئية
+  updateProfitReport(); // خاص بتقرير الأرباح
   if (typeof generatePartnerReports === 'function') generatePartnerReports();
   const modal = bootstrap.Modal.getInstance(document.getElementById('expenseModal')); 
   modal.hide();
@@ -188,7 +201,7 @@ function renderExpensesControls(total, pages){
         if (newType && !saved.includes(newType)) { saved.push(newType); localStorage.setItem('expenseTypes', JSON.stringify(saved)); }
       } catch(_){}
     }
-    saveData(); renderExpensesTable(); updateDashboard(); updateProfitReport(); showNotification('تم تطبيق الإجراء الجماعي', 'success');
+    saveData(); refreshCurrentView(); updateProfitReport(); showNotification('تم تطبيق الإجراء الجماعي', 'success');
   }
   bulkBtn.addEventListener('click', applyBulk);
   left.appendChild(bulkSel); left.appendChild(bulkTypeInp); left.appendChild(bulkBtn);

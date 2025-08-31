@@ -530,6 +530,524 @@
             color: #6c757d;
             margin-bottom: 10px;
         }
+        
+        /* أنماط الفلترة المتقدمة */
+        .advanced-filter-section .card {
+            border: 1px solid #e1e5eb;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 1rem;
+            overflow: visible !important; /* تغيير overflow للسماح بظهور القائمة المنسدلة */
+        }
+        
+        .advanced-filter-section .card-body {
+            padding: 1rem;
+        }
+        
+        /* إصلاح التخطيط للشاشات الصغيرة */
+        @media (max-width: 768px) {
+            .advanced-filter-section .row {
+                gap: 1rem;
+            }
+            
+            .advanced-filter-section .col-md-6 {
+                margin-bottom: 1rem;
+                width: 100%;
+            }
+            
+            /* إصلاح أزرار الفلترة على الجوال */
+            .advanced-filter-section .d-flex.gap-2 {
+                flex-wrap: wrap;
+                justify-content: center !important;
+                margin-top: 0.5rem;
+            }
+            
+            .filter-type-btn {
+                min-width: auto;
+                padding: 0.375rem 0.75rem;
+                font-size: 0.875rem;
+                flex: 1;
+                max-width: 120px;
+            }
+            
+            .filter-selector-btn {
+                font-size: 0.875rem;
+                padding: 8px 12px;
+            }
+            
+            .filter-title {
+                font-size: 0.9rem;
+            }
+            
+            .filter-subtitle {
+                font-size: 0.75rem;
+            }
+        }
+        
+        /* إصلاح التخطيط لسطح المكتب */
+        @media (min-width: 769px) {
+            .advanced-filter-section .row {
+                align-items: center;
+            }
+            
+            .advanced-filter-section .col-md-6:first-child {
+                padding-right: 0.5rem;
+            }
+            
+            .advanced-filter-section .col-md-6:last-child {
+                padding-left: 0.5rem;
+            }
+        }
+        
+        .filter-selector-wrapper {
+            position: relative;
+            width: 100%;
+            z-index: 1000; /* إضافة z-index للعنصر الأب */
+        }
+        
+        /* إصلاح عرض الأزرار */
+        .advanced-filter-section .btn-group {
+            display: flex;
+            gap: 0.25rem;
+        }
+        
+        @media (max-width: 768px) {
+            .advanced-filter-section .btn-group {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+        
+        .filter-selector-btn {
+            text-align: right;
+            padding: 10px 15px;
+            border: 2px solid #e1e5eb;
+            background: white;
+            transition: all 0.3s;
+        }
+        
+        .filter-selector-btn:hover {
+            border-color: var(--primary-color);
+            background: #f8f9fa;
+        }
+        
+        .filter-selector-btn.active {
+            border-color: var(--primary-color);
+            background: #f0f4ff;
+        }
+        
+        .filter-title {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .filter-subtitle {
+            font-size: 12px;
+        }
+        
+        .filter-icon {
+            font-size: 20px;
+            color: var(--primary-color);
+        }
+        
+        /* القائمة المنسدلة */
+        .filter-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            left: 0;
+            background: white;
+            border: 1px solid #e1e5eb;
+            border-radius: 8px;
+            margin-top: 5px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            z-index: 9999 !important; /* رفع z-index لضمان الظهور فوق كل شيء */
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .filter-group-title {
+            padding: 8px 15px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6c757d;
+            background: #f8f9fa;
+            text-transform: uppercase;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .filter-option {
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        
+        .filter-option:hover {
+            background: #f8f9fa;
+        }
+        
+        .filter-option.active {
+            background: #e8f0fe;
+            color: #1976d2;
+        }
+        
+        .filter-option i {
+            font-size: 20px;
+            width: 30px;
+            text-align: center;
+        }
+        
+        .filter-option-text {
+            flex: 1;
+        }
+        
+        .filter-option-text small {
+            display: block;
+            margin-top: 2px;
+        }
+        
+        .filter-type-btn {
+            min-width: 120px;
+        }
+        
+        .filter-type-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        /* ملخص الفلترة */
+        .filter-summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .filter-summary.show {
+            display: block;
+        }
+        
+        .filter-summary-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .filter-summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .filter-summary-stat {
+            background: rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .filter-summary-stat .value {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .filter-summary-stat .label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        /* التاريخ المخصص */
+        .custom-date-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        /* كشف الحساب المتحرك */
+        .account-statement-container {
+            padding: 20px 0;
+        }
+        
+        .account-statement-table {
+            font-size: 14px;
+        }
+        
+        .account-statement-table th {
+            background: #2c3e50;
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            vertical-align: middle;
+        }
+        
+        .account-statement-table td {
+            vertical-align: middle;
+        }
+        
+        .date-header-row td {
+            background: #e9ecef;
+            font-weight: 600;
+            padding: 10px;
+        }
+        
+        .sale-row {
+            background-color: rgba(220, 53, 69, 0.05);
+        }
+        
+        .payment-row {
+            background-color: rgba(40, 167, 69, 0.05);
+        }
+        
+        .opening-balance-row {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .total-row td {
+            font-size: 16px;
+            padding: 12px;
+        }
+        
+        /* العرض الزمني القديم - محتفظ به للمستقبل */
+        .timeline-container {
+            position: relative;
+            padding: 20px 0;
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 40px;
+            margin-bottom: 30px;
+            border-left: 3px solid #e9ecef;
+            padding-bottom: 20px;
+        }
+        
+        .timeline-item:last-child {
+            border-left: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .timeline-dot {
+            position: absolute;
+            left: -8px;
+            top: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #6c757d;
+            z-index: 2;
+        }
+        
+        .timeline-dot.sale {
+            border-color: #dc3545;
+        }
+        
+        .timeline-dot.payment {
+            border-color: #28a745;
+        }
+        
+        .timeline-content {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+        
+        .timeline-content:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .timeline-date {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        .timeline-type {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .timeline-type.sale {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .timeline-type.payment {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .timeline-details {
+            margin: 10px 0;
+        }
+        
+        .timeline-amount {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .timeline-amount.sale {
+            color: #dc3545;
+        }
+        
+        .timeline-amount.payment {
+            color: #28a745;
+        }
+        
+        .timeline-balance {
+            background: #fff3cd;
+            color: #856404;
+            padding: 8px 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .timeline-balance.positive {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .timeline-balance.negative {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .timeline-actions {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        /* تجميع التواريخ */
+        .timeline-date-group {
+            background: #f8f9fa;
+            padding: 10px 20px;
+            margin: 20px 0 10px 0;
+            border-radius: 30px;
+            font-weight: 600;
+            color: #495057;
+            text-align: center;
+            position: relative;
+        }
+        
+        .timeline-date-group:before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: -10px;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 10px;
+            background: #dee2e6;
+        }
+        
+        /* أزرار نوع العرض */
+        .view-type-selector {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+        
+        .view-type-selector .btn-group {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        /* تنسيق بطاقات الإحصائيات */
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .stat-card.border-primary {
+            border-left: 4px solid #007bff;
+        }
+        
+        .stat-card.border-success {
+            border-left: 4px solid #28a745;
+        }
+        
+        .stat-card.border-warning {
+            border-left: 4px solid #ffc107;
+        }
+        
+        .stat-card.border-info {
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .stat-icon {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            opacity: 0.9;
+        }
+        
+        .stat-content {
+            text-align: right;
+            margin-right: 10px;
+        }
+        
+        .stat-content h6 {
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .stat-content h4 {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0;
+            color: #333;
+        }
+        
+        .stat-content small {
+            color: #6c757d;
+            font-size: 12px;
+        }
       </style>
 </head>
 <body>
@@ -590,6 +1108,11 @@
                 <li class="nav-item">
                     <a class="nav-link" href="#" data-section="reports">
                         <i class="fas fa-chart-bar"></i> التقارير
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-section="discountReports">
+                        <i class="fas fa-percentage"></i> تقارير الخصومات
                     </a>
                 </li>
                 <li class="nav-item">
@@ -873,9 +1396,11 @@
                         <button class="btn btn-outline-secondary export-btn" data-type="expenses" data-format="txt">
                             <i class="fas fa-file-alt me-2"></i>تصدير TXT
                         </button>
+                        <!-- زر تصدير PDF مخفي حالياً - يمكن تفعيله لاحقاً عند تطوير ميزة تصدير PDF الحقيقية
                         <button class="btn btn-outline-danger export-btn" data-type="expenses" data-format="pdf">
                             <i class="fas fa-file-pdf me-2"></i>تصدير PDF
                         </button>
+                        -->
                         <button class="btn btn-outline-primary export-btn" data-type="expenses" data-format="printpage">
                             <i class="fas fa-file-alt me-2"></i>فتح صفحة التقرير
                         </button>
@@ -916,7 +1441,9 @@
                                 <div class="col-12 col-md-auto ms-auto d-flex gap-2">
                                     <button class="btn btn-sm btn-outline-success" id="exportSummariesExcel"><i class="fas fa-file-excel me-1"></i>Excel</button>
                                     <button class="btn btn-sm btn-outline-secondary" id="exportSummariesTxt"><i class="fas fa-file-alt me-1"></i>مستند</button>
+                                    <!-- زر تصدير PDF مخفي حالياً - يمكن تفعيله لاحقاً عند تطوير ميزة تصدير PDF الحقيقية
                                     <button class="btn btn-sm btn-outline-danger" id="exportSummariesPdf"><i class="fas fa-file-pdf me-1"></i>PDF</button>
+                                    -->
                                     <button class="btn btn-sm btn-outline-primary" id="openSummariesReport"><i class="fas fa-file-alt me-1"></i>فتح التقرير</button>
                                 </div>
                             </div>
@@ -966,7 +1493,9 @@
                                 <div class="col-12 col-md-auto ms-auto d-flex gap-2">
                                     <button class="btn btn-sm btn-outline-success" id="exportDebtsExcel"><i class="fas fa-file-excel me-1"></i>Excel</button>
                                     <button class="btn btn-sm btn-outline-secondary" id="exportDebtsTxt"><i class="fas fa-file-alt me-1"></i>مستند</button>
+                                    <!-- زر تصدير PDF مخفي حالياً - يمكن تفعيله لاحقاً عند تطوير ميزة تصدير PDF الحقيقية
                                     <button class="btn btn-sm btn-outline-danger" id="exportDebtsPdf"><i class="fas fa-file-pdf me-1"></i>PDF</button>
+                                    -->
                                     <button class="btn btn-sm btn-outline-primary" id="openDebtsReport"><i class="fas fa-file-alt me-1"></i>فتح التقرير</button>
                                 </div>
                             </div>
@@ -1020,7 +1549,9 @@
                                 <div class="col-12 col-md-auto ms-auto d-flex gap-2">
                                     <button class="btn btn-sm btn-outline-success" id="exportProfitExcel"><i class="fas fa-file-excel me-1"></i>Excel</button>
                                     <button class="btn btn-sm btn-outline-secondary" id="exportProfitTxt"><i class="fas fa-file-alt me-1"></i>مستند</button>
+                                    <!-- زر تصدير PDF مخفي حالياً - يمكن تفعيله لاحقاً عند تطوير ميزة تصدير PDF الحقيقية
                                     <button class="btn btn-sm btn-outline-danger" id="exportProfitPdf"><i class="fas fa-file-pdf me-1"></i>PDF</button>
+                                    -->
                                     <button class="btn btn-sm btn-outline-primary" id="openProfitReport"><i class="fas fa-file-alt me-1"></i>فتح التقرير</button>
                                 </div>
                             </div>
@@ -1114,7 +1645,9 @@
                                 <div class="col-12 col-md-auto ms-auto d-flex gap-2">
                                     <button class="btn btn-sm btn-outline-success" id="exportPartnersExcel"><i class="fas fa-file-excel me-1"></i>Excel</button>
                                     <button class="btn btn-sm btn-outline-secondary" id="exportPartnersTxt"><i class="fas fa-file-alt me-1"></i>مستند</button>
+                                    <!-- زر تصدير PDF مخفي حالياً - يمكن تفعيله لاحقاً عند تطوير ميزة تصدير PDF الحقيقية
                                     <button class="btn btn-sm btn-outline-danger" id="exportPartnersPdf"><i class="fas fa-file-pdf me-1"></i>PDF</button>
+                                    -->
                                     <button class="btn btn-sm btn-outline-primary" id="openPartnersReport"><i class="fas fa-file-alt me-1"></i>فتح التقرير</button>
                                 </div>
                             </div>
@@ -1259,6 +1792,172 @@
             </div>
         </div>
     </div>
+    
+    <!-- قسم تقارير الخصومات -->
+    <div id="discountReports" class="section" style="display:none;">
+        <div class="section-content">
+            <h4 class="section-title">تقارير الخصومات</h4>
+            
+            <!-- فلتر الفترة الزمنية -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">الفترة الزمنية</label>
+                            <select id="discountPeriod" class="form-select" onchange="toggleDiscountCustomDates()">
+                                <option value="today">اليوم</option>
+                                <option value="week">آخر 7 أيام</option>
+                                <option value="month" selected>الشهر الحالي</option>
+                                <option value="lastMonth">الشهر السابق</option>
+                                <option value="year">السنة الحالية</option>
+                                <option value="all">من البداية</option>
+                                <option value="custom">فترة مخصصة</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3" id="discountCustomDates" style="display: none;">
+                            <label class="form-label">من تاريخ</label>
+                            <input type="date" id="discountFromDate" class="form-control">
+                        </div>
+                        <div class="col-md-3" id="discountCustomDatesTo" style="display: none;">
+                            <label class="form-label">إلى تاريخ</label>
+                            <input type="date" id="discountToDate" class="form-control">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button class="btn btn-primary w-100" onclick="generateDiscountReport()">
+                                <i class="fas fa-search"></i> عرض التقرير
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ملخص إحصائيات الخصومات -->
+            <div class="row mb-4" id="discountStatsSummary" style="display: none;">
+                <div class="col-md-3">
+                    <div class="stat-card border-primary">
+                        <div class="stat-icon bg-primary">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h6>إجمالي الخصومات</h6>
+                            <h4 id="totalDiscountAmount">0</h4>
+                            <small>ريال</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card border-success">
+                        <div class="stat-icon bg-success">
+                            <i class="fas fa-store"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h6>خصومات المحلات</h6>
+                            <h4 id="storeDiscountAmount">0</h4>
+                            <small>ريال</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card border-warning">
+                        <div class="stat-icon bg-warning">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h6>خصومات إضافية</h6>
+                            <h4 id="additionalDiscountAmount">0</h4>
+                            <small>ريال</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card border-info">
+                        <div class="stat-icon bg-info">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h6>نسبة الخصومات</h6>
+                            <h4 id="discountPercentage">0%</h4>
+                            <small>من إجمالي المبيعات</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- جدول تفاصيل الخصومات -->
+            <div class="card" id="discountDetailsCard" style="display: none;">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">تفاصيل الخصومات</h5>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-success" onclick="exportDiscountReport('excel')">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="exportDiscountReport('pdf')">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="printDiscountReport()">
+                            <i class="fas fa-print"></i> طباعة
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="discountDetailsTable">
+                            <thead>
+                                <tr>
+                                    <th>التاريخ</th>
+                                    <th>المحل</th>
+                                    <th>نوع الخصم</th>
+                                    <th>المبلغ الأصلي</th>
+                                    <th>قيمة الخصم</th>
+                                    <th>النسبة</th>
+                                    <th>السبب</th>
+                                </tr>
+                            </thead>
+                            <tbody id="discountDetailsBody">
+                                <!-- سيتم ملؤه بواسطة JavaScript -->
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-secondary fw-bold">
+                                    <td colspan="3">الإجمالي</td>
+                                    <td id="footerOriginalTotal">0</td>
+                                    <td id="footerDiscountTotal">0</td>
+                                    <td id="footerDiscountPercent">0%</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- تقرير الخصومات حسب المحل -->
+            <div class="card mt-4" id="discountByStoreCard" style="display: none;">
+                <div class="card-header">
+                    <h5 class="mb-0">الخصومات حسب المحل</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="discountByStoreTable">
+                            <thead>
+                                <tr>
+                                    <th>المحل</th>
+                                    <th>عدد العمليات</th>
+                                    <th>خصومات دائمة</th>
+                                    <th>خصومات إضافية</th>
+                                    <th>إجمالي الخصومات</th>
+                                    <th>النسبة من المبيعات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="discountByStoreBody">
+                                <!-- سيتم ملؤه بواسطة JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal لإضافة باقة جديدة -->
     <div class="modal fade" id="packageModal" tabindex="-1" aria-hidden="true">
@@ -1375,6 +2074,42 @@
                             <label class="form-label">تاريخ الإضافة</label>
                             <input type="date" id="storeDate" class="form-control">
                         </div>
+                        
+                        <!-- حقول الخصم الجديدة -->
+                        <div class="discount-section border rounded p-3 bg-light">
+                            <h6 class="mb-3">
+                                <i class="fas fa-percentage text-success me-2"></i>
+                                إعدادات الخصم الدائم
+                            </h6>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" id="storeDiscountActive">
+                                <label class="form-check-label" for="storeDiscountActive">
+                                    تفعيل خصم دائم لهذا المحل
+                                </label>
+                            </div>
+                            <div id="discountSettings" style="display: none;">
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <label class="form-label">نوع الخصم</label>
+                                        <select id="storeDiscountType" class="form-select">
+                                            <option value="percentage">نسبة مئوية %</option>
+                                            <option value="fixed">مبلغ ثابت</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">قيمة الخصم</label>
+                                        <div class="input-group">
+                                            <input type="text" id="storeDiscountValue" class="form-control formatted-input" data-type="number" placeholder="0">
+                                            <span class="input-group-text" id="discountUnit">%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <small class="text-muted mt-1 d-block">
+                                    <i class="fas fa-info-circle"></i> سيتم تطبيق هذا الخصم تلقائياً على جميع عمليات البيع لهذا المحل
+                                </small>
+                            </div>
+                        </div>
+
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -1472,6 +2207,66 @@
                             <label class="form-label">تاريخ البيع</label>
                             <input type="date" id="saleDate" class="form-control">
                         </div>
+                        
+                        <!-- حقول الخصم الإضافي -->
+                        <div class="additional-discount-section border rounded p-3 bg-light mt-3">
+                            <h6 class="mb-3">
+                                <i class="fas fa-tags text-warning me-2"></i>
+                                خصم إضافي للعملية
+                            </h6>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" id="saleAdditionalDiscountActive">
+                                <label class="form-check-label" for="saleAdditionalDiscountActive">
+                                    تطبيق خصم إضافي لهذه العملية
+                                </label>
+                            </div>
+                            <div id="additionalDiscountSettings" style="display: none;">
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <label class="form-label">نوع الخصم</label>
+                                        <select id="saleAdditionalDiscountType" class="form-select">
+                                            <option value="percentage">نسبة مئوية %</option>
+                                            <option value="fixed">مبلغ ثابت</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">قيمة الخصم</label>
+                                        <div class="input-group">
+                                            <input type="text" id="saleAdditionalDiscountValue" class="form-control formatted-input" data-type="number" placeholder="0">
+                                            <span class="input-group-text" id="additionalDiscountUnit">%</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">سبب الخصم</label>
+                                        <input type="text" id="saleAdditionalDiscountReason" class="form-control" placeholder="مثال: عرض خاص، كمية كبيرة، عميل مميز">
+                                        <small class="text-muted">اختياري - سيظهر في التقارير</small>
+                                    </div>
+                                </div>
+                                
+                                <!-- معاينة الحساب -->
+                                <div class="discount-preview mt-3 p-2 bg-white rounded" style="display: none;">
+                                    <table class="table table-sm mb-0">
+                                        <tr>
+                                            <td>المبلغ الأساسي:</td>
+                                            <td class="text-end"><span id="previewOriginalAmount">0</span> ريال</td>
+                                        </tr>
+                                        <tr id="previewStoreDiscountRow" style="display: none;">
+                                            <td>خصم المحل (<span id="previewStoreDiscountRate"></span>):</td>
+                                            <td class="text-end text-success">-<span id="previewStoreDiscountAmount">0</span> ريال</td>
+                                        </tr>
+                                        <tr>
+                                            <td>خصم إضافي (<span id="previewAdditionalDiscountRate"></span>):</td>
+                                            <td class="text-end text-warning">-<span id="previewAdditionalDiscountAmount">0</span> ريال</td>
+                                        </tr>
+                                        <tr class="fw-bold">
+                                            <td>المبلغ النهائي:</td>
+                                            <td class="text-end"><span id="previewFinalAmount">0</span> ريال</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -1481,6 +2276,8 @@
             </div>
         </div>
     </div>
+    
+
 
     <!-- Modal لإضافة تسديد -->
     <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
@@ -1594,6 +2391,7 @@
             expenses: [],
             sales: [],
             payments: [],
+
             trash: []
         };
         
@@ -1768,6 +2566,7 @@
                             expenses: Array.isArray(parsedData.expenses) ? parsedData.expenses : [],
                             sales: Array.isArray(parsedData.sales) ? parsedData.sales : [],
                             payments: Array.isArray(parsedData.payments) ? parsedData.payments : [],
+
                             trash: Array.isArray(parsedData.trash) ? parsedData.trash : []
                         };
                         // تحديث البيانات العامة
@@ -1792,6 +2591,7 @@
                     expenses: [],
                     sales: [],
                     payments: [],
+        
                     trash: []
                 };
                 window.data = data;
@@ -1827,6 +2627,7 @@
                     expenses: Array.isArray(dataToSave.expenses) ? dataToSave.expenses : [],
                     sales: Array.isArray(dataToSave.sales) ? dataToSave.sales : [],
                     payments: Array.isArray(dataToSave.payments) ? dataToSave.payments : [],
+
                     trash: Array.isArray(dataToSave.trash) ? dataToSave.trash : []
                 };
                 
@@ -2362,11 +3163,16 @@
                     <button type="button" class="btn btn-outline-dark export-btn" data-type="store" data-store="${storeId}" data-format="json">
                         <i class="fas fa-file-code me-2"></i>تصدير JSON
                     </button>
+                    <!-- زر تصدير PDF مخفي حالياً - يمكن تفعيله لاحقاً عند تطوير ميزة تصدير PDF الحقيقية
                     <button type="button" class="btn btn-outline-danger export-btn" data-type="store" data-store="${storeId}" data-format="pdf">
                         <i class="fas fa-file-pdf me-2"></i>تصدير PDF
                     </button>
+                    -->
                     <button type="button" class="btn btn-outline-primary export-btn" data-type="store" data-store="${storeId}" data-format="printpage">
                         <i class="fas fa-file-alt me-2"></i>فتح صفحة التقرير
+                    </button>
+                    <button type="button" class="btn btn-outline-info export-btn" data-type="store" data-store="${storeId}" data-format="statement">
+                        <i class="fas fa-file-invoice me-2"></i>كشف حساب متحرك
                     </button>
                 </div>
             `;
@@ -3670,7 +4476,8 @@
                     stores: [],
                     expenses: [],
                     sales: [],
-                    payments: []
+                    payments: [],
+                    adjustments: []
                 };
             }
             
@@ -3743,6 +4550,7 @@
                                 expenses: toArraySafe(importedData.expenses),
                                 sales: toArraySafe(importedData.sales),
                                 payments: toArraySafe(importedData.payments),
+
                                 trash: toArraySafe(importedData.trash)
                             };
                             // تحديث المتغير العام
@@ -3756,6 +4564,7 @@
                             data.expenses = mergeUniqueById(data.expenses, importedData.expenses);
                             data.sales = mergeUniqueById(data.sales, importedData.sales);
                             data.payments = mergeUniqueById(data.payments, importedData.payments);
+
                             data.trash = mergeUniqueById(data.trash, importedData.trash);
                             // تحديث المتغير العام
                             window.data = data;
@@ -4055,33 +4864,202 @@
         /**
          * مشاركة تقرير المحل عبر واتساب
          */
-        function shareViaWhatsApp(storeId) {
+        function shareViaWhatsApp(storeId, dateFrom = null, dateTo = null) {
             const store = data.stores.find(s => s.id === storeId);
             if (!store || !store.phone) return;
             
-            const sales = data.sales.filter(s => s.storeId === storeId);
-            const payments = data.payments.filter(p => p.storeId === storeId);
-            const totalSales = sales.reduce((sum, sale) => sum + sale.total, 0);
-            const totalPayments = payments.reduce((sum, payment) => sum + payment.amount, 0);
-            const balance = totalSales - totalPayments;
+            // فلترة حسب التاريخ إن وُجد
+            let sales = data.sales.filter(s => s.storeId === storeId);
+            let payments = data.payments.filter(p => p.storeId === storeId);
             
-            // إنشاء رابط للتقرير
-            const reportUrl = window.location.origin + window.location.pathname + `#store-report-${storeId}`;
+            if (dateFrom || dateTo) {
+                const fromDate = dateFrom ? new Date(dateFrom) : new Date('1900-01-01');
+                const toDate = dateTo ? new Date(dateTo) : new Date();
+                
+                sales = sales.filter(s => {
+                    const saleDate = new Date(s.date);
+                    return saleDate >= fromDate && saleDate <= toDate;
+                });
+                
+                payments = payments.filter(p => {
+                    const paymentDate = new Date(p.date);
+                    return paymentDate >= fromDate && paymentDate <= toDate;
+                });
+            }
             
-            const message = encodeURIComponent(
-                `*تقرير محل ${store.name}*\n` +
-                `━━━━━━━━━━━━━\n` +
-                `📊 *إجمالي المبيعات:* ${formatNumber(totalSales)} ريال\n` +
-                `💰 *إجمالي المدفوعات:* ${formatNumber(totalPayments)} ريال\n` +
-                `💳 *الرصيد الحالي:* ${formatNumber(Math.abs(balance))} ريال ${balance >= 0 ? '✅ دائن' : '❌ مدين'}\n\n` +
-                `📅 *تاريخ التقرير:* ${new Date().toLocaleDateString('ar-YE')}\n\n` +
-                `🔗 *رابط التقرير الكامل:*\n${reportUrl}\n\n` +
-                `_تم إنشاء هذا التقرير بواسطة نظام إدارة المبيعات_`
-            );
+            // دمج وترتيب جميع العمليات
+            const allTransactions = [];
+            sales.forEach(sale => allTransactions.push({...sale, type: 'sale'}));
+            payments.forEach(payment => allTransactions.push({...payment, type: 'payment'}));
             
-            // فتح واتساب مع الرسالة
-            const whatsappUrl = `https://wa.me/${store.phone.replace(/^0/, '967')}?text=${message}`;
-            window.open(whatsappUrl, '_blank');
+            // تجميع العمليات حسب التاريخ
+            const transactionsByDate = {};
+            allTransactions.forEach(t => {
+                const date = t.date;
+                if (!transactionsByDate[date]) {
+                    transactionsByDate[date] = { sales: [], payments: [] };
+                }
+                if (t.type === 'sale') {
+                    transactionsByDate[date].sales.push(t);
+                } else {
+                    transactionsByDate[date].payments.push(t);
+                }
+            });
+            
+            // ترتيب التواريخ
+            const sortedDates = Object.keys(transactionsByDate).sort();
+            
+            // حساب الرصيد السابق (قبل الفترة المحددة)
+            let runningBalance = 0;
+            let totalSalesSum = 0;
+            
+            if (dateFrom) {
+                const previousSales = data.sales.filter(s => 
+                    s.storeId === storeId && new Date(s.date) < new Date(dateFrom)
+                );
+                const previousPayments = data.payments.filter(p => 
+                    p.storeId === storeId && new Date(p.date) < new Date(dateFrom)
+                );
+                
+                const prevSalesTotal = previousSales.reduce((sum, s) => sum + s.total, 0);
+                const prevPaymentsTotal = previousPayments.reduce((sum, p) => sum + p.amount, 0);
+                runningBalance = prevSalesTotal - prevPaymentsTotal;
+                totalSalesSum = prevSalesTotal;
+            }
+            
+            // بناء التقرير
+            let report = `*تقرير محل ${store.name}*\n`;
+            if (dateFrom || dateTo) {
+                report += `📅 الفترة: ${dateFrom || 'البداية'} إلى ${dateTo || 'اليوم'}\n`;
+            }
+            report += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+            
+            // إضافة الرصيد السابق إن وجد
+            if (runningBalance !== 0 && dateFrom) {
+                report += `💳 *رصيد سابق:* ${formatNumber(Math.abs(runningBalance))} ريال ${runningBalance >= 0 ? '(دائن)' : '(مدين)'}\n`;
+                report += `────────────────────────────\n\n`;
+            }
+            
+            // معالجة كل يوم
+            sortedDates.forEach(date => {
+                const dayTransactions = transactionsByDate[date];
+                const previousBalance = runningBalance;
+                
+                report += `📅 *${formatDateEn(date)}*\n\n`;
+                
+                // إذا كان هناك رصيد دائن سابق، نعرض التسديدات أولاً
+                if (previousBalance > 0 && dayTransactions.payments.length > 0) {
+                    dayTransactions.payments.forEach(payment => {
+                        runningBalance -= payment.amount;
+                        report += `💵 *تسديد:* ${formatNumber(payment.amount)} ريال\n`;
+                        report += `   ← الرصيد: ${formatNumber(Math.abs(runningBalance))} ريال ${runningBalance >= 0 ? '(دائن)' : '(مدين)'}\n\n`;
+                    });
+                }
+                
+                // عرض المبيعات
+                dayTransactions.sales.forEach(sale => {
+                    totalSalesSum += sale.total;
+                    runningBalance += sale.total;
+                    
+                    let packageName = 'مبلغ مخصص';
+                    if (sale.packageId) {
+                        const pkg = data.packages.find(p => p.id === sale.packageId);
+                        if (pkg) packageName = pkg.name;
+                    }
+                    
+                    report += `🛍️ *بيع:* ${packageName}\n`;
+                    report += `   الكمية: ${sale.quantity || 1} | المبلغ: ${formatNumber(sale.total)} ريال\n`;
+                    report += `   ← الرصيد: ${formatNumber(Math.abs(runningBalance))} ريال ${runningBalance >= 0 ? '(دائن)' : '(مدين)'}\n\n`;
+                });
+                
+                // إذا لم يكن هناك رصيد دائن سابق، نعرض التسديدات بعد المبيعات
+                if (previousBalance <= 0 && dayTransactions.payments.length > 0) {
+                    dayTransactions.payments.forEach(payment => {
+                        runningBalance -= payment.amount;
+                        report += `💵 *تسديد:* ${formatNumber(payment.amount)} ريال\n`;
+                        report += `   ← الرصيد: ${formatNumber(Math.abs(runningBalance))} ريال ${runningBalance >= 0 ? '(دائن)' : '(مدين)'}\n\n`;
+                    });
+                }
+                
+                report += `────────────────────────────\n\n`;
+            });
+            
+            // ملخص نهائي
+            const periodSales = sales.reduce((sum, s) => sum + s.total, 0);
+            const periodPayments = payments.reduce((sum, p) => sum + p.amount, 0);
+            
+            report += `*📊 الملخص:*\n`;
+            report += `• مبيعات الفترة: ${formatNumber(periodSales)} ريال\n`;
+            report += `• تسديدات الفترة: ${formatNumber(periodPayments)} ريال\n`;
+            report += `• الرصيد النهائي: ${formatNumber(Math.abs(runningBalance))} ريال ${runningBalance >= 0 ? '(دائن)' : '(مدين)'}\n\n`;
+            report += `📅 تاريخ التقرير: ${new Date().toLocaleDateString('ar-YE')}`;
+            
+            // استخدام Web Share API إذا كان متاحاً
+            if (navigator.share) {
+                try {
+                    navigator.share({
+                        title: `تقرير محل ${store.name}`,
+                        text: report
+                    }).then(() => {
+                        console.log('تمت المشاركة بنجاح');
+                    }).catch((error) => {
+                        console.log('تم إلغاء المشاركة:', error);
+                    });
+                } catch (error) {
+                    console.error('خطأ في المشاركة:', error);
+                    // في حالة الفشل، استخدام الطريقة القديمة
+                    fallbackWhatsApp();
+                }
+            } else {
+                // إذا لم يكن Web Share API متاحاً، اعرض خيارات
+                showShareOptions();
+            }
+            
+            // دالة احتياطية لفتح واتساب مباشرة
+            function fallbackWhatsApp() {
+                const message = encodeURIComponent(report);
+                const whatsappUrl = `https://wa.me/${store.phone.replace(/^0/, '967')}?text=${message}`;
+                window.open(whatsappUrl, '_blank');
+            }
+            
+            // عرض خيارات المشاركة
+            function showShareOptions() {
+                const message = encodeURIComponent(report);
+                const phoneNumber = store.phone.replace(/^0/, '967');
+                
+                // إنشاء نافذة منبثقة بالخيارات
+                const modal = document.createElement('div');
+                modal.className = 'modal fade show';
+                modal.style.display = 'block';
+                modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+                modal.innerHTML = `
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">مشاركة التقرير</h5>
+                                <button type="button" class="btn-close" onclick="this.closest('.modal').remove()"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-success" onclick="window.open('https://wa.me/${phoneNumber}?text=${message}', '_blank'); this.closest('.modal').remove();">
+                                        <i class="fab fa-whatsapp"></i> WhatsApp
+                                    </button>
+                                    <button class="btn btn-success" onclick="window.open('https://api.whatsapp.com/send?phone=${phoneNumber}&text=${message}', '_blank'); this.closest('.modal').remove();">
+                                        <i class="fab fa-whatsapp"></i> WhatsApp Business
+                                    </button>
+                                    <button class="btn btn-info" onclick="window.open('https://t.me/share/url?text=${message}', '_blank'); this.closest('.modal').remove();">
+                                        <i class="fab fa-telegram"></i> Telegram
+                                    </button>
+                                    <button class="btn btn-primary" onclick="copyToClipboard(decodeURIComponent('${message}')); this.closest('.modal').remove(); showNotification('تم نسخ التقرير', 'success');">
+                                        <i class="fas fa-copy"></i> نسخ التقرير
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
         }
         
         // تصدير دوال التواصل
@@ -4389,19 +5367,22 @@
     <script src="./js/dataValidator.js"></script>
     <script src="./js/quickFixes.js"></script>
     <script src="./js/utils.js"></script>
-    <script src="./js/reports.js"></script>
+    <script src="./js/storeFilter.js?v=10"></script>
+    <script src="./js/reports.js?v=12"></script>
+    <script src="./js/discountReports.js?v=1"></script>
     <script src="./app.js"></script>
     <script src="./js/inventory.js"></script>
-    <script src="./js/sales.js"></script>
+    <script src="./js/sales.js?v=3"></script>
     <script src="./js/payments.js"></script>
     <script src="./js/expenses.js"></script>
-    <script src="./js/stores.js"></script>
+    <script src="./js/stores.js?v=20"></script>
     <script src="./js/packages.js"></script>
     <script src="./js/storage.js"></script>
     <script src="./js/backup.js"></script>
     <script src="./js/backupManager.js"></script>
     <script src="./js/expensesTypes.js"></script>
     <script src="./js/trash.js"></script>
+
 
 
 
@@ -4422,6 +5403,7 @@
             <li class="nav-item"><a class="nav-link" href="#" data-section="stores"><i class="fas fa-store"></i> البقالات والمحلات</a></li>
             <li class="nav-item"><a class="nav-link" href="#" data-section="expenses"><i class="fas fa-money-bill-wave"></i> المصروفات</a></li>
             <li class="nav-item"><a class="nav-link" href="#" data-section="reports"><i class="fas fa-chart-bar"></i> التقارير</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" data-section="discountReports"><i class="fas fa-percentage"></i> تقارير الخصومات</a></li>
             <li class="nav-item"><a class="nav-link" href="#" data-section="importExport"><i class="fas fa-exchange-alt"></i> الاستيراد والتصدير</a></li>
             <li class="nav-item"><a class="nav-link" href="#" data-section="trash"><i class="fas fa-trash"></i> سلة المحذوفات</a></li>
         </ul>
@@ -4526,6 +5508,153 @@
             </div>
         </div>
     </div>
+    
+    <!-- سكريبت للتحكم في حقول الخصم -->
+    <script>
+        // التحكم في إظهار/إخفاء إعدادات الخصم
+        document.addEventListener('DOMContentLoaded', function() {
+            const discountCheckbox = document.getElementById('storeDiscountActive');
+            if (discountCheckbox) {
+                discountCheckbox.addEventListener('change', function() {
+                    const discountSettings = document.getElementById('discountSettings');
+                    if (discountSettings) {
+                        discountSettings.style.display = this.checked ? 'block' : 'none';
+                        
+                        // تنظيف القيم عند الإخفاء
+                        if (!this.checked) {
+                            document.getElementById('storeDiscountValue').value = '';
+                        }
+                    }
+                });
+            }
+            
+            // تغيير وحدة الخصم حسب النوع
+            const discountType = document.getElementById('storeDiscountType');
+            if (discountType) {
+                discountType.addEventListener('change', function() {
+                    const unit = document.getElementById('discountUnit');
+                    if (unit) {
+                        unit.textContent = this.value === 'percentage' ? '%' : 'ريال';
+                    }
+                });
+            }
+            
+            // التحكم في الخصم الإضافي في البيع
+            const additionalDiscountCheckbox = document.getElementById('saleAdditionalDiscountActive');
+            if (additionalDiscountCheckbox) {
+                additionalDiscountCheckbox.addEventListener('change', function() {
+                    const additionalDiscountSettings = document.getElementById('additionalDiscountSettings');
+                    if (additionalDiscountSettings) {
+                        additionalDiscountSettings.style.display = this.checked ? 'block' : 'none';
+                        
+                        // تنظيف القيم عند الإخفاء
+                        if (!this.checked) {
+                            document.getElementById('saleAdditionalDiscountValue').value = '';
+                            document.getElementById('saleAdditionalDiscountReason').value = '';
+                            document.querySelector('.discount-preview').style.display = 'none';
+                        } else {
+                            updateDiscountPreview();
+                        }
+                    }
+                });
+            }
+            
+            // تغيير وحدة الخصم الإضافي حسب النوع
+            const additionalDiscountType = document.getElementById('saleAdditionalDiscountType');
+            if (additionalDiscountType) {
+                additionalDiscountType.addEventListener('change', function() {
+                    const unit = document.getElementById('additionalDiscountUnit');
+                    if (unit) {
+                        unit.textContent = this.value === 'percentage' ? '%' : 'ريال';
+                    }
+                    updateDiscountPreview();
+                });
+            }
+            
+            // تحديث المعاينة عند تغيير القيم
+            ['saleStoreId', 'saleType', 'salePackageId', 'saleAmount', 'saleQuantity', 
+             'saleAdditionalDiscountValue', 'saleAdditionalDiscountType'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('input', updateDiscountPreview);
+                    element.addEventListener('change', updateDiscountPreview);
+                }
+            });
+        });
+        
+        // دالة تحديث معاينة الخصم
+        function updateDiscountPreview() {
+            if (!document.getElementById('saleAdditionalDiscountActive').checked) {
+                document.querySelector('.discount-preview').style.display = 'none';
+                return;
+            }
+            
+            const storeId = document.getElementById('saleStoreId').value;
+            const saleType = document.getElementById('saleType').value;
+            let originalAmount = 0;
+            
+            if (saleType === 'package') {
+                const packageId = document.getElementById('salePackageId').value;
+                const quantity = parseInt(document.getElementById('saleQuantity').value) || 0;
+                const pkg = data.packages.find(p => p.id === packageId);
+                if (pkg && storeId) {
+                    const store = data.stores.find(s => s.id === storeId);
+                    if (store) {
+                        const priceField = store.priceType + 'Price';
+                        originalAmount = (pkg[priceField] || 0) * quantity;
+                    }
+                }
+            } else {
+                originalAmount = parseFloat(document.getElementById('saleAmount').value.replace(/,/g, '')) || 0;
+            }
+            
+            // خصم المحل
+            let storeDiscountAmount = 0;
+            let storeDiscountRate = '';
+            const store = data.stores.find(s => s.id === storeId);
+            if (store && store.discount && store.discount.isActive) {
+                if (store.discount.type === 'percentage') {
+                    storeDiscountAmount = originalAmount * (store.discount.value / 100);
+                    storeDiscountRate = store.discount.value + '%';
+                } else {
+                    storeDiscountAmount = Math.min(store.discount.value, originalAmount);
+                    storeDiscountRate = formatNumber(store.discount.value) + ' ريال';
+                }
+                document.getElementById('previewStoreDiscountRow').style.display = '';
+                document.getElementById('previewStoreDiscountRate').textContent = storeDiscountRate;
+                document.getElementById('previewStoreDiscountAmount').textContent = formatNumber(storeDiscountAmount);
+            } else {
+                document.getElementById('previewStoreDiscountRow').style.display = 'none';
+            }
+            
+            // الخصم الإضافي (يطبق على المبلغ بعد خصم المحل)
+            const afterStoreDiscount = originalAmount - storeDiscountAmount;
+            const additionalDiscountType = document.getElementById('saleAdditionalDiscountType').value;
+            const additionalDiscountValue = parseFloat(document.getElementById('saleAdditionalDiscountValue').value.replace(/,/g, '')) || 0;
+            let additionalDiscountAmount = 0;
+            let additionalDiscountRate = '';
+            
+            if (additionalDiscountValue > 0) {
+                if (additionalDiscountType === 'percentage') {
+                    additionalDiscountAmount = afterStoreDiscount * (additionalDiscountValue / 100);
+                    additionalDiscountRate = additionalDiscountValue + '%';
+                } else {
+                    additionalDiscountAmount = Math.min(additionalDiscountValue, afterStoreDiscount);
+                    additionalDiscountRate = formatNumber(additionalDiscountValue) + ' ريال';
+                }
+            }
+            
+            const finalAmount = originalAmount - storeDiscountAmount - additionalDiscountAmount;
+            
+            // تحديث المعاينة
+            document.getElementById('previewOriginalAmount').textContent = formatNumber(originalAmount);
+            document.getElementById('previewAdditionalDiscountRate').textContent = additionalDiscountRate;
+            document.getElementById('previewAdditionalDiscountAmount').textContent = formatNumber(additionalDiscountAmount);
+            document.getElementById('previewFinalAmount').textContent = formatNumber(finalAmount);
+            
+            document.querySelector('.discount-preview').style.display = originalAmount > 0 ? 'block' : 'none';
+        }
+    </script>
 
 </body>
 </html>

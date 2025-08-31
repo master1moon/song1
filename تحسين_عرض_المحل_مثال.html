@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مثال تحسين عرض بيانات المحل</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+        }
+        
+        /* التبويبات المحسنة */
+        .nav-tabs {
+            border: none;
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .nav-tabs .nav-link {
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin: 0 5px;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .nav-tabs .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .nav-tabs .nav-link:not(.active):hover {
+            background: #f1f3f5;
+        }
+        
+        .badge-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc3545;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 11px;
+        }
+        
+        /* البطاقات التفاعلية */
+        .transaction-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            border-right: 4px solid transparent;
+        }
+        
+        .transaction-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .transaction-card.sale {
+            border-right-color: #dc3545;
+        }
+        
+        .transaction-card.payment {
+            border-right-color: #28a745;
+        }
+        
+        /* مربع البحث والفلترة */
+        .filter-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .filter-box .form-control {
+            border-radius: 8px;
+            border: 1px solid #e1e5eb;
+        }
+        
+        /* الملخص السريع */
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .summary-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .summary-card h5 {
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .summary-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        /* التجميع الزمني */
+        .month-group {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .month-group:hover {
+            background: #e9ecef;
+        }
+        
+        .month-group .toggle-icon {
+            transition: transform 0.3s;
+        }
+        
+        .month-group.collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+        
+        /* الرسم البياني */
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            height: 300px;
+        }
+        
+        /* التحميل التدريجي */
+        .load-more {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .load-more button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .load-more button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h2 class="mb-4">محل: عبدالجبار الدباشي</h2>
+        
+        <!-- الملخص السريع -->
+        <div class="summary-cards">
+            <div class="summary-card">
+                <h5>إجمالي المبيعات</h5>
+                <div class="value text-danger">259,500 <small>ريال</small></div>
+            </div>
+            <div class="summary-card">
+                <h5>إجمالي التسديدات</h5>
+                <div class="value text-success">155,000 <small>ريال</small></div>
+            </div>
+            <div class="summary-card">
+                <h5>الرصيد المستحق</h5>
+                <div class="value text-warning">104,500 <small>ريال</small></div>
+            </div>
+            <div class="summary-card">
+                <h5>آخر عملية</h5>
+                <div class="value text-info">قبل يومين</div>
+            </div>
+        </div>
+        
+        <!-- التبويبات -->
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#all">
+                    <i class="fas fa-list"></i> كل العمليات
+                    <span class="badge-count">20</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#sales">
+                    <i class="fas fa-shopping-cart"></i> المبيعات
+                    <span class="badge-count">11</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#payments">
+                    <i class="fas fa-money-bill"></i> التسديدات
+                    <span class="badge-count">9</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#analytics">
+                    <i class="fas fa-chart-line"></i> التحليلات
+                </a>
+            </li>
+        </ul>
+        
+        <!-- محتوى التبويبات -->
+        <div class="tab-content">
+            <!-- كل العمليات -->
+            <div class="tab-pane fade show active" id="all">
+                <!-- مربع البحث والفلترة -->
+                <div class="filter-box">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" placeholder="🔍 بحث سريع...">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-control">
+                                <option>كل الفترات</option>
+                                <option>اليوم</option>
+                                <option>هذا الأسبوع</option>
+                                <option>هذا الشهر</option>
+                                <option>آخر 3 شهور</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-control">
+                                <option>كل الأنواع</option>
+                                <option>مبيعات فقط</option>
+                                <option>تسديدات فقط</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary w-100">
+                                <i class="fas fa-filter"></i> تطبيق
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- التجميع الزمني -->
+                <div class="timeline-view">
+                    <!-- شهر أغسطس -->
+                    <div class="month-group" data-bs-toggle="collapse" data-bs-target="#aug2025">
+                        <div>
+                            <strong>أغسطس 2025</strong>
+                            <span class="text-muted ms-2">(9 عمليات - صافي: 52,000 ريال)</span>
+                        </div>
+                        <i class="fas fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="collapse show" id="aug2025">
+                        <!-- عملية 1 -->
+                        <div class="transaction-card sale">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <div class="text-danger">
+                                        <i class="fas fa-shopping-cart fa-2x"></i>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <strong>بيع: 50 وحدة من باقة 500</strong>
+                                            <div class="text-muted small">21 أغسطس - 10:30 ص</div>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="h5 text-danger mb-0">22,500 ريال</div>
+                                            <div class="small text-muted">450 × 50</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-light" data-bs-toggle="dropdown">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#"><i class="fas fa-edit"></i> تعديل</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="fas fa-print"></i> طباعة</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash"></i> حذف</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- عملية 2 -->
+                        <div class="transaction-card payment">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <div class="text-success">
+                                        <i class="fas fa-money-bill fa-2x"></i>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <strong>تسديد نقدي</strong>
+                                            <div class="text-muted small">19 أغسطس - 2:15 م</div>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="h5 text-success mb-0">20,000 ريال</div>
+                                            <div class="small text-muted">الرصيد بعد: 84,500</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-light" data-bs-toggle="dropdown">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#"><i class="fas fa-edit"></i> تعديل</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="fas fa-print"></i> طباعة</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash"></i> حذف</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- المزيد من العمليات... -->
+                    </div>
+                    
+                    <!-- شهر يوليو -->
+                    <div class="month-group collapsed" data-bs-toggle="collapse" data-bs-target="#jul2025">
+                        <div>
+                            <strong>يوليو 2025</strong>
+                            <span class="text-muted ms-2">(11 عملية - صافي: 52,500 ريال)</span>
+                        </div>
+                        <i class="fas fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="collapse" id="jul2025">
+                        <!-- عمليات يوليو -->
+                    </div>
+                </div>
+                
+                <!-- زر تحميل المزيد -->
+                <div class="load-more">
+                    <button onclick="loadMore()">
+                        <i class="fas fa-arrow-down"></i> عرض المزيد
+                    </button>
+                </div>
+            </div>
+            
+            <!-- تبويب المبيعات -->
+            <div class="tab-pane fade" id="sales">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> عرض المبيعات فقط مع إحصائيات مفصلة
+                </div>
+                <!-- محتوى المبيعات -->
+            </div>
+            
+            <!-- تبويب التسديدات -->
+            <div class="tab-pane fade" id="payments">
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i> عرض التسديدات فقط مع تتبع المدفوعات
+                </div>
+                <!-- محتوى التسديدات -->
+            </div>
+            
+            <!-- تبويب التحليلات -->
+            <div class="tab-pane fade" id="analytics">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="chart-container">
+                            <h5>توزيع المبيعات حسب الباقة</h5>
+                            <canvas id="packageChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="chart-container">
+                            <h5>تطور الرصيد الشهري</h5>
+                            <canvas id="balanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // محاكاة تحميل المزيد
+        function loadMore() {
+            alert('سيتم تحميل المزيد من العمليات...');
+        }
+        
+        // رسم بياني توضيحي
+        const ctx = document.getElementById('packageChart');
+        if (ctx) {
+            new Chart(ctx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['باقة 200', 'باقة 500', 'باقة 100'],
+                    datasets: [{
+                        data: [144000, 67500, 18000],
+                        backgroundColor: ['#667eea', '#764ba2', '#f093fb']
+                    }]
+                }
+            });
+        }
+    </script>
+</body>
+</html>

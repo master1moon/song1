@@ -1,3 +1,17 @@
+/**
+ * ملف sales.js - نظام إدارة المبيعات
+ * يتعامل مع إضافة، تعديل، وحذف المبيعات
+ * يدعم نوعين من المبيعات: باقات ومبالغ مخصصة
+ * يتكامل مع نظام المخزون لخصم الكميات المباعة
+ * 
+ * المشاكل المحتملة:
+ * - متغير today غير معرف مما قد يسبب خطأ
+ * - دالة cleanupModalBackdrops غير موجودة
+ * - لا يوجد تحقق كافي من توفر الكمية قبل البيع
+ * - حذف البيع لا يعيد الكمية للمخزون تلقائياً
+ * - معالجة أحداث change متكررة قد تسبب تسرب ذاكرة
+ */
+
 // إدارة المبيعات
 
 /**
@@ -5,6 +19,7 @@
  * يملأ قائمة الباقات من البيانات المتاحة
  * يسمح باختيار باقة أو إدخال مبلغ مخصص
  * يتعامل مع الحقول المختلفة بناءً على نوع البيع
+ * مشكلة: إضافة مستمع أحداث جديد في كل مرة قد يسبب تكرار
  * @param {string} storeId - معرف المحل الذي سيتم إضافة البيع له
  */
 function addSale(storeId) {
@@ -27,9 +42,20 @@ function addSale(storeId) {
   document.getElementById('saleReason').value = '';
   document.getElementById('saleQuantity').value = '';
   document.getElementById('saleAmount').value = '';
-  document.getElementById('saleDate').value = today;
+  document.getElementById('saleDate').value = getTodayDate();
   document.getElementById('customReasonGroup').style.display = 'none';
   document.getElementById('amountGroup').style.display = 'none';
+  
+  // تنظيف حقول الخصم الإضافي
+  document.getElementById('saleAdditionalDiscountActive').checked = false;
+  document.getElementById('saleAdditionalDiscountType').value = 'percentage';
+  document.getElementById('saleAdditionalDiscountValue').value = '';
+  document.getElementById('saleAdditionalDiscountReason').value = '';
+  document.getElementById('additionalDiscountSettings').style.display = 'none';
+  document.getElementById('additionalDiscountUnit').textContent = '%';
+  const preview = document.querySelector('.discount-preview');
+  if (preview) preview.style.display = 'none';
+  
   const modal = new bootstrap.Modal(document.getElementById('saleModal')); modal.show();
 }
 
@@ -48,13 +74,48 @@ function saveSale() {
   const reason = document.getElementById('saleReason').value;
   const quantity = parseFormattedNumber(document.getElementById('saleQuantity').value) || 0;
   const amount = parseFormattedNumber(document.getElementById('saleAmount').value) || 0;
-  const date = document.getElementById('saleDate').value ? formatDateEn(document.getElementById('saleDate').value) : today;
+  const date = document.getElementById('saleDate').value ? formatDateEn(document.getElementById('saleDate').value) : getTodayDate();
   if (!storeId || (!packageId && !reason)) { showNotification('يرجى ملء جميع الحقول المطلوبة', 'error'); return; }
   const isCustom = packageId === 'custom';
   const store = data.stores.find(s => s.id === storeId);
   const pkg = packageId && !isCustom ? data.packages.find(p => p.id === packageId) : null;
   let pricePerUnit = 0, total = 0;
-  if (isCustom) { total = amount; }
+  let storeDiscount = 0; // خصم المحل
+  let additionalDiscount = 0; // خصم إضافي للعملية
+  let totalAfterDiscount = 0; // المبلغ بعد كل الخصومات
+  
+  // جمع بيانات الخصم الإضافي
+  const additionalDiscountActive = document.getElementById('saleAdditionalDiscountActive').checked;
+  const additionalDiscountType = document.getElementById('saleAdditionalDiscountType').value;
+  const additionalDiscountValueStr = document.getElementById('saleAdditionalDiscountValue').value.replace(/,/g, '');
+  const additionalDiscountValue = parseFloat(additionalDiscountValueStr) || 0;
+  const additionalDiscountReason = document.getElementById('saleAdditionalDiscountReason').value;
+  
+  if (isCustom) { 
+    total = amount;
+    totalAfterDiscount = total;
+    
+    // تطبيق خصم المحل على المبلغ المخصص أيضاً
+    if (store && store.discount && store.discount.isActive) {
+      if (store.discount.type === 'percentage') {
+        storeDiscount = (total * store.discount.value) / 100;
+      } else {
+        storeDiscount = Math.min(store.discount.value, total); // لا يتجاوز الخصم المبلغ الكلي
+      }
+      totalAfterDiscount = total - storeDiscount;
+    }
+    
+    // تطبيق الخصم الإضافي
+    if (additionalDiscountActive && additionalDiscountValue > 0) {
+      const baseForAdditionalDiscount = totalAfterDiscount; // الخصم الإضافي يُطبق بعد خصم المحل
+      if (additionalDiscountType === 'percentage') {
+        additionalDiscount = (baseForAdditionalDiscount * additionalDiscountValue) / 100;
+      } else {
+        additionalDiscount = Math.min(additionalDiscountValue, baseForAdditionalDiscount);
+      }
+      totalAfterDiscount = baseForAdditionalDiscount - additionalDiscount;
+    }
+  }
   else if (pkg && store) {
     switch (store.priceType) {
       case 'retail': pricePerUnit = pkg.retailPrice || 0; break;
@@ -63,6 +124,31 @@ function saveSale() {
       default: pricePerUnit = pkg.retailPrice || 0;
     }
     total = quantity * pricePerUnit;
+    
+    // حساب خصم المحل إن وجد
+    if (store.discount && store.discount.isActive) {
+      if (store.discount.type === 'percentage') {
+        storeDiscount = (total * store.discount.value) / 100;
+      } else {
+        // الخصم الثابت يُقسم على عدد القطع
+        storeDiscount = Math.min(store.discount.value, total);
+      }
+      totalAfterDiscount = total - storeDiscount;
+    } else {
+      totalAfterDiscount = total;
+    }
+    
+    // تطبيق الخصم الإضافي على الباقات أيضاً
+    if (additionalDiscountActive && additionalDiscountValue > 0) {
+      const baseForAdditionalDiscount = totalAfterDiscount; // الخصم الإضافي يُطبق بعد خصم المحل
+      if (additionalDiscountType === 'percentage') {
+        additionalDiscount = (baseForAdditionalDiscount * additionalDiscountValue) / 100;
+      } else {
+        additionalDiscount = Math.min(additionalDiscountValue, baseForAdditionalDiscount);
+      }
+      totalAfterDiscount = baseForAdditionalDiscount - additionalDiscount;
+    }
+    
     if (quantity <= 0) { showNotification('الكمية غير صحيحة', 'error'); return; }
     const ok = deductFromInventory(packageId, quantity);
     if (!ok) { showNotification('الكمية المطلوبة غير متوفرة في المخزون', 'error'); return; }
@@ -71,21 +157,67 @@ function saveSale() {
     const sale = data.sales.find(s => s.id === id);
     if (sale) {
       if (sale.packageId && sale.packageId !== 'custom' && sale.quantity) { addToInventory(sale.packageId, sale.quantity); }
-      sale.packageId = packageId; sale.reason = reason; sale.quantity = quantity; sale.amount = amount; sale.pricePerUnit = pricePerUnit; sale.total = total; sale.date = date;
+      sale.packageId = packageId; 
+      sale.reason = reason; 
+      sale.quantity = quantity; 
+      sale.amount = amount; 
+      sale.pricePerUnit = pricePerUnit; 
+      sale.total = totalAfterDiscount; // حفظ المبلغ بعد الخصم
+      sale.originalTotal = total; // حفظ المبلغ الأصلي
+      sale.storeDiscount = storeDiscount; // حفظ قيمة خصم المحل
+      sale.additionalDiscount = additionalDiscount; // حفظ قيمة الخصم الإضافي
+      sale.additionalDiscountReason = additionalDiscountReason; // حفظ سبب الخصم الإضافي
+      sale.date = date;
     }
     showNotification('تم تحديث البيع بنجاح', 'success');
   } else {
     const newId = 'sale_' + Date.now();
-    data.sales.push({ id: newId, storeId, packageId, reason, quantity, amount, pricePerUnit, total, date });
-    showNotification('تم إضافة البيع بنجاح', 'success');
+    const newSale = { 
+      id: newId, 
+      storeId, 
+      packageId, 
+      reason, 
+      quantity, 
+      amount, 
+      pricePerUnit, 
+      total: totalAfterDiscount, // المبلغ بعد الخصم
+      originalTotal: total, // المبلغ الأصلي قبل الخصم
+      storeDiscount: storeDiscount, // قيمة خصم المحل
+      additionalDiscount: additionalDiscount, // قيمة الخصم الإضافي
+      additionalDiscountReason: additionalDiscountReason, // سبب الخصم الإضافي
+      date 
+    };
+    data.sales.push(newSale);
+    
+    // إشعار بالخصومات إن وجدت
+    let notificationMsg = 'تم إضافة البيع بنجاح';
+    const totalDiscounts = storeDiscount + additionalDiscount;
+    
+    if (totalDiscounts > 0) {
+      notificationMsg += ' مع خصومات:';
+      
+      if (storeDiscount > 0) {
+        const storeDiscountType = store.discount.type === 'percentage' ? `${store.discount.value}%` : `${formatNumber(store.discount.value)} ريال`;
+        notificationMsg += ` خصم المحل ${storeDiscountType} (${formatNumber(storeDiscount)} ريال)`;
+      }
+      
+      if (additionalDiscount > 0) {
+        if (storeDiscount > 0) notificationMsg += ' +';
+        const addDiscountType = additionalDiscountType === 'percentage' ? `${additionalDiscountValue}%` : `${formatNumber(additionalDiscountValue)} ريال`;
+        notificationMsg += ` خصم إضافي ${addDiscountType} (${formatNumber(additionalDiscount)} ريال)`;
+      }
+      
+      notificationMsg += ` = إجمالي الخصم: ${formatNumber(totalDiscounts)} ريال`;
+    }
+    
+    showNotification(notificationMsg, 'success');
   }
   if (!isCustom && packageId) { checkLowStockForPackage(packageId); }
   saveData();
-  renderInventoryTable();
-  showStoreDetails(storeId);
-  updateDashboard();
-  updateProfitReport();
-  generateDebtReport();
+  refreshCurrentView(); // تحديث جميع العروض المرئية
+  showStoreDetails(storeId); // تحديث تفاصيل المحل
+  updateProfitReport(); // خاص بتقرير الأرباح
+  generateDebtReport(); // خاص بتقرير الديون
   const modal = bootstrap.Modal.getInstance(document.getElementById('saleModal')); 
   modal.hide();
   if (typeof cleanupModalBackdrops === 'function') setTimeout(cleanupModalBackdrops, 300);
@@ -141,6 +273,6 @@ function deleteSale(id) {
   if (!confirm('هل أنت متأكد من حذف هذا البيع؟')) return;
   data.sales = data.sales.filter(s => s.id !== id);
   saveData();
-  (async()=>{ try{ if (typeof addToTrash==='function') await addToTrash('sales', sale); }catch{}; renderStoresList(); updateDashboard(); updateProfitReport(); })();
+  (async()=>{ try{ if (typeof addToTrash==='function') await addToTrash('sales', sale); }catch{}; refreshCurrentView(); updateProfitReport(); })();
   showNotification('تم حذف البيع بنجاح', 'success');
 }

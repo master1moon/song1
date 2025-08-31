@@ -1,9 +1,24 @@
+/**
+ * ملف payments.js - نظام إدارة التسديدات/المدفوعات
+ * يتعامل مع إضافة، تعديل، وحذف المدفوعات من المحلات
+ * يتكامل مع نظام المحلات لحساب الأرصدة
+ * يحدث جميع التقارير المالية عند كل عملية
+ * 
+ * المشاكل المحتملة:
+ * - متغير today غير معرف
+ * - دالة cleanupModalBackdrops غير موجودة
+ * - لا يتحقق من أن المبلغ لا يتجاوز المديونية
+ * - لا يسجل طريقة الدفع (نقدي، تحويل، شيك، إلخ)
+ * - لا يوجد إيصالات أو أرقام مرجعية للمدفوعات
+ */
+
 // إدارة التسديدات
 
 /**
  * فتح نموذج إضافة تسديد جديد
  * يعيد تعيين جميع حقول النموذج إلى قيمها الافتراضية
  * يضبط التاريخ على اليوم الحالي
+ * مشكلة: متغير today قد لا يكون معرفاً
  * @param {string} storeId - معرف المحل الذي سيتم إضافة التسديد له
  */
 function addPayment(storeId) {
@@ -12,7 +27,7 @@ function addPayment(storeId) {
   document.getElementById('paymentStoreId').value = storeId;
   document.getElementById('paymentAmount').value = '';
   document.getElementById('paymentNotes').value = '';
-  document.getElementById('paymentDate').value = today;
+  document.getElementById('paymentDate').value = getTodayDate();
   const modal = new bootstrap.Modal(document.getElementById('paymentModal')); modal.show();
 }
 
@@ -27,7 +42,7 @@ function savePayment() {
   const storeId = document.getElementById('paymentStoreId').value;
   const amount = parseFormattedNumber(document.getElementById('paymentAmount').value);
   const notes = document.getElementById('paymentNotes').value;
-  const date = document.getElementById('paymentDate').value ? formatDateEn(document.getElementById('paymentDate').value) : today;
+  const date = document.getElementById('paymentDate').value ? formatDateEn(document.getElementById('paymentDate').value) : getTodayDate();
   if (!storeId || isNaN(amount) || amount <= 0) { showNotification('يرجى ملء جميع الحقول المطلوبة', 'error'); return; }
   if (id) {
     const payment = data.payments.find(p => p.id === id);
@@ -39,10 +54,10 @@ function savePayment() {
     showNotification('تم إضافة التسديد بنجاح', 'success');
   }
   saveData();
-  showStoreDetails(storeId);
-  updateDashboard();
-  updateProfitReport();
-  generateDebtReport();
+  refreshCurrentView(); // تحديث جميع العروض المرئية
+  showStoreDetails(storeId); // تحديث تفاصيل المحل
+  updateProfitReport(); // خاص بتقرير الأرباح
+  generateDebtReport(); // خاص بتقرير الديون
   if (typeof generatePartnerReports === 'function') generatePartnerReports();
   const modal = bootstrap.Modal.getInstance(document.getElementById('paymentModal')); 
   modal.hide();
@@ -78,7 +93,7 @@ function deletePayment(id) {
   if (!confirm('هل أنت متأكد من حذف هذا التسديد؟')) return;
   data.payments = data.payments.filter(p => p.id !== id);
   saveData();
-  (async()=>{ try{ if (typeof addToTrash==='function') await addToTrash('payments', payment); }catch{}; showStoreDetails(payment.storeId); updateDashboard(); updateProfitReport(); generateDebtReport(); })();
+  (async()=>{ try{ if (typeof addToTrash==='function') await addToTrash('payments', payment); }catch{}; refreshCurrentView(); showStoreDetails(payment.storeId); updateProfitReport(); generateDebtReport(); })();
   showNotification('تم حذف التسديد بنجاح', 'success');
 }
 
