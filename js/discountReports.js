@@ -49,6 +49,7 @@ function parseArabicDate(arabicDateStr) {
     return new Date(englishDate);
 }
 
+
 /**
  * تبديل عرض حقول التاريخ المخصص
  */
@@ -100,6 +101,11 @@ function getDiscountDateRange(period) {
             
         case 'year':
             from = new Date(now.getFullYear(), 0, 1);
+            to = now;
+            break;
+            
+        case 'all':
+            from = new Date(0);
             to = now;
             break;
             
