@@ -1390,13 +1390,32 @@ function updateTimelineView(storeId) {
         description += ` <span class="badge bg-secondary">${transaction.quantity} كرت</span>`;
       }
       
-      // إضافة معلومات الخصم إن وجد
-      if (transaction.storeDiscount && transaction.storeDiscount > 0) {
-        description += ` <small class="text-success">(خصم: ${formatNumber(transaction.storeDiscount)})</small>`;
-        // عرض المبلغ الأصلي في حال وجود خصم
-        if (transaction.originalTotal) {
-          description += `<br><small class="text-muted">الأصل: ${formatNumber(transaction.originalTotal)}</small>`;
+      // إضافة معلومات الخصومات إن وجدت
+      const totalDiscounts = (transaction.storeDiscount || 0) + (transaction.additionalDiscount || 0);
+      
+      if (totalDiscounts > 0) {
+        description += '<div class="mt-1">';
+        
+        // خصم المحل
+        if (transaction.storeDiscount && transaction.storeDiscount > 0) {
+          description += `<small class="text-success d-block"><i class="fas fa-tag"></i> خصم المحل: ${formatNumber(transaction.storeDiscount)} ريال</small>`;
         }
+        
+        // خصم إضافي
+        if (transaction.additionalDiscount && transaction.additionalDiscount > 0) {
+          description += `<small class="text-warning d-block"><i class="fas fa-tags"></i> خصم إضافي: ${formatNumber(transaction.additionalDiscount)} ريال`;
+          if (transaction.additionalDiscountReason) {
+            description += ` (${transaction.additionalDiscountReason})`;
+          }
+          description += '</small>';
+        }
+        
+        // المبلغ الأصلي
+        if (transaction.originalTotal) {
+          description += `<small class="text-muted d-block">المبلغ الأصلي: ${formatNumber(transaction.originalTotal)} ريال</small>`;
+        }
+        
+        description += '</div>';
       }
     } else {
       description = 'تسديد نقدي';
