@@ -977,6 +977,77 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
+        
+        /* تنسيق بطاقات الإحصائيات */
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .stat-card.border-primary {
+            border-left: 4px solid #007bff;
+        }
+        
+        .stat-card.border-success {
+            border-left: 4px solid #28a745;
+        }
+        
+        .stat-card.border-warning {
+            border-left: 4px solid #ffc107;
+        }
+        
+        .stat-card.border-info {
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .stat-icon {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            opacity: 0.9;
+        }
+        
+        .stat-content {
+            text-align: right;
+            margin-right: 10px;
+        }
+        
+        .stat-content h6 {
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .stat-content h4 {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0;
+            color: #333;
+        }
+        
+        .stat-content small {
+            color: #6c757d;
+            font-size: 12px;
+        }
       </style>
 </head>
 <body>
@@ -1037,6 +1108,11 @@
                 <li class="nav-item">
                     <a class="nav-link" href="#" data-section="reports">
                         <i class="fas fa-chart-bar"></i> التقارير
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-section="discountReports">
+                        <i class="fas fa-percentage"></i> تقارير الخصومات
                     </a>
                 </li>
                 <li class="nav-item">
@@ -1711,6 +1787,171 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- قسم تقارير الخصومات -->
+    <div id="discountReports" class="section" style="display:none;">
+        <div class="section-content">
+            <h4 class="section-title">تقارير الخصومات</h4>
+            
+            <!-- فلتر الفترة الزمنية -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">الفترة الزمنية</label>
+                            <select id="discountPeriod" class="form-select" onchange="toggleDiscountCustomDates()">
+                                <option value="today">اليوم</option>
+                                <option value="week">آخر 7 أيام</option>
+                                <option value="month" selected>الشهر الحالي</option>
+                                <option value="lastMonth">الشهر السابق</option>
+                                <option value="year">السنة الحالية</option>
+                                <option value="custom">فترة مخصصة</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3" id="discountCustomDates" style="display: none;">
+                            <label class="form-label">من تاريخ</label>
+                            <input type="date" id="discountFromDate" class="form-control">
+                        </div>
+                        <div class="col-md-3" id="discountCustomDatesTo" style="display: none;">
+                            <label class="form-label">إلى تاريخ</label>
+                            <input type="date" id="discountToDate" class="form-control">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button class="btn btn-primary w-100" onclick="generateDiscountReport()">
+                                <i class="fas fa-search"></i> عرض التقرير
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ملخص إحصائيات الخصومات -->
+            <div class="row mb-4" id="discountStatsSummary" style="display: none;">
+                <div class="col-md-3">
+                    <div class="stat-card border-primary">
+                        <div class="stat-icon bg-primary">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h6>إجمالي الخصومات</h6>
+                            <h4 id="totalDiscountAmount">0</h4>
+                            <small>ريال</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card border-success">
+                        <div class="stat-icon bg-success">
+                            <i class="fas fa-store"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h6>خصومات المحلات</h6>
+                            <h4 id="storeDiscountAmount">0</h4>
+                            <small>ريال</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card border-warning">
+                        <div class="stat-icon bg-warning">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h6>خصومات إضافية</h6>
+                            <h4 id="additionalDiscountAmount">0</h4>
+                            <small>ريال</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card border-info">
+                        <div class="stat-icon bg-info">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h6>نسبة الخصومات</h6>
+                            <h4 id="discountPercentage">0%</h4>
+                            <small>من إجمالي المبيعات</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- جدول تفاصيل الخصومات -->
+            <div class="card" id="discountDetailsCard" style="display: none;">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">تفاصيل الخصومات</h5>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-success" onclick="exportDiscountReport('excel')">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="exportDiscountReport('pdf')">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="printDiscountReport()">
+                            <i class="fas fa-print"></i> طباعة
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="discountDetailsTable">
+                            <thead>
+                                <tr>
+                                    <th>التاريخ</th>
+                                    <th>المحل</th>
+                                    <th>نوع الخصم</th>
+                                    <th>المبلغ الأصلي</th>
+                                    <th>قيمة الخصم</th>
+                                    <th>النسبة</th>
+                                    <th>السبب</th>
+                                </tr>
+                            </thead>
+                            <tbody id="discountDetailsBody">
+                                <!-- سيتم ملؤه بواسطة JavaScript -->
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-secondary fw-bold">
+                                    <td colspan="3">الإجمالي</td>
+                                    <td id="footerOriginalTotal">0</td>
+                                    <td id="footerDiscountTotal">0</td>
+                                    <td id="footerDiscountPercent">0%</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- تقرير الخصومات حسب المحل -->
+            <div class="card mt-4" id="discountByStoreCard" style="display: none;">
+                <div class="card-header">
+                    <h5 class="mb-0">الخصومات حسب المحل</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="discountByStoreTable">
+                            <thead>
+                                <tr>
+                                    <th>المحل</th>
+                                    <th>عدد العمليات</th>
+                                    <th>خصومات دائمة</th>
+                                    <th>خصومات إضافية</th>
+                                    <th>إجمالي الخصومات</th>
+                                    <th>النسبة من المبيعات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="discountByStoreBody">
+                                <!-- سيتم ملؤه بواسطة JavaScript -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -5127,6 +5368,7 @@
     <script src="./js/utils.js"></script>
     <script src="./js/storeFilter.js?v=10"></script>
     <script src="./js/reports.js?v=12"></script>
+    <script src="./js/discountReports.js?v=1"></script>
     <script src="./app.js"></script>
     <script src="./js/inventory.js"></script>
     <script src="./js/sales.js?v=3"></script>
@@ -5160,6 +5402,7 @@
             <li class="nav-item"><a class="nav-link" href="#" data-section="stores"><i class="fas fa-store"></i> البقالات والمحلات</a></li>
             <li class="nav-item"><a class="nav-link" href="#" data-section="expenses"><i class="fas fa-money-bill-wave"></i> المصروفات</a></li>
             <li class="nav-item"><a class="nav-link" href="#" data-section="reports"><i class="fas fa-chart-bar"></i> التقارير</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" data-section="discountReports"><i class="fas fa-percentage"></i> تقارير الخصومات</a></li>
             <li class="nav-item"><a class="nav-link" href="#" data-section="importExport"><i class="fas fa-exchange-alt"></i> الاستيراد والتصدير</a></li>
             <li class="nav-item"><a class="nav-link" href="#" data-section="trash"><i class="fas fa-trash"></i> سلة المحذوفات</a></li>
         </ul>
