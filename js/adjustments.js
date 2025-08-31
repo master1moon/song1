@@ -202,12 +202,8 @@ function saveAdjustment() {
   
   data.adjustments.push(newAdjustment);
   
-  console.log('data.adjustments قبل saveData:', data.adjustments.length);
-  
   // حفظ البيانات
   saveData();
-  
-  console.log('data.adjustments بعد saveData:', data.adjustments.length);
   
   // إظهار رسالة نجاح
   const typeText = type === 'discount' ? 'خصم' : 'إضافة';
