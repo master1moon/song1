@@ -69,7 +69,23 @@ function saveSale() {
   const store = data.stores.find(s => s.id === storeId);
   const pkg = packageId && !isCustom ? data.packages.find(p => p.id === packageId) : null;
   let pricePerUnit = 0, total = 0;
-  if (isCustom) { total = amount; }
+  let storeDiscount = 0; // خصم المحل
+  let totalAfterDiscount = 0; // المبلغ بعد الخصم
+  
+  if (isCustom) { 
+    total = amount;
+    totalAfterDiscount = total;
+    
+    // تطبيق خصم المحل على المبلغ المخصص أيضاً
+    if (store && store.discount && store.discount.isActive) {
+      if (store.discount.type === 'percentage') {
+        storeDiscount = (total * store.discount.value) / 100;
+      } else {
+        storeDiscount = Math.min(store.discount.value, total); // لا يتجاوز الخصم المبلغ الكلي
+      }
+      totalAfterDiscount = total - storeDiscount;
+    }
+  }
   else if (pkg && store) {
     switch (store.priceType) {
       case 'retail': pricePerUnit = pkg.retailPrice || 0; break;
@@ -78,6 +94,20 @@ function saveSale() {
       default: pricePerUnit = pkg.retailPrice || 0;
     }
     total = quantity * pricePerUnit;
+    
+    // حساب خصم المحل إن وجد
+    if (store.discount && store.discount.isActive) {
+      if (store.discount.type === 'percentage') {
+        storeDiscount = (total * store.discount.value) / 100;
+      } else {
+        // الخصم الثابت يُقسم على عدد القطع
+        storeDiscount = Math.min(store.discount.value, total);
+      }
+      totalAfterDiscount = total - storeDiscount;
+    } else {
+      totalAfterDiscount = total;
+    }
+    
     if (quantity <= 0) { showNotification('الكمية غير صحيحة', 'error'); return; }
     const ok = deductFromInventory(packageId, quantity);
     if (!ok) { showNotification('الكمية المطلوبة غير متوفرة في المخزون', 'error'); return; }
@@ -86,13 +116,41 @@ function saveSale() {
     const sale = data.sales.find(s => s.id === id);
     if (sale) {
       if (sale.packageId && sale.packageId !== 'custom' && sale.quantity) { addToInventory(sale.packageId, sale.quantity); }
-      sale.packageId = packageId; sale.reason = reason; sale.quantity = quantity; sale.amount = amount; sale.pricePerUnit = pricePerUnit; sale.total = total; sale.date = date;
+      sale.packageId = packageId; 
+      sale.reason = reason; 
+      sale.quantity = quantity; 
+      sale.amount = amount; 
+      sale.pricePerUnit = pricePerUnit; 
+      sale.total = totalAfterDiscount; // حفظ المبلغ بعد الخصم
+      sale.originalTotal = total; // حفظ المبلغ الأصلي
+      sale.storeDiscount = storeDiscount; // حفظ قيمة الخصم
+      sale.date = date;
     }
     showNotification('تم تحديث البيع بنجاح', 'success');
   } else {
     const newId = 'sale_' + Date.now();
-    data.sales.push({ id: newId, storeId, packageId, reason, quantity, amount, pricePerUnit, total, date });
-    showNotification('تم إضافة البيع بنجاح', 'success');
+    const newSale = { 
+      id: newId, 
+      storeId, 
+      packageId, 
+      reason, 
+      quantity, 
+      amount, 
+      pricePerUnit, 
+      total: totalAfterDiscount, // المبلغ بعد الخصم
+      originalTotal: total, // المبلغ الأصلي قبل الخصم
+      storeDiscount: storeDiscount, // قيمة خصم المحل
+      date 
+    };
+    data.sales.push(newSale);
+    
+    // إشعار بالخصم إن وجد
+    if (storeDiscount > 0) {
+      const discountType = store.discount.type === 'percentage' ? `${store.discount.value}%` : `${formatNumber(store.discount.value)} ريال`;
+      showNotification(`تم إضافة البيع بنجاح مع خصم ${discountType} (${formatNumber(storeDiscount)} ريال)`, 'success');
+    } else {
+      showNotification('تم إضافة البيع بنجاح', 'success');
+    }
   }
   if (!isCustom && packageId) { checkLowStockForPackage(packageId); }
   saveData();

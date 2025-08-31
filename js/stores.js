@@ -299,10 +299,10 @@ function showStoreDetails(storeId) {
   // معلومات الخصم إن وجدت
   const discountInfo = store.discount && store.discount.isActive ? 
     `<div class="alert alert-success mt-3">
-      <i class="fas fa-percentage me-2"></i>
+      <i class="fas ${store.discount.type === 'percentage' ? 'fa-percentage' : 'fa-coins'} me-2"></i>
       <strong>خصم دائم:</strong> 
-      ${store.discount.value}${store.discount.type === 'percentage' ? '%' : ' ريال'} 
-      على جميع المبيعات
+      ${store.discount.type === 'fixed' ? formatNumber(store.discount.value) : store.discount.value}${store.discount.type === 'percentage' ? '%' : ' ريال'} 
+      على جميع المبيعات الجديدة
     </div>` : '';
   
   details.innerHTML = `
@@ -728,7 +728,9 @@ function saveStore() {
   // جمع بيانات الخصم الجديدة
   const discountActive = document.getElementById('storeDiscountActive').checked;
   const discountType = document.getElementById('storeDiscountType').value;
-  const discountValue = parseFloat(document.getElementById('storeDiscountValue').value) || 0;
+  // إزالة الفواصل من المبلغ قبل الحفظ
+  const discountValueStr = document.getElementById('storeDiscountValue').value.replace(/,/g, '');
+  const discountValue = parseFloat(discountValueStr) || 0;
   
   if (!name) { 
     showNotification('يرجى إدخال اسم المحل', 'error'); 
@@ -1380,10 +1382,21 @@ function updateTimelineView(storeId) {
     
     // بناء البيان
     let description = '';
+    let displayAmount = transaction.displayAmount;
+    
     if (isSale) {
       description = transaction.reason || getPackageDisplayName(transaction.packageId);
       if (transaction.quantity > 0) {
         description += ` <span class="badge bg-secondary">${transaction.quantity} كرت</span>`;
+      }
+      
+      // إضافة معلومات الخصم إن وجد
+      if (transaction.storeDiscount && transaction.storeDiscount > 0) {
+        description += ` <small class="text-success">(خصم: ${formatNumber(transaction.storeDiscount)})</small>`;
+        // عرض المبلغ الأصلي في حال وجود خصم
+        if (transaction.originalTotal) {
+          description += `<br><small class="text-muted">الأصل: ${formatNumber(transaction.originalTotal)}</small>`;
+        }
       }
     } else {
       description = 'تسديد نقدي';
