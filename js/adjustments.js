@@ -202,13 +202,12 @@ function saveAdjustment() {
   
   data.adjustments.push(newAdjustment);
   
+  console.log('data.adjustments قبل saveData:', data.adjustments.length);
+  
   // حفظ البيانات
   saveData();
   
-  // تحديث العرض
-  if (typeof refreshCurrentView === 'function') {
-    refreshCurrentView();
-  }
+  console.log('data.adjustments بعد saveData:', data.adjustments.length);
   
   // إظهار رسالة نجاح
   const typeText = type === 'discount' ? 'خصم' : 'إضافة';
@@ -229,9 +228,9 @@ function saveAdjustment() {
   const modal = bootstrap.Modal.getInstance(document.getElementById('adjustmentModal'));
   modal.hide();
   
-  // تحديث تفاصيل المحل
-  if (typeof showStoreDetails === 'function') {
-    showStoreDetails(storeId);
+  // تحديث العرض (refreshCurrentView سيحدث showStoreDetails تلقائياً)
+  if (typeof refreshCurrentView === 'function') {
+    refreshCurrentView();
   }
   
   } catch (error) {

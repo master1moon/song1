@@ -32,6 +32,7 @@
                 expenses: [],
                 sales: [],
                 payments: [],
+                adjustments: [],
                 trash: []
             };
             console.log('تم إنشاء بنية بيانات افتراضية');

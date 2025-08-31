@@ -249,6 +249,8 @@ if (typeof window !== 'undefined') {
  * @param {string} storeId - معرف المحل
  */
 function showStoreDetails(storeId) {
+  console.log('showStoreDetails - adjustments count:', data.adjustments ? data.adjustments.length : 0);
+  
   const store = data.stores.find(s => s.id === storeId); 
   if (!store) {
     showNotification('المحل غير موجود', 'error');
